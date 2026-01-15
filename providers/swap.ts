@@ -137,7 +137,10 @@ class SwapProvider {
         headers['x-api-key'] = this.jupiterApiKey;
       }
       
-      const response = await axios.get(this.jupiterQuoteUrl, {
+      const quoteUrl = this.jupiterQuoteUrl;
+      console.log(`[Jupiter] Quote URL: ${quoteUrl}`);
+      
+      const response = await axios.get(quoteUrl, {
         params: {
           inputMint,
           outputMint,
