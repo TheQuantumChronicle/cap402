@@ -69,20 +69,13 @@ export interface SwapResult {
 class SwapProvider {
   // Jupiter Lite API - free public endpoint (no API key required)
   private getJupiterBaseUrl(): string {
-    const url = process.env.JUPITER_API_URL || 'https://lite-api.jup.ag/swap/v1';
-    console.log(`[SwapProvider] JUPITER_API_URL env: ${process.env.JUPITER_API_URL}`);
-    console.log(`[SwapProvider] Base URL: ${url}`);
-    return url;
+    return process.env.JUPITER_API_URL || 'https://lite-api.jup.ag/swap/v1';
   }
   private get jupiterQuoteUrl(): string {
-    const base = this.getJupiterBaseUrl();
-    const url = `${base}/quote`;
-    console.log(`[SwapProvider] Quote URL: ${url}`);
-    return url;
+    return `${this.getJupiterBaseUrl()}/quote`;
   }
   private get jupiterSwapUrl(): string {
-    const base = this.getJupiterBaseUrl();
-    return `${base}/swap`;
+    return `${this.getJupiterBaseUrl()}/swap`;
   }
   private jupiterPriceUrl = 'https://price.jup.ag/v6/price';
   private jupiterApiKey = process.env.JUPITER_API_KEY || '';
@@ -144,10 +137,7 @@ class SwapProvider {
         headers['x-api-key'] = this.jupiterApiKey;
       }
       
-      const quoteUrl = this.jupiterQuoteUrl;
-      console.log(`[Jupiter] Quote URL: ${quoteUrl}`);
-      
-      const response = await axios.get(quoteUrl, {
+      const response = await axios.get(this.jupiterQuoteUrl, {
         params: {
           inputMint,
           outputMint,
@@ -222,12 +212,7 @@ class SwapProvider {
       const outputMint = TOKEN_MINTS[outputToken as keyof typeof TOKEN_MINTS] || outputToken;
       const amountInLamports = Math.floor(amount * 1e9);
       
-      const quoteUrl = this.jupiterQuoteUrl;
-      const swapUrl = this.jupiterSwapUrl;
-      console.log(`[Jupiter executeSwap] Quote URL: ${quoteUrl}`);
-      console.log(`[Jupiter executeSwap] Swap URL: ${swapUrl}`);
-      
-      const quoteResponse = await axios.get(quoteUrl, {
+      const quoteResponse = await axios.get(this.jupiterQuoteUrl, {
         params: {
           inputMint,
           outputMint,
@@ -240,7 +225,7 @@ class SwapProvider {
       const quoteData = quoteResponse.data;
       
       // 2. Get serialized swap transaction from Jupiter
-      const swapResponse = await axios.post(swapUrl, {
+      const swapResponse = await axios.post(this.jupiterSwapUrl, {
         quoteResponse: quoteData,
         userPublicKey: wallet.publicKey.toString(),
         wrapAndUnwrapSol: true,
