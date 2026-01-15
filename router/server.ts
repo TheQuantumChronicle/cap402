@@ -707,7 +707,18 @@ app.post('/invoke', async (req: Request, res: Response) => {
   }
 });
 
+// Simple health check that responds immediately (for Railway/load balancers)
 app.get('/health', (req: Request, res: Response) => {
+  // Fast response for healthchecks - don't wait for integration status
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: Date.now(),
+    version: '1.0.0'
+  });
+});
+
+// Detailed health check with integration status
+app.get('/health/detailed', (req: Request, res: Response) => {
   const integrations = integrationManager.getHealthStatus();
   const allHealthy = integrations.every(i => i.status === 'healthy');
   
