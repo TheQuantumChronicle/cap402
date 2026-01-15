@@ -215,7 +215,12 @@ class SwapProvider {
       const outputMint = TOKEN_MINTS[outputToken as keyof typeof TOKEN_MINTS] || outputToken;
       const amountInLamports = Math.floor(amount * 1e9);
       
-      const quoteResponse = await axios.get(this.jupiterQuoteUrl, {
+      const quoteUrl = this.jupiterQuoteUrl;
+      const swapUrl = this.jupiterSwapUrl;
+      console.log(`[Jupiter executeSwap] Quote URL: ${quoteUrl}`);
+      console.log(`[Jupiter executeSwap] Swap URL: ${swapUrl}`);
+      
+      const quoteResponse = await axios.get(quoteUrl, {
         params: {
           inputMint,
           outputMint,
@@ -228,7 +233,7 @@ class SwapProvider {
       const quoteData = quoteResponse.data;
       
       // 2. Get serialized swap transaction from Jupiter
-      const swapResponse = await axios.post(this.jupiterSwapUrl, {
+      const swapResponse = await axios.post(swapUrl, {
         quoteResponse: quoteData,
         userPublicKey: wallet.publicKey.toString(),
         wrapAndUnwrapSol: true,
