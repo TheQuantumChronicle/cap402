@@ -4,8 +4,7 @@
   "description": "Agent Infrastructure Standard - Semantic capability routing for autonomous agents with privacy-first design",
   "main": "router/server.ts",
   "scripts": {
-    "start": "node dist/router/server.js",
-    "start:dev": "ts-node router/server.ts",
+    "start": "ts-node router/server.ts",
     "dev": "nodemon --exec ts-node router/server.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
