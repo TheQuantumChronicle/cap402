@@ -95,11 +95,6 @@ app.use('/public', express.static(path.join(process.cwd(), 'public')));
 // Also serve public files at root for favicon.ico etc
 app.use(express.static(path.join(process.cwd(), 'public')));
 
-// Explicit favicon route to ensure correct content-type
-app.get('/favicon.ico', (req, res) => {
-  res.sendFile(path.join(process.cwd(), 'public', 'favicon.ico'));
-});
-
 // CORS middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -3516,6 +3511,32 @@ app.get('/sponsors', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Sponsor status failed'
+    });
+  }
+});
+
+// Live sponsor health check
+app.get('/sponsors/health', async (req: Request, res: Response) => {
+  try {
+    const { sponsorStatusManager } = await import('./sponsor-status');
+    const healthChecks = await Promise.all([
+      sponsorStatusManager.performLiveHealthCheck('arcium'),
+      sponsorStatusManager.performLiveHealthCheck('noir'),
+      sponsorStatusManager.performLiveHealthCheck('helius'),
+      sponsorStatusManager.performLiveHealthCheck('inco')
+    ]);
+    
+    const allHealthy = healthChecks.every(h => h.reachable);
+    res.json({
+      success: true,
+      status: allHealthy ? 'all_healthy' : 'some_degraded',
+      checks: healthChecks,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Health check failed'
     });
   }
 });
