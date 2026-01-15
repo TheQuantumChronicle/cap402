@@ -137,7 +137,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Serve frontend at root
 app.get('/', (req: Request, res: Response) => {
-  const frontendPath = path.join(__dirname, '..', 'frontend', 'index.html');
+  // When running compiled JS, __dirname is dist/router, so go up 2 levels
+  // When running with ts-node, __dirname is router, so go up 1 level
+  const isCompiled = __dirname.includes('dist');
+  const frontendPath = isCompiled 
+    ? path.join(__dirname, '..', '..', 'frontend', 'index.html')
+    : path.join(__dirname, '..', 'frontend', 'index.html');
   res.sendFile(frontendPath);
 });
 
