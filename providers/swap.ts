@@ -68,9 +68,15 @@ export interface SwapResult {
 
 class SwapProvider {
   // Jupiter Lite API - free public endpoint (no API key required)
-  private jupiterBaseUrl = process.env.JUPITER_API_URL || 'https://lite-api.jup.ag/swap/v1';
-  private jupiterQuoteUrl = `${this.jupiterBaseUrl}/quote`;
-  private jupiterSwapUrl = `${this.jupiterBaseUrl}/swap`;
+  private getJupiterBaseUrl(): string {
+    return process.env.JUPITER_API_URL || 'https://lite-api.jup.ag/swap/v1';
+  }
+  private get jupiterQuoteUrl(): string {
+    return `${this.getJupiterBaseUrl()}/quote`;
+  }
+  private get jupiterSwapUrl(): string {
+    return `${this.getJupiterBaseUrl()}/swap`;
+  }
   private jupiterPriceUrl = 'https://price.jup.ag/v6/price';
   private jupiterApiKey = process.env.JUPITER_API_KEY || '';
   
