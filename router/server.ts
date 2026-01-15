@@ -187,7 +187,7 @@ app.get('/openapi.json', (req: Request, res: Response) => {
   res.json({
     openapi: '3.0.3',
     info: { title: 'CAP-402 API', version: '0.1.0', description: 'Privacy-First Agent Infrastructure' },
-    servers: [{ url: 'http://localhost:3001' }],
+    servers: [{ url: 'https://cap402.com' }, { url: 'http://localhost:3001', description: 'Local development' }],
     paths: {
       '/invoke': {
         post: {
@@ -342,33 +342,33 @@ app.get('/capabilities/:id/example', (req: Request, res: Response) => {
   // Generate example based on capability
   const examples: Record<string, any> = {
     'cap.price.lookup.v1': {
-      curl: `curl -X POST http://localhost:3001/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL","quote_token":"USD"}}'`,
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL","quote_token":"USD"}}'`,
       inputs: { base_token: 'SOL', quote_token: 'USD' }
     },
     'cap.wallet.snapshot.v1': {
-      curl: `curl -X POST http://localhost:3001/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.wallet.snapshot.v1","inputs":{"address":"YOUR_WALLET_ADDRESS"}}'`,
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.wallet.snapshot.v1","inputs":{"address":"YOUR_WALLET_ADDRESS"}}'`,
       inputs: { address: 'YOUR_WALLET_ADDRESS', include_das_data: true }
     },
     'cap.swap.execute.v1': {
-      curl: `curl -X POST http://localhost:3001/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.swap.execute.v1","inputs":{"input_token":"SOL","output_token":"USDC","amount":1.0,"wallet_address":"YOUR_WALLET"}}'`,
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.swap.execute.v1","inputs":{"input_token":"SOL","output_token":"USDC","amount":1.0,"wallet_address":"YOUR_WALLET"}}'`,
       inputs: { input_token: 'SOL', output_token: 'USDC', amount: 1.0, wallet_address: 'YOUR_WALLET', slippage_bps: 50 }
     },
     'cap.zk.proof.v1': {
-      curl: `curl -X POST http://localhost:3001/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.zk.proof.v1","inputs":{"proof_type":"balance_threshold","public_inputs":{"threshold":100},"private_inputs":{"actual_balance":500}}}'`,
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.zk.proof.v1","inputs":{"proof_type":"balance_threshold","public_inputs":{"threshold":100},"private_inputs":{"actual_balance":500}}}'`,
       inputs: { proof_type: 'balance_threshold', public_inputs: { threshold: 100, token_mint: 'SOL' }, private_inputs: { actual_balance: 500 } }
     },
     'cap.cspl.wrap.v1': {
-      curl: `curl -X POST http://localhost:3001/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.cspl.wrap.v1","inputs":{"owner":"YOUR_WALLET","mint":"TOKEN_MINT","amount":100}}'`,
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.cspl.wrap.v1","inputs":{"owner":"YOUR_WALLET","mint":"TOKEN_MINT","amount":100}}'`,
       inputs: { owner: 'YOUR_WALLET', mint: 'TOKEN_MINT', amount: 100 }
     },
     'cap.fhe.compute.v1': {
-      curl: `curl -X POST http://localhost:3001/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.fhe.compute.v1","inputs":{"operation":"add","encrypted_inputs":["enc_a","enc_b"]}}'`,
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.fhe.compute.v1","inputs":{"operation":"add","encrypted_inputs":["enc_a","enc_b"]}}'`,
       inputs: { operation: 'add', encrypted_inputs: ['encrypted_value_a', 'encrypted_value_b'] }
     }
   };
 
   const example = examples[id] || {
-    curl: `curl -X POST http://localhost:3001/invoke -H "Content-Type: application/json" -d '{"capability_id":"${id}","inputs":{}}'`,
+    curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"${id}","inputs":{}}'`,
     inputs: {},
     note: 'See capability schema for required inputs'
   };

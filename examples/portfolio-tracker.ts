@@ -3,7 +3,7 @@ import { CAP402Client } from '../sdk/client';
 // Example: Portfolio tracking agent
 async function portfolioTracker() {
   const cap402 = new CAP402Client({
-    baseUrl: 'http://localhost:3001',
+    baseUrl: 'https://cap402.com',
     timeout: 10000,
     retries: 3,
   });

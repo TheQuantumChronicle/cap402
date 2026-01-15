@@ -28,7 +28,7 @@ export class CAP402Client {
       ...config
     };
 
-    const baseURL = this.config.baseUrl || this.config.router_url || 'http://localhost:3001';
+    const baseURL = this.config.baseUrl || this.config.router_url || 'https://cap402.com';
 
     this.client = axios.create({
       baseURL,

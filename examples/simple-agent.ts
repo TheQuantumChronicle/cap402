@@ -3,7 +3,7 @@ import { CAP402Client } from '../sdk/client';
 // Example: Simple trading agent using CAP-402
 async function tradingAgent() {
   const cap402 = new CAP402Client({
-    baseUrl: 'http://localhost:3001',
+    baseUrl: 'https://cap402.com',
   });
 
   console.log('🤖 Trading Agent Starting...\n');

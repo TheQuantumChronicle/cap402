@@ -195,14 +195,14 @@ Operations are versioned, semantic contracts:
 npm install
 npm start
 
-# Server runs at http://localhost:3001
+# Server runs at https://cap402.com
 
 # Test: Get live SOL price
-curl -X POST http://localhost:3001/invoke \
+curl -X POST https://cap402.com/invoke \
   -d '{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'
 
 # Test: Generate a ZK proof
-curl -X POST http://localhost:3001/invoke \
+curl -X POST https://cap402.com/invoke \
   -d '{"capability_id":"cap.zk.proof.v1","inputs":{"circuit":"balance_threshold","public_inputs":{"threshold":1000},"private_inputs":{"actual_balance":5000}}}'
 ```
 
@@ -489,28 +489,28 @@ cd ..
 npm start
 ```
 
-Router will be available at `http://localhost:3001`
+Router will be available at `https://cap402.com`
 
 ### 5. Test All Integrations
 
 ```bash
 # Test Helius (wallet data)
-curl -X POST http://localhost:3001/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{"capability_id":"cap.wallet.snapshot.v1","inputs":{"address":"YOUR_WALLET"}}'
 
 # Test CoinMarketCap (prices)
-curl -X POST http://localhost:3001/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL","quote_token":"USD"}}'
 
 # Test Noir ZK (proofs)
-curl -X POST http://localhost:3001/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{"capability_id":"cap.zk.proof.v1","inputs":{"proof_type":"balance_threshold","circuit":"balance_threshold","private_inputs":{"actual_balance":1000},"public_inputs":{"threshold":500}}}'
 
 # Test Inco FHE (encrypted compute)
-curl -X POST http://localhost:3001/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{"capability_id":"cap.fhe.compute.v1","inputs":{"operation":"add","operands":[100,50]}}'
 ```
@@ -894,15 +894,15 @@ Tests:       306 passed, 306 total
 **🔍 Request Tracing:**
 ```bash
 # Start a trace
-curl -X POST http://localhost:3001/trace/start
+curl -X POST https://cap402.com/trace/start
 # → { "trace_id": "trace_abc123" }
 
 # Add steps during workflow
-curl -X POST http://localhost:3001/trace/trace_abc123/step \
+curl -X POST https://cap402.com/trace/trace_abc123/step \
   -d '{"action": "price_lookup", "data": {"token": "SOL"}}'
 
 # Get trace results
-curl http://localhost:3001/trace/trace_abc123
+curl https://cap402.com/trace/trace_abc123
 # → { "steps": [...], "duration_ms": 428 }
 ```
 

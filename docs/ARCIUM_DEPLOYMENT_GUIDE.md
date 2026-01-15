@@ -132,7 +132,7 @@ cd /Users/zion/Desktop/CAP-402
 npm start
 
 # Test the capability
-curl -X POST http://localhost:3001/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{
     "capability_id": "cap.document.parse.v1",

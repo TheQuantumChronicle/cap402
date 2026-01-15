@@ -1904,7 +1904,7 @@ export class Router {
     
     if (language === 'typescript') {
       return `// ${cap.description}
-const response = await fetch('http://localhost:3001/invoke', {
+const response = await fetch('https://cap402.com/invoke', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -1922,7 +1922,7 @@ const result = await response.json();`;
       return `# ${cap.description}
 import requests
 
-response = requests.post('http://localhost:3001/invoke', json={
+response = requests.post('https://cap402.com/invoke', json={
     "capability_id": "${capabilityId}",
     "inputs": {
 ${pyInputs}
@@ -1934,7 +1934,7 @@ result = response.json()`;
     // curl
     const curlInputs = inputsArray.map((i: any) => `"${i.name}":"<${i.type}>"`).join(',');
     return `# ${cap.description}
-curl -X POST http://localhost:3001/invoke \\
+curl -X POST https://cap402.com/invoke \\
   -H "Content-Type: application/json" \\
   -d '{"capability_id":"${capabilityId}","inputs":{${curlInputs}}}'`;
   }
