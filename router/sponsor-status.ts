@@ -310,4 +310,67 @@ class SponsorStatusManager {
   }
 }
 
+// Metrics tracking for sponsor integrations
+class SponsorMetrics {
+  private metrics: Map<string, {
+    invocations: number;
+    successes: number;
+    failures: number;
+    totalLatencyMs: number;
+    lastInvocation: number;
+  }> = new Map();
+
+  record(sponsor: string, success: boolean, latencyMs: number): void {
+    const existing = this.metrics.get(sponsor) || {
+      invocations: 0,
+      successes: 0,
+      failures: 0,
+      totalLatencyMs: 0,
+      lastInvocation: 0
+    };
+
+    existing.invocations++;
+    if (success) {
+      existing.successes++;
+    } else {
+      existing.failures++;
+    }
+    existing.totalLatencyMs += latencyMs;
+    existing.lastInvocation = Date.now();
+
+    this.metrics.set(sponsor, existing);
+  }
+
+  getMetrics(sponsor: string): {
+    invocations: number;
+    success_rate: number;
+    avg_latency_ms: number;
+    last_invocation: number;
+  } | null {
+    const m = this.metrics.get(sponsor);
+    if (!m) return null;
+
+    return {
+      invocations: m.invocations,
+      success_rate: m.invocations > 0 ? (m.successes / m.invocations) * 100 : 0,
+      avg_latency_ms: m.invocations > 0 ? Math.round(m.totalLatencyMs / m.invocations) : 0,
+      last_invocation: m.lastInvocation
+    };
+  }
+
+  getAllMetrics(): Record<string, any> {
+    const result: Record<string, any> = {};
+    for (const [sponsor, m] of this.metrics.entries()) {
+      result[sponsor] = {
+        invocations: m.invocations,
+        success_rate: m.invocations > 0 ? ((m.successes / m.invocations) * 100).toFixed(1) + '%' : '0%',
+        avg_latency_ms: m.invocations > 0 ? Math.round(m.totalLatencyMs / m.invocations) : 0,
+        last_invocation: m.lastInvocation ? new Date(m.lastInvocation).toISOString() : null
+      };
+    }
+    return result;
+  }
+}
+
+export const sponsorMetrics = new SponsorMetrics();
 export const sponsorStatusManager = new SponsorStatusManager();

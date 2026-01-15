@@ -206,6 +206,84 @@ class ArciumProvider {
       programId: this.program?.programId
     };
   }
+
+  /**
+   * Wrap tokens into confidential C-SPL tokens
+   */
+  async wrapToCSPL(
+    owner: string,
+    mint: string,
+    amount: number
+  ): Promise<ArciumComputationResult> {
+    return this.submitComputation({
+      programId: ARCIUM_PROGRAM_ID,
+      inputs: {
+        operation: 'cspl_wrap',
+        owner,
+        mint,
+        amount
+      }
+    });
+  }
+
+  /**
+   * Transfer confidential tokens
+   */
+  async transferCSPL(
+    from: string,
+    to: string,
+    mint: string,
+    encryptedAmount: string
+  ): Promise<ArciumComputationResult> {
+    return this.submitComputation({
+      programId: ARCIUM_PROGRAM_ID,
+      inputs: {
+        operation: 'cspl_transfer',
+        from,
+        to,
+        mint,
+        encrypted_amount: encryptedAmount
+      }
+    });
+  }
+
+  /**
+   * Execute confidential swap via MPC
+   */
+  async confidentialSwap(
+    inputToken: string,
+    outputToken: string,
+    encryptedAmount: string,
+    wallet: string
+  ): Promise<ArciumComputationResult> {
+    return this.submitComputation({
+      programId: ARCIUM_PROGRAM_ID,
+      inputs: {
+        operation: 'confidential_swap',
+        input_token: inputToken,
+        output_token: outputToken,
+        encrypted_amount: encryptedAmount,
+        wallet
+      }
+    });
+  }
+
+  /**
+   * Parse document with confidential extraction
+   */
+  async parseDocument(
+    documentUrl: string,
+    extractionSchema: any
+  ): Promise<ArciumComputationResult> {
+    return this.submitComputation({
+      programId: ARCIUM_PROGRAM_ID,
+      inputs: {
+        operation: 'document_parse',
+        document_url: documentUrl,
+        extraction_schema: extractionSchema
+      }
+    });
+  }
 }
 
 export const arciumProvider = new ArciumProvider();

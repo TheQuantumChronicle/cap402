@@ -135,8 +135,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Root endpoint - API info
-app.get('/', async (req: Request, res: Response) => {
+// Serve frontend at root
+app.get('/', (req: Request, res: Response) => {
+  const frontendPath = path.join(__dirname, '..', 'frontend', 'index.html');
+  res.sendFile(frontendPath);
+});
+
+// API info endpoint (moved from root)
+app.get('/api', async (req: Request, res: Response) => {
   const allCaps = registry.getAllCapabilities();
   const publicCaps = allCaps.filter(c => c.execution.mode === 'public');
   const confidentialCaps = allCaps.filter(c => c.execution.mode === 'confidential');
@@ -166,7 +172,7 @@ app.get('/', async (req: Request, res: Response) => {
     },
     sponsors: {
       arcium: { capabilities: 3, focus: 'C-SPL Confidential Tokens' },
-      noir: { capabilities: 1, focus: 'Zero-Knowledge Proofs (7 circuits)' },
+      noir: { capabilities: 1, focus: 'Zero-Knowledge Proofs (10 circuits)' },
       helius: { capabilities: 1, focus: 'DAS API & Webhooks' },
       inco: { capabilities: 2, focus: 'Fully Homomorphic Encryption' }
     },
@@ -3482,9 +3488,10 @@ app.get('/sponsors/:name/security', async (req: Request, res: Response) => {
 // Sponsor Integration Status endpoint
 app.get('/sponsors', async (req: Request, res: Response) => {
   try {
-    const { sponsorStatusManager } = await import('./sponsor-status');
+    const { sponsorStatusManager, sponsorMetrics } = await import('./sponsor-status');
     const report = await sponsorStatusManager.getFullReport();
-    res.json({ success: true, ...report });
+    const metrics = sponsorMetrics.getAllMetrics();
+    res.json({ success: true, ...report, sponsor_metrics: metrics });
   } catch (error) {
     res.status(500).json({
       success: false,
