@@ -534,7 +534,9 @@ app.post('/invoke', async (req: Request, res: Response) => {
     // Update agent reputation if registered
     if (agent && agentId !== 'anonymous') {
       const { agentIdentityManager } = await import('./agent-identity');
+      const { agentRegistry } = await import('./agent-registry');
       agentIdentityManager.recordInvocation(agentId, invokeRequest.capability_id, result.success);
+      agentRegistry.recordInvocation(agentId, result.success, executionTime);
     }
 
     // ============================================
