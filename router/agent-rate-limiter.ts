@@ -26,8 +26,8 @@ interface RateLimitState {
 
 const RATE_LIMITS: Record<TrustLevel, RateLimitConfig> = {
   anonymous: {
-    requests_per_minute: 10,
-    burst_limit: 5,
+    requests_per_minute: 60,
+    burst_limit: 20,
     cost_multiplier: 1.5
   },
   verified: {
