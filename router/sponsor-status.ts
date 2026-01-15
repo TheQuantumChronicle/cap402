@@ -69,7 +69,8 @@ class SponsorStatusManager {
     try {
       switch (sponsor.toLowerCase()) {
         case 'arcium':
-          reachable = arciumProvider.isReady();
+          // Arcium is reachable if initialized (even in simulation mode)
+          reachable = arciumProvider.isReady() || arciumProvider.getStatus().status === 'ready';
           break;
         case 'noir':
         case 'aztec':
