@@ -1,0 +1,1102 @@
+openapi: 3.1.0
+info:
+  title: CAP-402 Agent Infrastructure API
+  description: |
+    # CAP-402: Agent Infrastructure Standard
+    
+    **The protocol for semantic capability routing between autonomous agents.**
+    
+    CAP-402 provides infrastructure-first, privacy-aware, economically-signaled execution 
+    of agent capabilities with future on-chain settlement.
+    
+    ## Core Principle
+    
+    > **Agents do not call APIs directly. Agents call capabilities.**
+    
+    A capability is a versioned, semantic contract that abstracts:
+    - What can be done
+    - What inputs/outputs look like
+    - What it costs (economically + operationally)
+    - How it is executed (public vs confidential)
+    - How settlement could occur (X.402-style hints)
+    
+    ## The Privacy Stack
+    
+    CAP-402 uniquely combines three complementary cryptographic technologies:
+    
+    | Technology | Role | What It Does |
+    |------------|------|--------------|
+    | **Noir** | Proves privately | ZK proofs that verify conditions without revealing data |
+    | **Arcium** | Decides privately | MPC computation on encrypted data—logic stays hidden |
+    | **Inco** | Stores privately | Confidential on-chain state and execution |
+    
+    > *"Noir proves things privately, Arcium decides things privately, Inco stores and executes things privately."*
+    
+    ## Key Features
+    
+    - **Privacy-First**: Confidential execution via Arcium MPC, Noir ZK proofs, Inco FHE
+    - **Semantic Discovery**: Natural language capability search
+    - **Economic Coordination**: X.402 payment hints, trust-based pricing
+    - **Composable**: Chain capabilities together in pipelines
+    - **Verifiable**: Capability receipts with cryptographic proofs
+    
+    ## Authentication
+    
+    CAP-402 supports multiple authentication methods:
+    - **API Key**: `X-API-Key` header for registered agents
+    - **Capability Token**: `X-Capability-Token` for fine-grained access
+    - **Handshake Protocol**: Multi-step authentication for confidential operations
+    
+  version: 1.0.0
+  contact:
+    name: CAP-402 Team
+    url: https://cap402.com
+    email: cap402@proton.me
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.cap402.com
+    description: Production API
+  - url: http://localhost:3402
+    description: Local Development
+
+tags:
+  - name: Capabilities
+    description: |
+      Discover and invoke agent capabilities. Capabilities are semantic contracts 
+      that define what can be done, not how it's implemented. Each capability 
+      includes typed inputs/outputs, execution mode (public/confidential), and 
+      economic hints.
+  - name: Composition
+    description: |
+      Chain multiple capabilities together into atomic workflows. Composition 
+      provides automatic data flow between steps, error handling with rollback, 
+      and a single receipt for the entire chain. Batched calls receive a 10% 
+      discount.
+  - name: Discovery
+    description: |
+      Semantic search for capabilities using natural language queries. Instead 
+      of browsing endpoints, agents can ask "I need to swap tokens privately" 
+      and receive relevant capability suggestions with relevance scores.
+  - name: Agents
+    description: |
+      Agent identity management and registration. Agents register with a public 
+      key and receive an API key. Trust levels (anonymous → verified → trusted → 
+      premium) determine rate limits and pricing discounts.
+  - name: Security
+    description: |
+      Multi-layer security including API keys, capability tokens, handshake 
+      protocols, and semantic encryption. Capability tokens provide fine-grained 
+      access control scoped to specific capabilities with expiration.
+  - name: Analytics
+    description: |
+      Usage metrics, capability insights, and system health. Track invocation 
+      counts, success rates, latency percentiles, and cost optimization 
+      recommendations.
+  - name: Advanced
+    description: |
+      Advanced features including privacy gradient selection (4 levels from 
+      public to ZK-verifiable), capability negotiation, intent graphs for 
+      complex workflows, and verifiable execution receipts.
+
+paths:
+  /capabilities:
+    get:
+      tags:
+        - Capabilities
+      summary: List all capabilities
+      description: |
+        Returns all registered capabilities in the CAP-402 router.
+        Each capability includes its schema, execution mode, and economic hints.
+      operationId: listCapabilities
+      responses:
+        '200':
+          description: List of capabilities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  capabilities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Capability'
+              example:
+                success: true
+                capabilities:
+                  - id: "cap.price.lookup.v1"
+                    name: "Price Lookup"
+                    description: "Get real-time token prices"
+                    execution:
+                      mode: "public"
+
+  /capabilities/{id}:
+    get:
+      tags:
+        - Capabilities
+      summary: Get capability details
+      description: Returns detailed information about a specific capability
+      operationId: getCapability
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Capability ID (e.g., cap.price.lookup.v1)
+          schema:
+            type: string
+            example: cap.price.lookup.v1
+      responses:
+        '200':
+          description: Capability details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  capability:
+                    $ref: '#/components/schemas/Capability'
+        '404':
+          description: Capability not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /invoke:
+    post:
+      tags:
+        - Capabilities
+      summary: Invoke a capability
+      description: |
+        Execute a capability with the provided inputs.
+        
+        ## Execution Modes
+        - **Public**: Standard execution, results visible
+        - **Confidential**: Privacy-preserving via Arcium MPC
+        
+        ## Authentication
+        - Anonymous: Basic rate limits apply
+        - API Key: Enhanced limits based on trust level
+        - Capability Token: Fine-grained access control
+      operationId: invokeCapability
+      security:
+        - ApiKeyAuth: []
+        - CapabilityToken: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvokeRequest'
+            examples:
+              priceLookup:
+                summary: Price Lookup
+                value:
+                  capability_id: "cap.price.lookup.v1"
+                  inputs:
+                    base_token: "SOL"
+                    quote_token: "USD"
+              walletSnapshot:
+                summary: Wallet Snapshot
+                value:
+                  capability_id: "cap.wallet.snapshot.v1"
+                  inputs:
+                    address: "82MfBWDV..."
+                    network: "solana-mainnet"
+                    include_nfts: true
+              confidentialSwap:
+                summary: Confidential Swap
+                value:
+                  capability_id: "cap.confidential.swap.v1"
+                  inputs:
+                    wallet_address: "WALLET"
+                    input_token: "SOL"
+                    output_token: "USDC"
+                    amount: 100
+      responses:
+        '200':
+          description: Successful invocation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /compose:
+    post:
+      tags:
+        - Composition
+      summary: Compose multiple capabilities
+      description: |
+        Chain multiple capabilities together in a single request.
+        
+        ## Features
+        - Automatic data flow between steps
+        - Error handling and rollback
+        - Composition discounts (10% off)
+        - Single receipt for entire workflow
+      operationId: composeCapabilities
+      security:
+        - ApiKeyAuth: []
+        - CapabilityToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompositionRequest'
+            example:
+              steps:
+                - capability_id: "cap.price.lookup.v1"
+                  inputs:
+                    base_token: "SOL"
+                    quote_token: "USD"
+                - capability_id: "cap.wallet.snapshot.v1"
+                  inputs:
+                    address: "{{agent.wallet}}"
+                    network: "solana-mainnet"
+      responses:
+        '200':
+          description: Composition result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompositionResponse'
+
+  /discover:
+    post:
+      tags:
+        - Discovery
+      summary: Semantic capability search
+      description: |
+        Search for capabilities using natural language queries.
+        
+        Examples:
+        - "I need to swap tokens privately"
+        - "Get wallet balance with NFTs"
+        - "Prove I have more than 10 SOL without revealing balance"
+      operationId: discoverCapabilities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  description: Natural language search query
+                  example: "swap tokens privately without MEV"
+                filters:
+                  type: object
+                  properties:
+                    mode:
+                      type: string
+                      enum: [public, confidential]
+                    max_cost:
+                      type: number
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  query:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        capability_id:
+                          type: string
+                        name:
+                          type: string
+                        relevance_score:
+                          type: number
+                        match_reasons:
+                          type: array
+                          items:
+                            type: string
+
+  /agents/register:
+    post:
+      tags:
+        - Agents
+      summary: Register a new agent
+      description: |
+        Register a new agent identity in the CAP-402 network.
+        Returns an API key for authentication.
+      operationId: registerAgent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - public_key
+              properties:
+                public_key:
+                  type: string
+                  description: Agent's public key
+                metadata:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    capabilities:
+                      type: array
+                      items:
+                        type: string
+      responses:
+        '200':
+          description: Agent registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  agent_id:
+                    type: string
+                  api_key:
+                    type: string
+                    description: Store securely - shown only once
+
+  /agents/{agent_id}:
+    get:
+      tags:
+        - Agents
+      summary: Get agent information
+      operationId: getAgent
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '404':
+          description: Agent not found
+
+  /security/tokens/issue:
+    post:
+      tags:
+        - Security
+      summary: Issue capability token
+      description: |
+        Issue a capability token for fine-grained access control.
+        Tokens can be scoped to specific capabilities and have expiration.
+      operationId: issueToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - agent_id
+              properties:
+                agent_id:
+                  type: string
+                  pattern: '^[a-zA-Z0-9_-]{1,64}$'
+                capabilities:
+                  type: array
+                  items:
+                    type: string
+                expires_in_hours:
+                  type: integer
+                  minimum: 1
+                  maximum: 720
+                  default: 24
+      responses:
+        '200':
+          description: Token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  token:
+                    type: object
+                    properties:
+                      token_id:
+                        type: string
+                      expires_at:
+                        type: string
+                        format: date-time
+                  semantic_key:
+                    type: string
+
+  /security/tokens/validate:
+    post:
+      tags:
+        - Security
+      summary: Validate capability token
+      operationId: validateToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token_id
+                - capability_id
+              properties:
+                token_id:
+                  type: string
+                capability_id:
+                  type: string
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  reason:
+                    type: string
+
+  /security/trust/register:
+    post:
+      tags:
+        - Security
+      summary: Join trust network
+      description: Register an agent in the decentralized trust network
+      operationId: registerTrust
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - agent_id
+              properties:
+                agent_id:
+                  type: string
+                initial_stake:
+                  type: number
+      responses:
+        '200':
+          description: Registered in trust network
+
+  /security/trust/{agent_id}:
+    get:
+      tags:
+        - Security
+      summary: Get trust score
+      operationId: getTrustScore
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trust information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustInfo'
+
+  /negotiate:
+    post:
+      tags:
+        - Advanced
+      summary: Negotiate capability execution
+      description: |
+        Get execution options with different privacy/cost tradeoffs.
+        
+        ## Privacy Levels
+        - **0 (Public)**: Standard execution, lowest cost
+        - **1 (Obscured)**: Basic privacy, moderate cost
+        - **2 (Encrypted)**: Strong privacy, higher cost
+        - **3 (ZK Verifiable)**: Maximum privacy with proofs
+      operationId: negotiateCapability
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NegotiationRequest'
+      responses:
+        '200':
+          description: Negotiation options
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NegotiationResponse'
+
+  /intent:
+    post:
+      tags:
+        - Advanced
+      summary: Execute intent graph
+      description: |
+        Execute a complex multi-step workflow defined as a directed graph.
+        
+        ## Features
+        - Parallel execution where possible
+        - Dependency management
+        - Atomic execution option
+        - Single receipt for entire intent
+      operationId: executeIntent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntentGraph'
+      responses:
+        '200':
+          description: Intent execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntentResult'
+
+  /privacy/{capability_id}:
+    get:
+      tags:
+        - Advanced
+      summary: Get privacy options
+      description: Get available privacy levels for a capability
+      operationId: getPrivacyOptions
+      parameters:
+        - name: capability_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Privacy options
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  capability_id:
+                    type: string
+                  options:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PrivacyOption'
+
+  /receipts/verify:
+    post:
+      tags:
+        - Advanced
+      summary: Verify execution receipt
+      description: Verify a capability execution receipt
+      operationId: verifyReceipt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - receipt
+              properties:
+                receipt:
+                  $ref: '#/components/schemas/CapabilityReceipt'
+                original_inputs:
+                  type: object
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  checks:
+                    type: object
+
+  /metrics:
+    get:
+      tags:
+        - Analytics
+      summary: Get system metrics
+      description: Get overall system and capability metrics
+      operationId: getMetrics
+      responses:
+        '200':
+          description: System metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  system:
+                    type: object
+                    properties:
+                      uptime_seconds:
+                        type: integer
+                      total_requests:
+                        type: integer
+                  http:
+                    type: object
+                    properties:
+                      total_requests:
+                        type: integer
+                      success_rate:
+                        type: string
+                      avg_latency_ms:
+                        type: integer
+                  capabilities:
+                    type: array
+                    items:
+                      type: object
+
+  /health:
+    get:
+      tags:
+        - Analytics
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        '200':
+          description: System health
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded, unhealthy]
+                  version:
+                    type: string
+                  uptime_ms:
+                    type: integer
+
+  /advanced/health:
+    get:
+      tags:
+        - Advanced
+      summary: Advanced features health
+      description: Get health status of all advanced features
+      operationId: getAdvancedHealth
+      responses:
+        '200':
+          description: Advanced features health
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                  overall_status:
+                    type: string
+                  features:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        feature:
+                          type: string
+                        status:
+                          type: string
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Agent API key from registration
+    CapabilityToken:
+      type: apiKey
+      in: header
+      name: X-Capability-Token
+      description: Fine-grained capability token
+
+  schemas:
+    Capability:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique capability identifier
+          example: cap.price.lookup.v1
+        name:
+          type: string
+          example: Price Lookup
+        description:
+          type: string
+        version:
+          type: string
+          example: "1.0.0"
+        execution:
+          type: object
+          properties:
+            mode:
+              type: string
+              enum: [public, confidential]
+            proof_type:
+              type: string
+              enum: [none, arcium-attestation, zk-snark, delivery-receipt, fhe-proof]
+        inputs:
+          type: object
+          properties:
+            schema:
+              type: object
+            required:
+              type: array
+              items:
+                type: string
+        outputs:
+          type: object
+        economics:
+          type: object
+          properties:
+            cost_hint:
+              type: string
+            currency:
+              type: string
+
+    InvokeRequest:
+      type: object
+      required:
+        - capability_id
+        - inputs
+      properties:
+        capability_id:
+          type: string
+          description: ID of capability to invoke
+        inputs:
+          type: object
+          description: Capability-specific inputs
+        options:
+          type: object
+          properties:
+            privacy_level:
+              type: integer
+              minimum: 0
+              maximum: 3
+            timeout_ms:
+              type: integer
+
+    InvokeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        capability_id:
+          type: string
+        outputs:
+          type: object
+        metadata:
+          type: object
+          properties:
+            execution_time_ms:
+              type: integer
+            executor:
+              type: string
+            privacy_level:
+              type: integer
+        receipt:
+          $ref: '#/components/schemas/CapabilityReceipt'
+        economic_hints:
+          type: object
+
+    CompositionRequest:
+      type: object
+      required:
+        - steps
+      properties:
+        steps:
+          type: array
+          items:
+            type: object
+            required:
+              - capability_id
+              - inputs
+            properties:
+              capability_id:
+                type: string
+              inputs:
+                type: object
+        template_id:
+          type: string
+        options:
+          type: object
+
+    CompositionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvokeResponse'
+        total_cost:
+          type: number
+        total_time_ms:
+          type: integer
+
+    Agent:
+      type: object
+      properties:
+        agent_id:
+          type: string
+        trust_level:
+          type: string
+          enum: [anonymous, verified, trusted, premium]
+        reputation_score:
+          type: number
+        total_invocations:
+          type: integer
+        registered_at:
+          type: string
+          format: date-time
+
+    TrustInfo:
+      type: object
+      properties:
+        agent_id:
+          type: string
+        trust_score:
+          type: number
+        reputation_level:
+          type: string
+        endorsements:
+          type: integer
+        violations:
+          type: integer
+
+    NegotiationRequest:
+      type: object
+      required:
+        - capability_id
+      properties:
+        capability_id:
+          type: string
+        negotiate:
+          type: object
+          properties:
+            privacy:
+              type: object
+              properties:
+                minimum_level:
+                  type: integer
+                prefer_cheapest:
+                  type: boolean
+            latency:
+              type: object
+              properties:
+                max_ms:
+                  type: integer
+            batching:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+
+    NegotiationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        capability_id:
+          type: string
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              option_id:
+                type: string
+              privacy_level:
+                type: integer
+              estimated_cost:
+                type: number
+              estimated_latency_ms:
+                type: integer
+              executor:
+                type: string
+        recommendation:
+          type: object
+          properties:
+            option_id:
+              type: string
+            reasoning:
+              type: string
+
+    IntentGraph:
+      type: object
+      required:
+        - nodes
+      properties:
+        intent_id:
+          type: string
+        nodes:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - capability_id
+              - inputs
+            properties:
+              id:
+                type: string
+              capability_id:
+                type: string
+              inputs:
+                type: object
+        edges:
+          type: array
+          items:
+            type: object
+            properties:
+              from:
+                type: string
+              to:
+                type: string
+              data_mapping:
+                type: object
+        constraints:
+          type: object
+          properties:
+            atomic:
+              type: boolean
+            timeout_ms:
+              type: integer
+
+    IntentResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        intent_id:
+          type: string
+        executed_nodes:
+          type: array
+          items:
+            type: string
+        failed_nodes:
+          type: array
+          items:
+            type: string
+        results:
+          type: object
+        receipt:
+          $ref: '#/components/schemas/CapabilityReceipt'
+
+    PrivacyOption:
+      type: object
+      properties:
+        level:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        cost_multiplier:
+          type: number
+        latency_multiplier:
+          type: number
+        proof_type:
+          type: string
+
+    CapabilityReceipt:
+      type: object
+      properties:
+        receipt_id:
+          type: string
+        capability_id:
+          type: string
+        agent_id:
+          type: string
+        invocation_timestamp:
+          type: integer
+        input_commitment:
+          type: string
+        output_commitment:
+          type: string
+        proof:
+          type: object
+        signature:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        request_id:
+          type: string
+
+    RateLimitError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Rate limit exceeded
+        retry_after:
+          type: integer
+          description: Seconds until rate limit resets

@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Primary Meta Tags -->
+  <title>CAP-402 | Agent Infrastructure Standard for Autonomous AI</title>
+  <meta name="title" content="CAP-402 | Agent Infrastructure Standard for Autonomous AI">
+  <meta name="description" content="The TCP/IP of the Agent Economy. Privacy-first capability routing, economic signaling, and cryptographic trust for autonomous AI agents. Built on Arcium, Noir, Inco, and Helius.">
+  <meta name="keywords" content="AI agents, autonomous agents, agent infrastructure, privacy, MPC, zero-knowledge proofs, FHE, Solana, DeFi, CAP-402, Arcium, Noir, Inco, Helius, semantic routing, capability routing">
+  <meta name="author" content="TheQuantumChronicle">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+  <meta name="revisit-after" content="7 days">
+  <link rel="canonical" href="https://cap402.com">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cap402.com">
+  <meta property="og:title" content="CAP-402 | Agent Infrastructure Standard">
+  <meta property="og:description" content="The TCP/IP of the Agent Economy. Privacy-first capability routing for autonomous AI agents. Built on Arcium, Noir, Inco, and Helius.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/TheQuantumChronicle/CAP402/main/docs/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="CAP-402">
+  <meta property="og:locale" content="en_US">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://cap402.com">
+  <meta name="twitter:title" content="CAP-402 | Agent Infrastructure Standard">
+  <meta name="twitter:description" content="The TCP/IP of the Agent Economy. Privacy-first capability routing for autonomous AI agents.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/TheQuantumChronicle/CAP402/main/docs/og-image.png">
+  <meta name="twitter:creator" content="@TheQuantumChron">
+  
+  <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="/public/favicon.ico">
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#050508">
+  <meta name="msapplication-TileColor" content="#050508">
+  
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "CAP-402",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Cross-platform",
+    "description": "Agent Infrastructure Standard - Privacy-first capability routing, economic signaling, and cryptographic trust for autonomous AI agents.",
+    "url": "https://github.com/TheQuantumChronicle/CAP402",
+    "author": {
+      "@type": "Organization",
+      "name": "TheQuantumChronicle",
+      "url": "https://github.com/TheQuantumChronicle"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "keywords": "AI agents, autonomous agents, privacy, MPC, zero-knowledge proofs, FHE, Solana",
+    "softwareVersion": "0.1.0",
+    "programmingLanguage": "TypeScript",
+    "codeRepository": "https://github.com/TheQuantumChronicle/CAP402"
+  }
+  </script>
+  
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://github.com">
+  <link rel="dns-prefetch" href="https://arcium.com">
+  <link rel="dns-prefetch" href="https://noir-lang.org">
+  <link rel="dns-prefetch" href="https://inco.org">
+  <link rel="dns-prefetch" href="https://helius.dev">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --arcium-purple: #6C44FC;
+      --noir-pink: #f472b6;
+      --noir-purple: #a855f7;
+      --bg-dark: #0a0a0c;
+      --bg-card: rgba(255,255,255,0.02);
+      --border-subtle: rgba(255,255,255,0.06);
+      --text-primary: #fafafa;
+      --text-secondary: #888;
+      --text-muted: #555;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    
+    code, .mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Noir-style gradient mesh background */
+    .mesh-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      background: 
+        radial-gradient(ellipse 100% 80% at 50% 0%, rgba(108, 68, 252, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 60% at 0% 50%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+        radial-gradient(ellipse 60% 80% at 100% 80%, rgba(244, 114, 182, 0.06) 0%, transparent 40%),
+        var(--bg-dark);
+    }
+    
+    /* Animated glow orb - Arcium style */
+    .glow-orb {
+      position: fixed;
+      width: 1000px; /* Larger orbs */
+      height: 1000px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(108, 68, 252, 0.15) 0%, transparent 60%);
+      filter: blur(80px);
+      animation: orbFloat 30s ease-in-out infinite;
+      z-index: -2;
+    }
+    
+    .glow-orb.orb-1 { top: -30%; left: -20%; }
+    .glow-orb.orb-2 { bottom: -40%; right: -25%; background: radial-gradient(circle, rgba(244, 114, 182, 0.1) 0%, transparent 60%); animation-delay: -15s; }
+    
+    /* Particles enhancement */
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: 0.6;
+    }
+    
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(30px, -20px) scale(1.05); }
+      50% { transform: translate(-20px, 30px) scale(0.95); }
+      75% { transform: translate(-30px, -10px) scale(1.02); }
+    }
+    
+    /* Subtle grid - Noir style */
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 60% 60% at 50% 30%, black 0%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 30%, black 0%, transparent 70%);
+    }
+    
+    /* Grain texture */
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0.02;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+    
+    /* Navigation - Arcium style */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1.5rem 4vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: transparent;
+      border-bottom: none;
+    }
+    
+    .nav-logo {
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-logo img {
+      /* No effects needed */
+      display: block;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    
+    .nav-links a {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 400;
+      transition: color 0.2s;
+    }
+    
+    .nav-links a:hover { color: var(--text-primary); }
+    
+    .nav-cta {
+      padding: 0.6rem 1.4rem;
+      background: var(--arcium-purple);
+      border-radius: 8px;
+      color: white !important;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .nav-cta:hover {
+      background: #5a35e0;
+      transform: translateY(-1px);
+    }
+    
+    /* Hero - Noir elegance */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between; /* Space between content and footer/infra */
+      align-items: center;
+      padding: 6rem 6vw 2rem; /* Adjusted padding */
+      max-width: 1400px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    .infrastructure-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding-bottom: 2vh;
+    }
+
+    .infrastructure-logos {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      flex-wrap: wrap;
+      align-items: center;
+      background: rgba(255,255,255,0.02);
+      padding: 1.5rem 3rem;
+      border-radius: 24px;
+      border: 1px solid var(--border-subtle);
+      backdrop-filter: blur(5px);
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .logo-float {
+      animation: float 6s ease-in-out infinite;
+      box-shadow: 0 0 40px rgba(108, 68, 252, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .logo-float:hover {
+      box-shadow: 0 0 60px rgba(108, 68, 252, 0.4);
+      transform: scale(1.05);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 2.5rem;
+      width: fit-content;
+    }
+    
+    .hero-eyebrow .dot {
+      width: 6px;
+      height: 6px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    
+    .hero-title {
+      font-size: clamp(3.5rem, 10vw, 7rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 1.5rem;
+    }
+    
+    .hero-title .gradient {
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 30%, var(--arcium-purple) 60%, var(--noir-pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero-subtitle {
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+      font-weight: 300;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin-bottom: 3rem;
+      line-height: 1.7;
+    }
+    
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 5rem;
+    }
+    
+    .btn-primary {
+      padding: 1rem 2rem;
+      background: var(--arcium-purple);
+      border-radius: 12px;
+      font-weight: 500;
+      color: white;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-primary:hover {
+      background: #5a35e0;
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -15px rgba(108, 68, 252, 0.4);
+    }
+    
+    .btn-secondary {
+      padding: 1rem 2rem;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-secondary:hover {
+      background: var(--bg-card);
+      border-color: rgba(255,255,255,0.15);
+    }
+    
+    /* Stats row */
+    .stats-row {
+      display: flex;
+      gap: 4rem;
+      flex-wrap: wrap;
+    }
+    
+    .stat {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -0.02em;
+    }
+    
+    .stat-value.live { color: #22c55e; }
+    
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 0.25rem;
+    }
+    
+    /* Flowing sections */
+    section {
+      padding: 4vh 6vw; /* Reduced from 6vh */
+      position: relative;
+    }
+
+    /* Separator */
+    .separator {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    /* Secret scroll reveal effect */
+    .reveal-text {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      filter: blur(10px);
+    }
+
+    .reveal-text.visible {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    /* Glitch effect on scroll */
+    .glitch-scroll {
+      position: relative;
+    }
+    
+    .glitch-scroll::before {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      color: var(--arcium-purple);
+      z-index: -1;
+      transition: opacity 0.2s;
+    }
+
+    .scrolling .glitch-scroll::before {
+      opacity: 0.5;
+      transform: translate(2px, 0);
+      filter: blur(1px);
+    }
+    
+    /* Floating tags */
+    .tag {
+      display: inline-block;
+      padding: 0.5em 1.2em;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 100px;
+      font-size: 0.85rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .tag:hover {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: rgba(139, 92, 246, 0.4);
+      transform: translateY(-2px);
+    }
+    
+    /* Flowing grid */
+    .flow-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+    }
+    
+    .flow-item {
+      flex: 1 1 280px;
+      max-width: 400px;
+      padding: 2rem;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .flow-item:hover {
+      transform: translateY(-8px);
+      border-color: rgba(139, 92, 246, 0.3);
+      box-shadow: 0 30px 60px -20px rgba(139, 92, 246, 0.2);
+    }
+    
+    /* Comparison */
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    @media (max-width: 768px) {
+      .compare { grid-template-columns: 1fr; gap: 2rem; }
+    }
+    
+    .compare-side {
+      padding: 2rem;
+      border-radius: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .compare-side::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 32px;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+    
+    .without { background: rgba(239, 68, 68, 0.05); }
+    .with { background: rgba(34, 197, 94, 0.05); }
+    
+    /* Code blocks */
+    .code-block {
+      background: rgba(0,0,0,0.4);
+      border-radius: 16px;
+      padding: 1.5rem;
+      overflow-x: auto;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .code-block code {
+      color: #a78bfa;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    
+    /* Sponsor orbs */
+    .sponsor-orb {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.4s ease;
+      position: relative;
+    }
+    
+    .sponsor-orb::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+      opacity: 0;
+      z-index: -1;
+      transition: opacity 0.4s ease;
+      filter: blur(20px);
+    }
+    
+    .sponsor-orb:hover {
+      transform: scale(1.1);
+      border-color: rgba(139, 92, 246, 0.5);
+    }
+    
+    .sponsor-orb:hover::after {
+      opacity: 0.5;
+    }
+    
+    /* Live indicator */
+    .live-pulse {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: livePulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes livePulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+      50% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); }
+    }
+    
+    /* Stats */
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #fff, #a78bfa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+    
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+    
+    /* Links */
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    
+    .link-glow {
+      position: relative;
+      padding: 1rem 2rem;
+      border-radius: 100px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .link-glow:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.5);
+    }
+    
+    .link-ghost {
+      padding: 1rem 2rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 100px;
+      transition: all 0.3s ease;
+    }
+    
+    .link-ghost:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.3);
+    }
+  </style>
+</head>
+<body>
+  <!-- Background layers - Arcium + Noir style -->
+  <div class="mesh-bg"></div>
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="grid-overlay"></div>
+  <div class="grain"></div>
+  <div id="particles" class="particles"></div>
+
+  <!-- Navigation - Arcium style -->
+  <nav>
+    <a href="/" class="nav-logo">
+      <img src="/public/CAP402logo.png" alt="CAP-402" style="height: 32px; width: auto;">
+    </a>
+    <div class="nav-links">
+      <a href="#capabilities">Capabilities</a>
+      <a href="#infrastructure">Infrastructure</a>
+      <a href="#start">Docs</a>
+      <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" rel="noopener noreferrer" class="nav-cta" style="display: flex; align-items: center; gap: 0.5rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+        GitHub
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="logo-float" style="margin-bottom: 2.5rem; width: 140px; height: 140px; border-radius: 50%; background: rgba(10, 10, 12, 0.5); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+        <img src="/public/CAP402logo.png" alt="CAP-402" style="width: 100%; height: 100%; object-fit: cover;">
+      </div>
+
+      <h1 class="hero-title glitch-scroll" data-text="CAP-402">
+        <span class="gradient">CAP-402</span>
+      </h1>
+      
+      <p class="hero-subtitle">
+        Private compute for autonomous agents.
+      </p>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem; font-weight: 500; letter-spacing: 0.02em;">
+        Agents call capabilities. Not APIs.
+      </p>
+      
+      <div class="hero-actions">
+        <a href="#start" class="btn-primary">Build</a>
+        <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" class="btn-secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+
+    <!-- Infrastructure - Moved into Hero for "Fold" positioning -->
+    <div id="infrastructure" class="infrastructure-container">
+      <div class="infrastructure-logos">
+        <a href="https://arcium.com" target="_blank" rel="noopener noreferrer" class="infra-card">
+          <img src="/public/arcium.svg" alt="Arcium" style="height: 32px; width: auto;">
+        </a>
+        <a href="https://noir-lang.org" target="_blank" rel="noopener noreferrer" class="infra-card">
+          <img src="/public/noir.png" alt="Noir" style="height: 32px; width: auto;">
+        </a>
+        <a href="https://inco.org" target="_blank" rel="noopener noreferrer" class="infra-card">
+          <img src="/public/inco.png" alt="Inco" style="height: 32px; width: auto;">
+        </a>
+        <a href="https://helius.dev" target="_blank" rel="noopener noreferrer" class="infra-card">
+          <img src="/public/helius.svg" alt="Helius" style="height: 32px; width: auto;">
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="separator"></div>
+
+  <!-- CAP-402 Manifesto -->
+  <section style="padding: 3vh 6vw; text-align: center;">
+    <div style="max-width: 400px; margin: 0 auto; opacity: 0.7;">
+      <p style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.75rem;">CAP-402 is</p>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
+        A semantic capability standard<br>
+        A privacy-first execution router<br>
+        A non-custodial economic signal layer
+      </p>
+    </div>
+  </section>
+
+  <div class="separator"></div>
+
+  <!-- Comparison -->
+  <section style="padding: 4vh 6vw;">
+    <p style="text-align: center; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 2rem;">Default Web vs CAP-402 Execution</p>
+    <div class="compare" style="max-width: 800px; margin: 0 auto;">
+      <div class="compare-side without">
+        <h3 class="scramble" style="color: white; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem; text-align: center;">THE EXPOSED WEB</h3>
+        <ul>
+          <li><strong style="color: #ef4444; text-transform: uppercase;" class="scramble">MEV Extraction</strong><br><span class="scramble">Bots front-run your agent's large trades, stealing value.</span></li>
+          <li><strong style="color: #ef4444; text-transform: uppercase;" class="scramble">Public Balances</strong><br><span class="scramble">Everyone sees your agent's war chest before negotiations start.</span></li>
+          <li><strong style="color: #ef4444; text-transform: uppercase;" class="scramble">Leaked Intent</strong><br><span class="scramble">Competitors analyze your on-chain calls to reverse-engineer strategy.</span></li>
+        </ul>
+      </div>
+      <div class="compare-side with">
+        <h3 class="scramble" style="color: white; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem; text-align: center;">THE PRIVATE WEB (CAP-402)</h3>
+        <ul>
+          <li><strong style="color: #22c55e; text-transform: uppercase;" class="scramble">Confidential Settlements</strong><br><span class="scramble">Trade execution via Arcium MPC. No signals for bots to prey on.</span></li>
+          <li><strong style="color: #22c55e; text-transform: uppercase;" class="scramble">Zero-Knowledge Attestations</strong><br><span class="scramble">Prove you have funds (Noir) without revealing the amount.</span></li>
+          <li><strong style="color: #22c55e; text-transform: uppercase;" class="scramble">Encrypted Messaging</strong><br><span class="scramble">Agent-to-agent channels (Inco FHE) for secret deal-making.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="separator"></div>
+
+  <!-- Capabilities -->
+  <section id="capabilities" style="padding: 6vh 6vw;">
+    <p style="text-align: center; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 2rem;">Capabilities</p>
+    <div class="cap-grid" style="max-width: 1100px; margin: 0 auto;">
+      <div class="cap-item">
+        <code class="mono scramble">swap</code>
+        <h3 class="scramble" style="font-size: 1rem; margin: 0.5rem 0; color: var(--arcium-purple); opacity: 0.8;">Confidential Trading</h3>
+        <span class="scramble" style="font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">Execute large orders via MPC without MEV leakage. Dark pool liquidity for autonomous agents.</span>
+      </div>
+      <div class="cap-item">
+        <code class="mono scramble">prove</code>
+        <h3 class="scramble" style="font-size: 1rem; margin: 0.5rem 0; color: var(--arcium-purple); opacity: 0.8;">Identity & Solvency</h3>
+        <span class="scramble" style="font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">Generate Noir ZK proofs for credit scores, balance checks, and reputation without doxxing.</span>
+      </div>
+      <div class="cap-item">
+        <code class="mono scramble">compute</code>
+        <h3 class="scramble" style="font-size: 1rem; margin: 0.5rem 0; color: var(--arcium-purple); opacity: 0.8;">Blind Calculation</h3>
+        <span class="scramble" style="font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">Run sensitive logic over encrypted data using Inco FHE. Private voting, sealed auctions, secret strategy.</span>
+      </div>
+      <div class="cap-item">
+        <code class="mono scramble">price</code>
+        <h3 class="scramble" style="font-size: 1rem; margin: 0.5rem 0; color: var(--arcium-purple); opacity: 0.8;">Verifiable Oracle</h3>
+        <span class="scramble" style="font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">Cryptographically signed market data from Helius & CMC. Trusted inputs for high-stakes decisions.</span>
+      </div>
+      <div class="cap-item">
+        <code class="mono scramble">message</code>
+        <h3 class="scramble" style="font-size: 1rem; margin: 0.5rem 0; color: var(--arcium-purple); opacity: 0.8;">Agent Comms</h3>
+        <span class="scramble" style="font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">End-to-end encrypted negotiation channels. Coordinate multi-agent swarms privately.</span>
+      </div>
+      <div class="cap-item">
+        <code class="mono scramble">compose</code>
+        <h3 class="scramble" style="font-size: 1rem; margin: 0.5rem 0; color: var(--arcium-purple); opacity: 0.8;">Atomic Workflows</h3>
+        <span class="scramble" style="font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">Chain multiple capabilities into a single transaction. Swap -> Bridge -> Yield, all or nothing.</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="separator"></div>
+
+  <!-- Start -->
+  <section id="start" style="padding: 4vh 6vw;">
+    <div class="code-block" style="max-width: 600px; margin: 0 auto;">
+      <code class="mono">curl cap402.com/invoke -d '{"capability_id":"cap.price.lookup.v1"}'</code>
+    </div>
+  </section>
+
+  <!-- Endpoints -->
+  <section style="padding: 4vh 6vw; text-align: center;">
+    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">One surface. Multiple execution paths.</p>
+    <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; max-width: 800px; margin: 0 auto;">
+      <span class="tag">/invoke</span>
+      <span class="tag">/compose</span>
+      <span class="tag">/discover</span>
+      <span class="tag">/capabilities</span>
+      <span class="tag">/health</span>
+      <span class="tag">/diagnostics</span>
+      <span class="tag">/health/providers</span>
+      <span class="tag">/router/stats</span>
+    </div>
+  </section>
+
+  <div class="separator"></div>
+
+  <!-- Who This Is For -->
+  <section style="padding: 3vh 6vw; text-align: center;">
+    <p style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1rem;">
+      For: <span style="color: var(--text-secondary);">Agent developers</span> · <span style="color: var(--text-secondary);">Protocol builders</span> · <span style="color: var(--text-secondary);">Privacy-first systems</span>
+    </p>
+    <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; max-width: 700px; margin: 0 auto;">
+      <span class="guarantee-item">No custody</span>
+      <span class="guarantee-item">Optional privacy</span>
+      <span class="guarantee-item">Optional settlement</span>
+      <span class="guarantee-item">Provider-agnostic</span>
+      <span class="guarantee-item">Versioned capabilities</span>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="padding: 4vh 6vw; border-top: 1px solid var(--border-subtle); text-align: center;">
+    <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem;">
+      <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" style="color: var(--text-muted); font-size: 0.85rem;">GitHub</a>
+      <a href="https://arcium.com" target="_blank" style="color: var(--text-muted); font-size: 0.85rem;">Arcium</a>
+      <a href="https://noir-lang.org" target="_blank" style="color: var(--text-muted); font-size: 0.85rem;">Noir</a>
+      <a href="https://inco.org" target="_blank" style="color: var(--text-muted); font-size: 0.85rem;">Inco</a>
+      <a href="https://helius.dev" target="_blank" style="color: var(--text-muted); font-size: 0.85rem;">Helius</a>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1rem;">
+      <span>Status: v1.0 — Production Ready</span>
+      <span>Tests: 306 passing</span>
+      <span>Endpoints: 75+</span>
+      <span>Network: Solana</span>
+      <span>License: MIT</span>
+    </div>
+    
+    <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; opacity: 0.5;">
+      <span style="font-size: 0.7rem; color: var(--text-muted);">Built by</span>
+      <a href="https://x.com/IntymLabs" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 0.3rem; text-decoration: none;">
+        <img src="/public/intymlogo.png" alt="Intym Labs" style="height: 14px; width: auto; opacity: 0.8;">
+        <span style="font-size: 0.7rem; color: var(--text-secondary);">Intym Labs</span>
+      </a>
+    </div>
+  </footer>
+
+  <!-- Additional styles -->
+  <style>
+    /* Infrastructure cards - minimal */
+    .infra-card {
+      opacity: 0.5;
+      transition: opacity 0.3s ease;
+    }
+    
+    .infra-card:hover {
+      opacity: 1;
+    }
+    
+    /* Comparison - minimal */
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    
+    .compare-side {
+      padding: 2rem;
+      border-radius: 16px;
+    }
+    
+    .compare-side h3 {
+       min-height: 1.5em; /* Prevent layout shift during scramble */
+    }
+
+    .compare-side ul {
+      list-style: none;
+      margin-top: 1rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 2;
+    }
+    
+    .compare-side li {
+       margin-bottom: 1rem;
+    }
+    
+    .compare-side strong {
+        display: inline-block; /* Required for scramble effect */
+    }
+    
+    .without { background: rgba(239, 68, 68, 0.05); }
+    .with { background: rgba(34, 197, 94, 0.05); }
+    
+    /* Capability grid - balanced */
+    .cap-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      .cap-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .cap-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .cap-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1.5rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    
+    .cap-item:hover {
+      border-color: var(--arcium-purple);
+    }
+    
+    .cap-item code {
+      color: white;
+      font-size: 0.9rem;
+    }
+    
+    .cap-item span {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+    
+    .cap-desc {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-style: italic;
+    }
+    
+    /* Guarantee items */
+    .guarantee-item {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    /* Tags */
+    .tag {
+      padding: 0.4rem 0.8rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    /* Capability icons */
+    .cap-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(108, 68, 252, 0.1);
+      border-radius: 12px;
+      margin-bottom: 1.25rem;
+      color: var(--icon-color, var(--arcium-purple));
+    }
+    
+    .flow-item h3 {
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    .flow-item p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    
+    .flow-item code {
+      display: inline-block;
+      padding: 0.4rem 0.8rem;
+      background: rgba(108, 68, 252, 0.1);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: var(--arcium-purple);
+    }
+    
+    /* Responsive nav */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .stats-row { gap: 2rem; }
+      
+      .infrastructure-logos {
+        display: inline-flex;
+        gap: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        flex-wrap: nowrap;
+        overflow-x: hidden;
+        justify-content: center;
+        width: auto;
+        max-width: 90vw;
+        margin: 0 auto;
+        border-radius: 100px;
+      }
+
+      .infrastructure-logos img {
+        height: 14px !important;
+        width: auto;
+      }
+    }
+  </style>
+
+  <script>
+    let scrollTimeout;
+    let scrollSpeed = 0;
+    let lastScrollY = window.scrollY;
+
+    window.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+      scrollSpeed = currentScrollY - lastScrollY;
+      lastScrollY = currentScrollY;
+      
+      const scrolled = window.scrollY;
+      
+      const scanLine = document.querySelector('.scan-line');
+      if (scanLine) {
+        scanLine.style.top = `${(scrolled % window.innerHeight)}px`;
+      }
+
+      document.body.classList.add('scrolling');
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        document.body.classList.remove('scrolling');
+        scrollSpeed = 0;
+      }, 100);
+
+      // Subtle Background Scroll Effect
+      const orbs = document.querySelectorAll('.glow-orb');
+      const rate = scrolled * 0.05;
+      orbs.forEach((orb, index) => {
+          const direction = index % 2 === 0 ? 1 : -1;
+          orb.style.transform = `translate(${direction * rate}px, ${-rate * 0.5}px)`;
+          // Subtle hue shift
+          orb.style.filter = `blur(80px) hue-rotate(${scrolled * 0.02}deg)`;
+      });
+      
+      const mesh = document.querySelector('.mesh-bg');
+      if (mesh) {
+        mesh.style.transform = `translateY(${scrolled * -0.1}px)`;
+      }
+    });
+
+    // Particle system
+    const canvas = document.createElement('canvas');
+    canvas.id = 'particle-canvas';
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '-1';
+    document.getElementById('particles').appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    const particles = [];
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 2;
+        this.alpha = Math.random() * 0.5;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy + (scrollSpeed * 0.05); // React to scroll
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0) this.y = height;
+        if (this.y > height) this.y = 0;
+      }
+      draw() {
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 120; i++) particles.push(new Particle());
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      // Decay scroll speed effect
+      scrollSpeed *= 0.9;
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Scramble Text Effect
+    class ScrambleText {
+      constructor(el) {
+        this.el = el;
+        this.chars = '!<>-_\\/[]{}—=+*^?#________';
+        this.originalText = el.innerText;
+        this.update = this.update.bind(this);
+      }
+      
+      setText(newText) {
+        const oldText = this.el.innerText;
+        const length = Math.max(oldText.length, newText.length);
+        const promise = new Promise((resolve) => this.resolve = resolve);
+        this.queue = [];
+        for (let i = 0; i < length; i++) {
+          const from = oldText[i] || '';
+          const to = newText[i] || '';
+          const start = Math.floor(Math.random() * 40);
+          const end = start + Math.floor(Math.random() * 40);
+          this.queue.push({ from, to, start, end });
+        }
+        cancelAnimationFrame(this.frameRequest);
+        this.frame = 0;
+        this.update();
+        return promise;
+      }
+      
+      update() {
+        let output = '';
+        let complete = 0;
+        for (let i = 0, n = this.queue.length; i < n; i++) {
+          let { from, to, start, end, char } = this.queue[i];
+          if (this.frame >= end) {
+            complete++;
+            output += to;
+          } else if (this.frame >= start) {
+            if (!char || Math.random() < 0.28) {
+              char = this.randomChar();
+              this.queue[i].char = char;
+            }
+            output += `<span class="dud" style="color: var(--arcium-purple); opacity: 0.5;">${char}</span>`;
+          } else {
+            output += from;
+          }
+        }
+        this.el.innerHTML = output;
+        if (complete === this.queue.length) {
+          this.resolve();
+        } else {
+          this.frameRequest = requestAnimationFrame(this.update);
+          this.frame++;
+        }
+      }
+      
+      randomChar() {
+        return this.chars[Math.floor(Math.random() * this.chars.length)];
+      }
+    }
+
+    // Initialize Scramble on view
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          if (!el.dataset.scrambled) {
+            const scrambler = new ScrambleText(el);
+            scrambler.setText(el.innerText);
+            el.dataset.scrambled = 'true';
+          }
+        }
+      });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.scramble').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

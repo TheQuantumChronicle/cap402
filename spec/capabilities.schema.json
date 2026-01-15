@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent Capability Specification",
+  "description": "Formal schema for semantic capability routing in agent-to-agent infrastructure",
+  "type": "object",
+  "required": ["id", "name", "description", "inputs", "outputs", "execution", "economics", "performance", "version"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable, unique identifier for the capability (e.g., 'cap.price.lookup.v1')",
+      "pattern": "^cap\\.[a-z0-9_\\.]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable capability name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Clear description of what this capability does"
+    },
+    "inputs": {
+      "type": "object",
+      "description": "Typed input schema",
+      "properties": {
+        "schema": {
+          "type": "object",
+          "description": "JSON Schema for inputs"
+        },
+        "required": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["schema"]
+    },
+    "outputs": {
+      "type": "object",
+      "description": "Typed output schema",
+      "properties": {
+        "schema": {
+          "type": "object",
+          "description": "JSON Schema for outputs"
+        }
+      },
+      "required": ["schema"]
+    },
+    "execution": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["public", "confidential"],
+          "description": "Execution privacy mode"
+        },
+        "proof_type": {
+          "type": ["string", "null"],
+          "enum": ["arcium", "zk", null],
+          "description": "Type of cryptographic proof generated (if any)"
+        },
+        "executor_hint": {
+          "type": "string",
+          "description": "Suggested executor implementation"
+        }
+      }
+    },
+    "economics": {
+      "type": "object",
+      "required": ["cost_hint", "currency"],
+      "properties": {
+        "cost_hint": {
+          "type": "number",
+          "description": "Suggested cost in base units",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency identifier (e.g., 'SOL', 'USDC', 'credits')"
+        },
+        "x402_payment_signal": {
+          "type": "object",
+          "description": "X.402-style payment hint metadata",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "settlement_optional": { "type": "boolean" },
+            "payment_methods": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "privacy_cash_compatible": {
+          "type": "boolean",
+          "description": "Whether this capability supports privacy-preserving payments"
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "required": ["latency_hint", "reliability_hint"],
+      "properties": {
+        "latency_hint": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Expected latency category"
+        },
+        "reliability_hint": {
+          "type": "number",
+          "description": "Expected reliability (0.0 - 1.0)",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "throughput_limit": {
+          "type": "number",
+          "description": "Requests per second limit (if applicable)"
+        }
+      }
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of this capability"
+    },
+    "deprecated": {
+      "type": "boolean",
+      "description": "Whether this capability is deprecated"
+    },
+    "composable": {
+      "type": "boolean",
+      "description": "Whether outputs can be piped to other capabilities"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for routing and discovery",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "provider_hints": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

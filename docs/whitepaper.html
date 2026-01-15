@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAP-402 Whitepaper</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.3.0/github-markdown.min.css">
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-dark: #764ba2;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f6f8fa;
+    }
+    .topbar {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      padding: 20px 40px;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .topbar-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .topbar h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .topbar a {
+      color: white;
+      text-decoration: none;
+    }
+    .nav-links a {
+      margin-left: 20px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 4px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .nav-links a:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .markdown-body {
+      background: white;
+      padding: 60px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .markdown-body h1 {
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 15px;
+    }
+    .markdown-body h2 {
+      margin-top: 40px;
+      color: var(--primary-dark);
+    }
+    .markdown-body table {
+      width: 100%;
+    }
+    .markdown-body th {
+      background: #f6f8fa;
+    }
+    .markdown-body code {
+      background: #f6f8fa;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .markdown-body pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    .markdown-body pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+    .toc {
+      background: #f6f8fa;
+      padding: 20px 30px;
+      border-radius: 6px;
+      margin: 30px 0;
+    }
+    .toc h3 {
+      margin-top: 0;
+      color: var(--primary-dark);
+    }
+    .toc ul {
+      columns: 2;
+      column-gap: 40px;
+    }
+    .toc li {
+      margin: 8px 0;
+    }
+    .toc a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .toc a:hover {
+      text-decoration: underline;
+    }
+    .download-btn {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+    .download-btn:hover {
+      background: var(--primary-dark);
+    }
+    @media (max-width: 768px) {
+      .markdown-body {
+        padding: 30px 20px;
+      }
+      .topbar-content {
+        flex-direction: column;
+        text-align: center;
+      }
+      .nav-links {
+        margin-top: 15px;
+      }
+      .toc ul {
+        columns: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-content">
+      <h1>🔮 CAP-402 Whitepaper</h1>
+      <div class="nav-links">
+        <a href="https://cap402.com">Home</a>
+        <a href="api-docs.html">API Docs</a>
+        <a href="https://github.com/cap402">GitHub</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="container">
+    <article class="markdown-body">
+      <h1>CAP-402: Agent Infrastructure Standard</h1>
+      <h2>A Protocol for Semantic Capability Routing Between Autonomous Agents</h2>
+      
+      <p><strong>Version 1.0</strong> | January 2026</p>
+      <p>🌐 <strong>Website</strong>: <a href="https://cap402.com">cap402.com</a></p>
+      
+      <a href="WHITEPAPER.md" download class="download-btn">📄 Download PDF</a>
+      
+      <hr>
+      
+      <h2>Abstract</h2>
+      <p>As autonomous AI agents proliferate across industries, a critical infrastructure gap has emerged: there is no standard protocol for agents to discover, negotiate, and execute capabilities from other agents or services. CAP-402 addresses this gap by introducing a semantic capability routing protocol that provides privacy-aware, economically-signaled execution with verifiable receipts.</p>
+      <p>This whitepaper presents the CAP-402 protocol specification, its architecture, security model, and economic framework. We demonstrate how CAP-402 enables a new paradigm where <strong>agents do not call APIs directly—agents call capabilities</strong>.</p>
+      
+      <hr>
+      
+      <div class="toc">
+        <h3>📑 Table of Contents</h3>
+        <ul>
+          <li><a href="#introduction">1. Introduction</a></li>
+          <li><a href="#problem">2. Problem Statement</a></li>
+          <li><a href="#overview">3. Protocol Overview</a></li>
+          <li><a href="#architecture">4. Architecture</a></li>
+          <li><a href="#schema">5. Capability Schema</a></li>
+          <li><a href="#privacy">6. Privacy Gradient</a></li>
+          <li><a href="#economics">7. Economic Model</a></li>
+          <li><a href="#security">8. Security Framework</a></li>
+          <li><a href="#advanced">9. Advanced Features</a></li>
+          <li><a href="#implementation">10. Implementation</a></li>
+          <li><a href="#usecases">11. Use Cases</a></li>
+          <li><a href="#roadmap">12. Roadmap</a></li>
+        </ul>
+      </div>
+      
+      <h2 id="introduction">1. Introduction</h2>
+      <p>The emergence of autonomous AI agents represents a fundamental shift in how software systems interact. Unlike traditional APIs designed for human developers, agent-to-agent communication requires:</p>
+      <ul>
+        <li><strong>Semantic understanding</strong>: Agents need to discover capabilities by intent, not by endpoint</li>
+        <li><strong>Privacy preservation</strong>: Sensitive operations must be executable without exposing data</li>
+        <li><strong>Economic coordination</strong>: Agents must negotiate costs and value exchange</li>
+        <li><strong>Verifiability</strong>: Execution results must be provable and auditable</li>
+        <li><strong>Composability</strong>: Complex workflows must be expressible as capability chains</li>
+      </ul>
+      
+      <h3>1.1 Design Principles</h3>
+      <ol>
+        <li><strong>Capabilities over APIs</strong>: Abstract what can be done, not how it's implemented</li>
+        <li><strong>Privacy by default</strong>: Support confidential execution as a first-class feature</li>
+        <li><strong>Economic signaling</strong>: Enable value exchange without custody</li>
+        <li><strong>Verifiable execution</strong>: Every invocation produces a cryptographic receipt</li>
+        <li><strong>Progressive decentralization</strong>: Start centralized, evolve to fully decentralized</li>
+      </ol>
+      
+      <h2 id="problem">2. Problem Statement</h2>
+      <h3>2.1 The Current Landscape</h3>
+      <table>
+        <thead>
+          <tr><th>Problem</th><th>Impact</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>No discovery standard</strong></td><td>Agents must hard-code API endpoints</td></tr>
+          <tr><td><strong>No privacy layer</strong></td><td>All operations are visible, enabling front-running</td></tr>
+          <tr><td><strong>No economic coordination</strong></td><td>Ad-hoc pricing, no micropayments</td></tr>
+          <tr><td><strong>No trust framework</strong></td><td>No way to verify agent capabilities</td></tr>
+          <tr><td><strong>No composability</strong></td><td>Each integration built from scratch</td></tr>
+        </tbody>
+      </table>
+      
+      <h2 id="overview">3. Protocol Overview</h2>
+      <h3>3.1 Core Concepts</h3>
+      <p><strong>Capability</strong>: A versioned, semantic contract defining what can be done, its interface, execution mode, and economics.</p>
+      <p><strong>Invocation</strong>: A request to execute a capability with specific inputs, returning outputs, receipt, and economic hints.</p>
+      <p><strong>Composition</strong>: Chaining multiple capabilities into a single workflow with automatic data flow.</p>
+      
+      <h3>3.2 Protocol Flow</h3>
+      <pre><code>1. Discovery    Agent queries: "I need to swap tokens privately"
+                Router returns: [cap.confidential.swap.v1, cap.cspl.wrap.v1, ...]
+
+2. Negotiation  Agent requests options for cap.confidential.swap.v1
+                Router returns: [{privacy: 2, cost: 0.01}, {privacy: 3, cost: 0.05}]
+
+3. Invocation   Agent invokes with selected option
+                Router executes via appropriate executor
+
+4. Receipt      Agent receives cryptographic receipt
+                Receipt can be verified without re-execution
+
+5. Settlement   Economic hints enable payment (X.402 or on-chain)</code></pre>
+      
+      <h2 id="architecture">4. Architecture</h2>
+      
+      <h2 id="crypto">5. Cryptographic Foundation</h2>
+      <p>CAP-402's privacy guarantees are built on three complementary cryptographic systems.</p>
+      
+      <div style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); padding: 25px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
+        <h3 style="margin-top: 0; color: #667eea;">The One-Sentence Mental Model</h3>
+        <p style="font-size: 18px; font-weight: 500; margin-bottom: 0;"><em>Noir proves things privately, Arcium decides things privately, Inco stores and executes things privately.</em></p>
+      </div>
+      
+      <h3>5.1 Noir — Zero-Knowledge Proof Generation</h3>
+      <p><strong>What It Is</strong>: Noir is a domain-specific programming language designed for writing zero-knowledge programs—code that can prove something is true without revealing the underlying data.</p>
+      
+      <p><strong>Technical Foundation</strong>:</p>
+      <ul>
+        <li>Rust-inspired syntax optimized for ZK circuit development</li>
+        <li>Compiles to ACIR (Abstract Circuit Intermediate Representation)</li>
+        <li>Backend-agnostic: supports PLONK, Groth16, and other proving systems</li>
+        <li>Developer-friendly abstractions over complex cryptographic primitives</li>
+      </ul>
+      
+      <p><strong>Role in CAP-402</strong>: Noir answers the question: <em>"Can you prove you're allowed to do this?"</em></p>
+      
+      <pre><code>User generates ZK proof that:
+  → They own a specific credential
+  → Their balance exceeds a threshold
+  → Their identity satisfies a condition
+  
+Result: Verifier learns ONLY that the condition is satisfied
+        No wallet balances, identities, or secrets exposed</code></pre>
+      
+      <p><strong>Why It Matters</strong>: Traditional verification requires exposing data. Noir enables verification without disclosure—essential for compliance, creditworthiness checks, and identity verification in agent workflows.</p>
+      
+      <h3>5.2 Arcium — Confidential Computation</h3>
+      <p><strong>What It Is</strong>: Arcium provides encrypted compute on-chain. Unlike traditional blockchains where data and computation are public, Arcium enables computation on encrypted data while keeping inputs private and producing verifiable results.</p>
+      
+      <p><strong>Technical Foundation</strong>:</p>
+      <ul>
+        <li>Multi-Party Computation (MPC) across distributed nodes</li>
+        <li>Confidential Programs (CPs) execute in encrypted environments</li>
+        <li>No single node ever sees raw data</li>
+        <li>Cryptographic proofs of correct execution</li>
+      </ul>
+      
+      <p><strong>Mental Model</strong>:</p>
+      <pre><code>User → encrypts data
+         ↓
+Arcium network → computes on encrypted data
+         ↓
+Result → decrypted only by authorized party
+         ↓
+Blockchain → verifies computation happened correctly</code></pre>
+      
+      <p><strong>Role in CAP-402</strong>: Arcium answers the question: <em>"Given everything we know privately, should this be allowed?"</em></p>
+      
+      <p><strong>What Arcium Protects</strong>:</p>
+      <ul>
+        <li>Authorization rules and logic</li>
+        <li>Risk checks and thresholds</li>
+        <li>Strategy conditions</li>
+        <li>AI/scoring logic</li>
+        <li>User behavior signals</li>
+      </ul>
+      
+      <p><strong>Important Clarification</strong>: Arcium is NOT a privacy coin, mixer, or simple ZK system. It's distributed MPC with cryptographic guarantees and blockchain verifiability.</p>
+      
+      <h3>5.3 Inco — Confidential On-Chain State</h3>
+      <p><strong>What It Is</strong>: Inco is the confidentiality layer for Web3—infrastructure that enables private smart contracts and encrypted on-chain state without sacrificing composability.</p>
+      
+      <p><strong>Technical Foundation</strong>:</p>
+      <ul>
+        <li><strong>Inco Lightning</strong>: Fast privacy via Trusted Execution Environments (TEEs)</li>
+        <li><strong>Inco Atlas</strong> (upcoming): Fully Homomorphic Encryption (FHE) + MPC</li>
+        <li>Solidity-compatible development</li>
+        <li>Selective access control for compliance</li>
+      </ul>
+      
+      <p><strong>Role in CAP-402</strong>: Inco answers the question: <em>"Where do we safely store and execute this without leaking it on-chain?"</em></p>
+      
+      <p><strong>What Inco Enables</strong>:</p>
+      <ul>
+        <li>Confidential token balances (ERC-20 with hidden amounts)</li>
+        <li>Private DeFi positions (lending, AMMs, dark pools)</li>
+        <li>Hidden game logic (card hands, random outcomes)</li>
+        <li>Selective disclosure (auditors see data, public doesn't)</li>
+      </ul>
+      
+      <h3>5.4 The Unified Privacy Architecture</h3>
+      <table>
+        <thead>
+          <tr><th>Technology</th><th>What Happens If Removed</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Noir</strong></td><td>Cannot generate portable proofs; users must expose data to prove conditions</td></tr>
+          <tr><td><strong>Arcium</strong></td><td>Decision logic becomes public; strategies can be copied or gamed</td></tr>
+          <tr><td><strong>Inco</strong></td><td>On-chain state leaks; execution results expose private information</td></tr>
+        </tbody>
+      </table>
+      
+      <p><strong>The Complete Flow</strong>:</p>
+      <pre><code>User / Agent
+     │
+     │ 1️⃣ Proves something privately (identity, limits, ownership)
+     ↓
+Noir ZK Proof
+     │
+     │ 2️⃣ Proof + encrypted context sent to private decision logic
+     ↓
+Arcium Confidential Program
+     │
+     │ 3️⃣ Decision + state update in confidential execution layer
+     ↓
+Inco Confidential Contract
+     │
+     │ 4️⃣ Minimal result exposed on-chain
+     ↓
+Transaction Executes (or fails)</code></pre>
+      
+      <p><strong>CAP-402's Differentiator</strong>: Most applications choose one privacy technology. CAP-402 combines proof-based authorization, private decision engines, and confidential execution into one unified intent standard. This is rare positioning in the market.</p>
+      <h3>4.1 Layer Model</h3>
+      <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Application Layer                         │
+│              (Agents, SDKs, Integrations)                   │
+├─────────────────────────────────────────────────────────────┤
+│                    Protocol Layer                            │
+│     (Capability Schema, Routing, Composition, Receipts)     │
+├─────────────────────────────────────────────────────────────┤
+│                    Execution Layer                           │
+│        (Public Executor, Confidential Executor)             │
+├─────────────────────────────────────────────────────────────┤
+│                    Security Layer                            │
+│   (Tokens, Trust Network, Handshake, Semantic Encryption)   │
+├─────────────────────────────────────────────────────────────┤
+│                    Economic Layer                            │
+│           (X.402 Hints, Privacy Cash, Pricing)              │
+├─────────────────────────────────────────────────────────────┤
+│                    Settlement Layer                          │
+│              (Solana, Future: Multi-chain)                  │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+      
+      <h2 id="privacy">6. Privacy Gradient</h2>
+      <h3>6.1 Privacy Levels</h3>
+      <table>
+        <thead>
+          <tr><th>Level</th><th>Name</th><th>Description</th><th>Cost</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>Public</td><td>Standard execution, visible results</td><td>1.0x</td></tr>
+          <tr><td>1</td><td>Obscured</td><td>Basic obfuscation, limited visibility</td><td>1.1x</td></tr>
+          <tr><td>2</td><td>Encrypted</td><td>Strong encryption, authorized access only</td><td>1.5x</td></tr>
+          <tr><td>3</td><td>ZK Verifiable</td><td>Zero-knowledge proofs, maximum privacy</td><td>2.0x</td></tr>
+        </tbody>
+      </table>
+      
+      <h2 id="economics">7. Economic Model</h2>
+      <h3>7.1 Trust-Based Pricing</h3>
+      <table>
+        <thead>
+          <tr><th>Trust Level</th><th>Rate Limit</th><th>Discount</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Anonymous</td><td>10 req/min</td><td>0%</td></tr>
+          <tr><td>Verified</td><td>50 req/min</td><td>10%</td></tr>
+          <tr><td>Trusted</td><td>200 req/min</td><td>20%</td></tr>
+          <tr><td>Premium</td><td>1000 req/min</td><td>50%</td></tr>
+        </tbody>
+      </table>
+      
+      <h2 id="security">8. Security Framework</h2>
+      <h3>8.1 Multi-Layer Security</h3>
+      <ul>
+        <li><strong>Layer 1</strong>: API Key Authentication</li>
+        <li><strong>Layer 2</strong>: Capability Tokens (fine-grained access)</li>
+        <li><strong>Layer 3</strong>: Handshake Protocol (multi-step auth)</li>
+        <li><strong>Layer 4</strong>: Semantic Encryption (payload-level)</li>
+      </ul>
+      
+      <h2 id="usecases">11. Use Cases</h2>
+      <h3>Private DeFi Trading</h3>
+      <p><strong>Problem</strong>: MEV bots front-run large swaps, extracting $500+ per trade.</p>
+      <p><strong>Solution</strong>: Wrap tokens to confidential, execute private swap. Zero MEV extraction.</p>
+      
+      <h3>Proof of Wealth Without Disclosure</h3>
+      <p><strong>Problem</strong>: Proving creditworthiness exposes entire portfolio.</p>
+      <p><strong>Solution</strong>: ZK proof that balance > $10K, without revealing actual amount.</p>
+      
+      <h2 id="roadmap">12. Roadmap</h2>
+      <table>
+        <thead>
+          <tr><th>Phase</th><th>Timeline</th><th>Milestones</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Foundation</td><td>✅ Complete</td><td>Protocol spec, reference router, 15+ capabilities</td></tr>
+          <tr><td>Expansion</td><td>Q1 2026</td><td>Multi-language SDKs, 50+ capabilities, mainnet</td></tr>
+          <tr><td>Decentralization</td><td>Q2 2026</td><td>Distributed routers, on-chain registry, governance</td></tr>
+          <tr><td>Ecosystem</td><td>Q3 2026</td><td>Capability marketplace, certification program</td></tr>
+        </tbody>
+      </table>
+      
+      <hr>
+      
+      <h2>Contact</h2>
+      <ul>
+        <li><strong>Website</strong>: <a href="https://cap402.com">cap402.com</a></li>
+        <li><strong>GitHub</strong>: <a href="https://github.com/cap402">github.com/cap402</a></li>
+        <li><strong>Email</strong>: cap402@proton.me</li>
+      </ul>
+      
+      <hr>
+      
+      <p style="text-align: center; font-style: italic; margin-top: 40px;">
+        <strong>CAP-402 | Agent Infrastructure Standard | v1.0.0</strong><br>
+        "Agents don't call APIs. Agents call capabilities."
+      </p>
+    </article>
+  </div>
+</body>
+</html>

@@ -1,0 +1,73 @@
+{
+  "name": "cap-402",
+  "version": "0.1.0",
+  "description": "Agent Infrastructure Standard - Semantic capability routing for autonomous agents with privacy-first design",
+  "main": "router/server.ts",
+  "scripts": {
+    "start": "ts-node router/server.ts",
+    "dev": "nodemon --exec ts-node router/server.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:api": "jest tests/api.test.ts",
+    "test:security": "jest tests/security.test.ts",
+    "test:scenarios": "jest tests/agent-scenarios.test.ts",
+    "test:sponsors": "jest tests/sponsors.test.ts",
+    "test:edge": "jest tests/edge-cases.test.ts",
+    "test:composition": "jest tests/composition.test.ts",
+    "test:integration": "jest tests/integration-flow.test.ts",
+    "test:all": "jest tests/",
+    "test:integrations": "ts-node test-real-integrations.ts",
+    "demo": "ts-node demo.ts",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"**/*.ts\"",
+    "health": "curl -s http://localhost:3001/health | jq",
+    "capabilities": "curl -s http://localhost:3001/capabilities | jq '.capabilities[].id'"
+  },
+  "keywords": [
+    "agent",
+    "infrastructure",
+    "blockchain",
+    "privacy",
+    "capability-routing",
+    "arcium",
+    "solana"
+  ],
+  "author": "CAP-402 Team",
+  "license": "MIT",
+  "dependencies": {
+    "@arcium-hq/client": "^0.1.47",
+    "@arcium-hq/reader": "^0.1.47",
+    "@coral-xyz/anchor": "^0.31.1",
+    "@fhevm/sdk": "^0.7.0-20",
+    "@noir-lang/backend_barretenberg": "^0.36.0",
+    "@noir-lang/noir_js": "^1.0.0-beta.18",
+    "@solana/web3.js": "^1.87.6",
+    "@types/compression": "^1.8.1",
+    "axios": "^1.6.0",
+    "bs58": "^5.0.0",
+    "compression": "^1.8.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "helmet": "^8.1.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.10.0",
+    "@types/supertest": "^6.0.3",
+    "@types/ws": "^8.5.10",
+    "jest": "^30.2.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

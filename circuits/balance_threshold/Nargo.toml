@@ -1,0 +1,7 @@
+[package]
+name = "balance_threshold"
+type = "bin"
+authors = ["CAP-402"]
+compiler_version = ">=0.30.0"
+
+[dependencies]
