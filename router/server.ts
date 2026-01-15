@@ -913,6 +913,68 @@ app.get('/diagnostics', async (req: Request, res: Response) => {
   }
 });
 
+// Real-time system dashboard - everything at a glance
+app.get('/system/dashboard', async (req: Request, res: Response) => {
+  try {
+    const { metricsCollector } = require('./metrics');
+    const { agentRegistry } = require('./agent-registry');
+    const { sponsorStatusManager } = await import('./sponsor-status');
+    const { getRequestMetrics } = require('./middleware/request-context');
+    
+    const systemMetrics = metricsCollector.getSystemMetrics();
+    const agentStats = agentRegistry.getStats();
+    const requestMetrics = getRequestMetrics();
+    const sponsorReport = await sponsorStatusManager.getFullReport();
+    
+    // Calculate uptime
+    const uptimeSeconds = Math.floor(systemMetrics.uptime_ms / 1000);
+    const uptimeFormatted = uptimeSeconds > 3600 
+      ? `${Math.floor(uptimeSeconds / 3600)}h ${Math.floor((uptimeSeconds % 3600) / 60)}m`
+      : uptimeSeconds > 60 
+        ? `${Math.floor(uptimeSeconds / 60)}m ${uptimeSeconds % 60}s`
+        : `${uptimeSeconds}s`;
+    
+    res.json({
+      success: true,
+      dashboard: {
+        status: sponsorReport.overall_status === 'healthy' ? '🟢 All Systems Operational' : '🟡 Degraded',
+        uptime: uptimeFormatted,
+        version: '1.0.0'
+      },
+      capabilities: {
+        total: registry.getAllCapabilities().length,
+        public: registry.getAllCapabilities().filter((c: any) => c.execution.mode === 'public').length,
+        confidential: registry.getAllCapabilities().filter((c: any) => c.execution.mode === 'confidential').length,
+        privacy_ratio: Math.round((registry.getAllCapabilities().filter((c: any) => c.execution.mode === 'confidential').length / registry.getAllCapabilities().length) * 100) + '%'
+      },
+      sponsors: {
+        status: sponsorReport.overall_status,
+        arcium: sponsorReport.sponsors.find(s => s.sponsor === 'Arcium')?.status || 'unknown',
+        noir: sponsorReport.sponsors.find(s => s.sponsor === 'Aztec/Noir')?.status || 'unknown',
+        helius: sponsorReport.sponsors.find(s => s.sponsor === 'Helius')?.status || 'unknown',
+        inco: sponsorReport.sponsors.find(s => s.sponsor === 'Inco')?.status || 'unknown'
+      },
+      agents: {
+        registered: agentStats.total || 0,
+        active_24h: agentStats.active_24h || 0
+      },
+      traffic: {
+        total_requests: requestMetrics.total || 0,
+        success_rate: requestMetrics.total > 0 
+          ? Math.round((requestMetrics.success / requestMetrics.total) * 100) + '%'
+          : '100%',
+        avg_latency_ms: Math.round(requestMetrics.avgLatencyMs || 0)
+      },
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Dashboard failed'
+    });
+  }
+});
+
 // System overview - comprehensive status of all components
 app.get('/system/overview', async (req: Request, res: Response) => {
   try {
