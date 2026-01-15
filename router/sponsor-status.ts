@@ -85,6 +85,10 @@ class SponsorStatusManager {
           'Hidden transfer amounts',
           'MPC-powered computation',
           'Confidential DeFi operations',
+          'Private auctions with encrypted bids',
+          'Confidential voting systems',
+          'Private order books',
+          'Confidential credit scoring',
           'Programmable compliance'
         ],
         last_check: Date.now()
@@ -197,15 +201,15 @@ class SponsorStatusManager {
         features: [
           'Fully Homomorphic Encryption (FHE)',
           'Encrypted computation',
-          'Homomorphic addition (fheAdd)',
-          'Homomorphic subtraction (fheSub)',
-          'Homomorphic multiplication (fheMul)',
-          'Homomorphic comparison (fheLt)',
-          'Conditional select (fheSelect)',
+          'Homomorphic operations (add, sub, mul, lt, select)',
+          'Private random number generation',
+          'Encrypted threshold checks',
+          'Balance aggregation on encrypted values',
+          'Time-locked encryption',
           'Confidential messaging',
           'Encrypted state management',
-          'Private auctions',
-          'Confidential voting'
+          'Private auctions with hidden bids',
+          'Confidential voting with hidden choices'
         ],
         last_check: Date.now()
       };
