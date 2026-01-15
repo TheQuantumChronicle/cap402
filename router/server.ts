@@ -137,12 +137,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Serve frontend at root
 app.get('/', (req: Request, res: Response) => {
-  // When running compiled JS, __dirname is dist/router, so go up 2 levels
-  // When running with ts-node, __dirname is router, so go up 1 level
-  const isCompiled = __dirname.includes('dist');
-  const frontendPath = isCompiled 
-    ? path.join(__dirname, '..', '..', 'frontend', 'index.html')
-    : path.join(__dirname, '..', 'frontend', 'index.html');
+  // Determine project root based on environment
+  // In Railway: /app, locally with ts-node: project root, locally compiled: dist parent
+  let projectRoot: string;
+  if (process.env.RAILWAY_ENVIRONMENT) {
+    projectRoot = '/app';
+  } else if (__dirname.includes('dist')) {
+    projectRoot = path.join(__dirname, '..', '..');
+  } else {
+    projectRoot = path.join(__dirname, '..');
+  }
+  const frontendPath = path.join(projectRoot, 'frontend', 'index.html');
   res.sendFile(frontendPath);
 });
 
