@@ -67,8 +67,8 @@ export interface SwapResult {
 }
 
 class SwapProvider {
-  // Jupiter API endpoints - use env var or default to v6
-  private jupiterBaseUrl = process.env.JUPITER_API_URL || 'https://quote-api.jup.ag/v6';
+  // Jupiter Lite API - free public endpoint (no API key required)
+  private jupiterBaseUrl = process.env.JUPITER_API_URL || 'https://lite-api.jup.ag/swap/v1';
   private jupiterQuoteUrl = `${this.jupiterBaseUrl}/quote`;
   private jupiterSwapUrl = `${this.jupiterBaseUrl}/swap`;
   private jupiterPriceUrl = 'https://price.jup.ag/v6/price';
