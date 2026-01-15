@@ -137,17 +137,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Serve frontend at root
 app.get('/', (req: Request, res: Response) => {
-  // Determine project root based on environment
-  // In Railway: /app, locally with ts-node: project root, locally compiled: dist parent
-  let projectRoot: string;
-  if (process.env.RAILWAY_ENVIRONMENT) {
-    projectRoot = '/app';
-  } else if (__dirname.includes('dist')) {
-    projectRoot = path.join(__dirname, '..', '..');
-  } else {
-    projectRoot = path.join(__dirname, '..');
-  }
-  const frontendPath = path.join(projectRoot, 'frontend', 'index.html');
+  // Use process.cwd() which is always the project root in both local and Railway
+  const frontendPath = path.join(process.cwd(), 'frontend', 'index.html');
   res.sendFile(frontendPath);
 });
 
