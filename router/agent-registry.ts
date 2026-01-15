@@ -173,6 +173,13 @@ class AgentRegistry {
   }
 
   /**
+   * Get all registered agents
+   */
+  getAllAgents(): RegisteredAgent[] {
+    return Array.from(this.agents.values());
+  }
+
+  /**
    * Discover agents by capability or criteria
    */
   discoverAgents(query: AgentDiscoveryQuery): RegisteredAgent[] {

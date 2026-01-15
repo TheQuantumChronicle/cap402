@@ -2873,6 +2873,318 @@ app.get('/agents/stats/overview', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// KILLER FEATURES: Agent-to-Agent Protocol
+// ============================================
+
+// Agent-to-Agent Direct Invocation (A2A Protocol)
+app.post('/a2a/invoke', async (req: Request, res: Response) => {
+  try {
+    const { from_agent, to_agent, capability_id, inputs, payment, privacy_level } = req.body;
+    const { agentRegistry } = await import('./agent-registry');
+    const { agentCoordinator } = await import('./agent-coordination');
+
+    if (!from_agent || !to_agent || !capability_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'from_agent, to_agent, and capability_id required'
+      });
+    }
+
+    // Verify both agents exist
+    const sourceAgent = agentRegistry.getAgent(from_agent);
+    const targetAgent = agentRegistry.getAgent(to_agent);
+
+    if (!sourceAgent) {
+      return res.status(404).json({ success: false, error: `Source agent ${from_agent} not found` });
+    }
+    if (!targetAgent) {
+      return res.status(404).json({ success: false, error: `Target agent ${to_agent} not found` });
+    }
+
+    // Check if target agent provides the capability
+    const providesCapability = targetAgent.capabilities_provided?.includes(capability_id);
+
+    // Execute the invocation
+    const startTime = Date.now();
+    const result = await router.invoke({
+      capability_id,
+      inputs: inputs || {}
+    });
+
+    const execTime = Date.now() - startTime;
+
+    // Record the interaction
+    agentRegistry.recordInvocation(from_agent, result.success, execTime);
+    if (providesCapability) {
+      agentRegistry.recordInvocation(to_agent, result.success, execTime);
+    }
+
+    res.json({
+      success: result.success,
+      a2a_protocol: {
+        from: from_agent,
+        to: to_agent,
+        capability: capability_id,
+        privacy_level: privacy_level || 'public',
+        execution_time_ms: execTime
+      },
+      outputs: result.outputs,
+      metadata: result.metadata
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'A2A invocation failed'
+    });
+  }
+});
+
+// Agent Service Discovery - Find agents that can do X
+app.get('/a2a/discover/:capability_id', async (req: Request, res: Response) => {
+  try {
+    const { capability_id } = req.params;
+    const { min_trust, max_latency, privacy_required } = req.query;
+    const { agentRegistry } = await import('./agent-registry');
+
+    const allAgents = agentRegistry.getAllAgents();
+    
+    // Filter agents that provide this capability
+    let matchingAgents = allAgents.filter(agent => 
+      agent.capabilities_provided?.includes(capability_id)
+    );
+
+    // Apply filters
+    if (min_trust) {
+      matchingAgents = matchingAgents.filter(a => a.trust_score >= Number(min_trust));
+    }
+    if (max_latency) {
+      matchingAgents = matchingAgents.filter(a => 
+        (a.reputation?.average_response_time_ms || 0) <= Number(max_latency)
+      );
+    }
+
+    // Sort by trust score and success rate
+    matchingAgents.sort((a, b) => {
+      const aScore = a.trust_score + (a.reputation?.successful_invocations || 0);
+      const bScore = b.trust_score + (b.reputation?.successful_invocations || 0);
+      return bScore - aScore;
+    });
+
+    res.json({
+      success: true,
+      capability_id,
+      providers: matchingAgents.map(a => ({
+        agent_id: a.agent_id,
+        name: a.name,
+        trust_score: a.trust_score,
+        success_rate: a.reputation?.total_invocations > 0 
+          ? Math.round((a.reputation.successful_invocations / a.reputation.total_invocations) * 100) + '%'
+          : 'N/A',
+        avg_latency_ms: a.reputation?.average_response_time_ms || 0,
+        total_invocations: a.reputation?.total_invocations || 0
+      })),
+      count: matchingAgents.length
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Discovery failed'
+    });
+  }
+});
+
+// Agent Auction - Multiple agents bid to fulfill a request
+app.post('/a2a/auction', async (req: Request, res: Response) => {
+  try {
+    const { requester_agent, capability_id, inputs, max_price, deadline_ms } = req.body;
+    const { agentRegistry } = await import('./agent-registry');
+
+    if (!requester_agent || !capability_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'requester_agent and capability_id required'
+      });
+    }
+
+    // Find all agents that can fulfill this
+    const allAgents = agentRegistry.getAllAgents();
+    const providers = allAgents.filter(a => a.capabilities_provided?.includes(capability_id));
+
+    if (providers.length === 0) {
+      return res.json({
+        success: true,
+        auction_id: `auction_${Date.now().toString(36)}`,
+        status: 'no_providers',
+        message: `No agents currently provide ${capability_id}`
+      });
+    }
+
+    // Simulate auction (in production, this would be async with real bids)
+    const bids = providers.map(agent => {
+      const bid_price = Math.random() * (max_price || 100);
+      const estimated_latency_ms = agent.reputation?.average_response_time_ms || 50;
+      const trust_score = agent.trust_score;
+      const success_rate = agent.reputation?.total_invocations > 0
+        ? (agent.reputation.successful_invocations / agent.reputation.total_invocations)
+        : 1;
+      const score = (1 / (bid_price + 1)) * trust_score * success_rate * (1000 / (estimated_latency_ms + 1));
+      return {
+        agent_id: agent.agent_id,
+        name: agent.name,
+        bid_price,
+        estimated_latency_ms,
+        trust_score,
+        success_rate,
+        score
+      };
+    });
+
+    // Sort by score (lower price + higher trust + faster = better)
+    bids.sort((a, b) => b.score - a.score);
+
+    const winner = bids[0];
+
+    res.json({
+      success: true,
+      auction_id: `auction_${Date.now().toString(36)}`,
+      status: 'completed',
+      winner: {
+        agent_id: winner.agent_id,
+        name: winner.name,
+        bid_price: winner.bid_price.toFixed(4),
+        estimated_latency_ms: winner.estimated_latency_ms
+      },
+      all_bids: bids.length,
+      runner_ups: bids.slice(1, 4).map(b => ({ agent_id: b.agent_id, bid_price: b.bid_price.toFixed(4) }))
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Auction failed'
+    });
+  }
+});
+
+// Agent Swarm - Coordinate multiple agents for complex tasks
+app.post('/a2a/swarm', async (req: Request, res: Response) => {
+  try {
+    const { coordinator_agent, task, agents, strategy, timeout_ms } = req.body;
+    const { agentRegistry } = await import('./agent-registry');
+
+    if (!coordinator_agent || !task || !agents || !Array.isArray(agents)) {
+      return res.status(400).json({
+        success: false,
+        error: 'coordinator_agent, task object, and agents array required'
+      });
+    }
+
+    const swarmId = `swarm_${Date.now().toString(36)}`;
+    const startTime = Date.now();
+
+    // Validate all agents exist
+    const validAgents = agents.filter(id => agentRegistry.getAgent(id));
+    
+    // Execute task across swarm based on strategy
+    const results: any[] = [];
+    
+    if (strategy === 'parallel') {
+      // All agents work simultaneously
+      const promises = validAgents.map(async (agentId) => {
+        const result = await router.invoke({
+          capability_id: task.capability_id,
+          inputs: task.inputs || {}
+        });
+        return { agent_id: agentId, result };
+      });
+      
+      const swarmResults = await Promise.allSettled(promises);
+      swarmResults.forEach((r, i) => {
+        if (r.status === 'fulfilled') {
+          results.push(r.value);
+        } else {
+          results.push({ agent_id: validAgents[i], error: r.reason?.message });
+        }
+      });
+    } else {
+      // Sequential (default)
+      for (const agentId of validAgents) {
+        const result = await router.invoke({
+          capability_id: task.capability_id,
+          inputs: task.inputs || {}
+        });
+        results.push({ agent_id: agentId, result });
+      }
+    }
+
+    const successCount = results.filter(r => r.result?.success).length;
+
+    res.json({
+      success: true,
+      swarm_id: swarmId,
+      coordinator: coordinator_agent,
+      strategy: strategy || 'sequential',
+      agents_participated: validAgents.length,
+      success_count: successCount,
+      execution_time_ms: Date.now() - startTime,
+      results
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Swarm execution failed'
+    });
+  }
+});
+
+// Agent Reputation Leaderboard
+app.get('/a2a/leaderboard', async (req: Request, res: Response) => {
+  try {
+    const { agentRegistry } = await import('./agent-registry');
+    const { limit, sort_by } = req.query;
+
+    const allAgents = agentRegistry.getAllAgents();
+    
+    // Calculate scores
+    const scored = allAgents.map(agent => ({
+      agent_id: agent.agent_id,
+      name: agent.name,
+      trust_score: agent.trust_score,
+      total_invocations: agent.reputation?.total_invocations || 0,
+      success_rate: agent.reputation?.total_invocations > 0
+        ? Math.round((agent.reputation.successful_invocations / agent.reputation.total_invocations) * 100)
+        : 0,
+      avg_latency_ms: Math.round(agent.reputation?.average_response_time_ms || 0),
+      capabilities_count: agent.capabilities_provided?.length || 0,
+      composite_score: (agent.trust_score * 0.3) + 
+        ((agent.reputation?.successful_invocations || 0) * 0.4) +
+        ((agent.capabilities_provided?.length || 0) * 10 * 0.3)
+    }));
+
+    // Sort
+    const sortField = sort_by as string || 'composite_score';
+    scored.sort((a, b) => (b as any)[sortField] - (a as any)[sortField]);
+
+    // Limit
+    const topAgents = scored.slice(0, Number(limit) || 10);
+
+    res.json({
+      success: true,
+      leaderboard: topAgents.map((agent, index) => ({
+        rank: index + 1,
+        ...agent
+      })),
+      total_agents: allAgents.length,
+      updated_at: Date.now()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Leaderboard failed'
+    });
+  }
+});
+
 // Analytics Dashboard endpoint
 app.get('/analytics/dashboard', async (req: Request, res: Response) => {
   try {
