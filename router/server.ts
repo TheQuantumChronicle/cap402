@@ -255,6 +255,61 @@ app.get('/capabilities', (req: Request, res: Response) => {
   res.json(response);
 });
 
+// Capability examples - quick reference for all capabilities
+app.get('/capabilities/examples', (req: Request, res: Response) => {
+  const examples = {
+    'cap.price.lookup.v1': {
+      description: 'Get real-time token prices',
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'`,
+      inputs: { base_token: 'SOL' },
+      sponsor: 'Helius'
+    },
+    'cap.wallet.snapshot.v1': {
+      description: 'Get wallet balances and NFTs',
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.wallet.snapshot.v1","inputs":{"address":"YOUR_WALLET"}}'`,
+      inputs: { address: 'YOUR_WALLET_ADDRESS' },
+      sponsor: 'Helius'
+    },
+    'cap.swap.execute.v1': {
+      description: 'Execute token swap via Jupiter',
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.swap.execute.v1","inputs":{"input_token":"SOL","output_token":"USDC","amount":0.001,"wallet_address":"YOUR_WALLET"}}'`,
+      inputs: { input_token: 'SOL', output_token: 'USDC', amount: 0.001, wallet_address: 'YOUR_WALLET' },
+      sponsor: 'Jupiter'
+    },
+    'cap.zk.proof.v1': {
+      description: 'Generate zero-knowledge proof',
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.zk.proof.v1","inputs":{"proof_type":"balance_threshold","circuit":"balance_threshold","public_inputs":{"threshold":100},"private_inputs":{"actual_balance":500}}}'`,
+      inputs: { proof_type: 'balance_threshold', circuit: 'balance_threshold', public_inputs: { threshold: 100 }, private_inputs: { actual_balance: 500 } },
+      sponsor: 'Noir/Aztec'
+    },
+    'cap.fhe.compute.v1': {
+      description: 'Compute on encrypted data',
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.fhe.compute.v1","inputs":{"operation":"add","operands":[100,50]}}'`,
+      inputs: { operation: 'add', operands: [100, 50] },
+      sponsor: 'Inco'
+    },
+    'cap.confidential.swap.v1': {
+      description: 'Private token swap via MPC',
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.confidential.swap.v1","inputs":{"input_token":"SOL","output_token":"USDC","amount":0.001,"wallet_address":"YOUR_WALLET"}}'`,
+      inputs: { input_token: 'SOL', output_token: 'USDC', amount: 0.001, wallet_address: 'YOUR_WALLET' },
+      sponsor: 'Arcium'
+    },
+    'cap.cspl.wrap.v1': {
+      description: 'Wrap tokens into confidential C-SPL',
+      curl: `curl -X POST https://cap402.com/invoke -H "Content-Type: application/json" -d '{"capability_id":"cap.cspl.wrap.v1","inputs":{"owner":"YOUR_WALLET","mint":"TOKEN_MINT","amount":100}}'`,
+      inputs: { owner: 'YOUR_WALLET', mint: 'TOKEN_MINT', amount: 100 },
+      sponsor: 'Arcium'
+    }
+  };
+
+  res.json({
+    success: true,
+    count: Object.keys(examples).length,
+    examples,
+    note: 'Replace YOUR_WALLET with your actual wallet address'
+  });
+});
+
 // Capability summary with sponsor breakdown (must be before :id route)
 app.get('/capabilities/summary', (req: Request, res: Response) => {
   // Check cache
