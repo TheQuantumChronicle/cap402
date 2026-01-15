@@ -806,29 +806,171 @@
 
   <div class="separator"></div>
 
-  <!-- Start -->
+  <!-- Live API Playground -->
   <section id="start" style="padding: 4vh 6vw;">
-    <div class="code-block" style="max-width: 700px; margin: 0 auto; cursor: pointer;" onclick="navigator.clipboard.writeText(document.getElementById('curl-cmd').textContent); this.style.borderColor='#22c55e'; setTimeout(() => this.style.borderColor='', 500);" title="Click to copy">
-      <code class="mono" id="curl-cmd">curl -X POST cap402.com/invoke -d '{"capability_id":"cap.price.lookup.v1"}'</code>
+    <p style="text-align: center; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1.5rem;">Live API Playground</p>
+    
+    <div style="max-width: 900px; margin: 0 auto;">
+      <!-- Endpoint Selector -->
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 1.5rem;">
+        <button class="playground-btn active" data-endpoint="price" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'>💰 Price</button>
+        <button class="playground-btn" data-endpoint="mev" data-method="POST" data-url="/mev/analyze" data-body='{"token_in":"SOL","token_out":"USDC","amount":10000,"slippage":0.5}'>🛡️ MEV</button>
+        <button class="playground-btn" data-endpoint="arbitrage" data-method="GET" data-url="/alpha/arbitrage?min_profit_bps=5" data-body="">📈 Arbitrage</button>
+        <button class="playground-btn" data-endpoint="whales" data-method="GET" data-url="/alpha/whale-tracker" data-body="">🐋 Whales</button>
+        <button class="playground-btn" data-endpoint="liquidations" data-method="GET" data-url="/alpha/liquidations" data-body="">⚠️ Liquidations</button>
+        <button class="playground-btn" data-endpoint="capabilities" data-method="GET" data-url="/capabilities" data-body="">📋 Capabilities</button>
+        <button class="playground-btn" data-endpoint="health" data-method="GET" data-url="/sponsors/health" data-body="">💚 Health</button>
+      </div>
+      
+      <!-- Request/Response -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <!-- Request -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden;">
+          <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Request</span>
+            <span id="req-method" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; background: rgba(108,68,252,0.2); color: var(--arcium-purple); border-radius: 4px; font-family: 'JetBrains Mono', monospace;">POST</span>
+          </div>
+          <div style="padding: 1rem;">
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem; font-family: 'JetBrains Mono', monospace;">
+              <span style="color: var(--text-muted);">URL:</span> <span id="req-url">https://cap402.com/invoke</span>
+            </div>
+            <pre id="req-body" style="font-size: 0.75rem; color: var(--text-primary); background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 4px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; white-space: pre-wrap; max-height: 150px;">{
+  "capability_id": "cap.price.lookup.v1",
+  "inputs": { "base_token": "SOL" }
+}</pre>
+          </div>
+        </div>
+        
+        <!-- Response -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden;">
+          <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Response</span>
+            <span id="res-status" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; background: rgba(34,197,94,0.2); color: #22c55e; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">—</span>
+          </div>
+          <pre id="res-body" style="padding: 1rem; font-size: 0.75rem; color: var(--text-primary); background: rgba(0,0,0,0.2); margin: 0; overflow-x: auto; font-family: 'JetBrains Mono', monospace; white-space: pre-wrap; max-height: 200px; min-height: 150px;">Click "Run Request" to see live response...</pre>
+        </div>
+      </div>
+      
+      <!-- Run Button -->
+      <div style="text-align: center; margin-top: 1.5rem;">
+        <button id="run-request" class="btn-primary" style="padding: 0.75rem 2rem; font-size: 0.9rem;">
+          ▶ Run Request
+        </button>
+        <span id="latency" style="margin-left: 1rem; font-size: 0.75rem; color: var(--text-muted);"></span>
+      </div>
     </div>
   </section>
+  
+  <style>
+    .playground-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .playground-btn:hover {
+      border-color: var(--arcium-purple);
+      color: var(--text-primary);
+    }
+    .playground-btn.active {
+      background: rgba(108,68,252,0.15);
+      border-color: var(--arcium-purple);
+      color: var(--arcium-purple);
+    }
+    @media (max-width: 768px) {
+      #start > div > div:nth-child(2) {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+  
+  <script>
+    const playgroundState = {
+      method: 'POST',
+      url: '/invoke',
+      body: '{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'
+    };
+    
+    document.querySelectorAll('.playground-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.playground-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        playgroundState.method = this.dataset.method;
+        playgroundState.url = this.dataset.url;
+        playgroundState.body = this.dataset.body;
+        
+        document.getElementById('req-method').textContent = playgroundState.method;
+        document.getElementById('req-method').style.background = playgroundState.method === 'GET' ? 'rgba(34,197,94,0.2)' : 'rgba(108,68,252,0.2)';
+        document.getElementById('req-method').style.color = playgroundState.method === 'GET' ? '#22c55e' : 'var(--arcium-purple)';
+        document.getElementById('req-url').textContent = 'https://cap402.com' + playgroundState.url;
+        document.getElementById('req-body').textContent = playgroundState.body ? JSON.stringify(JSON.parse(playgroundState.body), null, 2) : '(no body)';
+        document.getElementById('res-body').textContent = 'Click "Run Request" to see live response...';
+        document.getElementById('res-status').textContent = '—';
+        document.getElementById('res-status').style.background = 'rgba(136,136,136,0.2)';
+        document.getElementById('res-status').style.color = '#888';
+        document.getElementById('latency').textContent = '';
+      });
+    });
+    
+    document.getElementById('run-request').addEventListener('click', async function() {
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = '⏳ Loading...';
+      document.getElementById('res-body').textContent = 'Fetching...';
+      
+      const start = performance.now();
+      try {
+        const options = {
+          method: playgroundState.method,
+          headers: { 'Content-Type': 'application/json' }
+        };
+        if (playgroundState.method === 'POST' && playgroundState.body) {
+          options.body = playgroundState.body;
+        }
+        
+        const res = await fetch('https://cap402.com' + playgroundState.url, options);
+        const latency = Math.round(performance.now() - start);
+        const data = await res.json();
+        
+        document.getElementById('res-status').textContent = res.status + ' ' + (res.ok ? 'OK' : 'Error');
+        document.getElementById('res-status').style.background = res.ok ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)';
+        document.getElementById('res-status').style.color = res.ok ? '#22c55e' : '#ef4444';
+        document.getElementById('res-body').textContent = JSON.stringify(data, null, 2);
+        document.getElementById('latency').textContent = latency + 'ms';
+      } catch (err) {
+        document.getElementById('res-status').textContent = 'Error';
+        document.getElementById('res-status').style.background = 'rgba(239,68,68,0.2)';
+        document.getElementById('res-status').style.color = '#ef4444';
+        document.getElementById('res-body').textContent = 'Error: ' + err.message;
+      }
+      
+      btn.disabled = false;
+      btn.textContent = '▶ Run Request';
+    });
+  </script>
 
-  <!-- Endpoints -->
-  <section style="padding: 4vh 6vw; text-align: center;">
-    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">Click an endpoint to see example. Click the command to copy.</p>
+  <div class="separator"></div>
+
+  <!-- Quick Copy Endpoints -->
+  <section style="padding: 3vh 6vw; text-align: center;">
+    <p style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1rem;">Quick copy curl commands</p>
     <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; max-width: 800px; margin: 0 auto;">
-      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/invoke -d '{\"capability_id\":\"cap.price.lookup.v1\"}'">/invoke</span>
-      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/a2a/invoke -d '{\"from_agent\":\"bot-A\",\"to_agent\":\"bot-B\",\"capability_id\":\"cap.price.lookup.v1\"}'">/a2a/invoke</span>
-      <span class="tag endpoint-tag" data-cmd="curl cap402.com/a2a/discover/cap.price.lookup.v1">/a2a/discover</span>
-      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/a2a/auction -d '{\"requester_agent\":\"my-bot\",\"capability_id\":\"cap.price.lookup.v1\"}'">/a2a/auction</span>
-      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/a2a/swarm -d '{\"coordinator_agent\":\"my-bot\",\"task\":{\"capability_id\":\"cap.price.lookup.v1\"},\"agents\":[\"bot-1\",\"bot-2\"]}'">/a2a/swarm</span>
-      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/mev/analyze -d '{\"token_in\":\"SOL\",\"token_out\":\"USDC\",\"amount\":10000}'">/mev/analyze</span>
-      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/mev/protected-swap -d '{\"token_in\":\"SOL\",\"token_out\":\"USDC\",\"amount\":100,\"wallet_address\":\"...\"}'">/mev/protected-swap</span>
-      <span class="tag endpoint-tag" data-cmd="curl cap402.com/alpha/arbitrage">/alpha/arbitrage</span>
-      <span class="tag endpoint-tag" data-cmd="curl cap402.com/alpha/whale-tracker">/alpha/whale-tracker</span>
-      <span class="tag endpoint-tag" data-cmd="curl cap402.com/alpha/liquidations">/alpha/liquidations</span>
+      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/invoke -H 'Content-Type: application/json' -d '{\"capability_id\":\"cap.price.lookup.v1\",\"inputs\":{\"base_token\":\"SOL\"}}'">/invoke</span>
       <span class="tag endpoint-tag" data-cmd="curl cap402.com/capabilities">/capabilities</span>
+      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/mev/analyze -H 'Content-Type: application/json' -d '{\"token_in\":\"SOL\",\"token_out\":\"USDC\",\"amount\":10000}'">/mev/analyze</span>
+      <span class="tag endpoint-tag" data-cmd="curl cap402.com/alpha/arbitrage">/alpha/arbitrage</span>
       <span class="tag endpoint-tag" data-cmd="curl cap402.com/sponsors/health">/sponsors/health</span>
+    </div>
+    <div id="curl-display" style="max-width: 700px; margin: 1rem auto 0; display: none;">
+      <div class="code-block" style="cursor: pointer;" onclick="navigator.clipboard.writeText(document.getElementById('curl-cmd').textContent); this.style.borderColor='#22c55e'; setTimeout(() => this.style.borderColor='', 500);" title="Click to copy">
+        <code class="mono" id="curl-cmd"></code>
+      </div>
     </div>
   </section>
   
@@ -837,6 +979,7 @@
       tag.style.cursor = 'pointer';
       tag.addEventListener('click', function() {
         document.getElementById('curl-cmd').textContent = this.dataset.cmd;
+        document.getElementById('curl-display').style.display = 'block';
         document.querySelectorAll('.endpoint-tag').forEach(t => t.style.borderColor = '');
         this.style.borderColor = 'var(--arcium-purple)';
       });
