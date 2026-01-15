@@ -294,16 +294,99 @@ Real-time webhooks       - Balance changes, transaction confirmations
 
 | Metric | Count |
 |--------|-------|
-| **Total Capabilities** | 12 |
-| **Confidential Capabilities** | 7 |
-| **Noir ZK Circuits** | 7 |
-| **Composition Templates** | 6 |
-| **API Endpoints** | 75+ |
-| **Deep Provider Integrations** | 8 |
-| **Test Suites** | 16 |
-| **Total Tests** | 306 |
-| **Error Codes** | 8 (unified) |
-| **Priority Levels** | 4 (critical/high/normal/low) |
+| **Total Capabilities** | 13 |
+| **Confidential Capabilities** | 10 |
+| **Noir ZK Circuits** | 10 |
+| **API Endpoints** | 100+ |
+| **Sponsor Integrations** | 4 (Arcium, Noir, Helius, Inco) |
+| **A2A Protocol Endpoints** | 5 |
+| **Trading Alpha Endpoints** | 8 |
+
+---
+
+## 💰 MEV Protection & Trading Alpha
+
+### MEV Analysis
+```bash
+# Analyze sandwich attack risk before trading
+curl -X POST https://cap402.com/mev/analyze \
+  -d '{"token_in":"SOL","token_out":"USDC","amount":10000,"slippage":1}'
+
+# Response: 75% sandwich probability, $150 potential loss, $127 savings with protection
+```
+
+### Protected Swap Execution
+```bash
+# Execute with MEV protection (Jito-style private mempool)
+curl -X POST https://cap402.com/mev/protected-swap \
+  -d '{"token_in":"SOL","token_out":"USDC","amount":1000,"wallet_address":"...","protection_level":"maximum"}'
+```
+
+### Arbitrage Scanner
+```bash
+# Find cross-DEX price discrepancies
+curl https://cap402.com/alpha/arbitrage?min_profit_bps=5
+
+# Response: BTC spread 6.1 bps between Raydium/Orca, $5.60 profit on $10k
+```
+
+### Whale Tracker
+```bash
+# Monitor large wallet movements
+curl https://cap402.com/alpha/whale-tracker
+
+# Response: $46M SOL buy detected, market sentiment BULLISH
+```
+
+### Liquidation Monitor
+```bash
+# Find profitable DeFi liquidation opportunities
+curl https://cap402.com/alpha/liquidations
+
+# Response: $7,500 profit potential, ETH position at 1.02 health factor
+```
+
+---
+
+## 🤖 Agent-to-Agent (A2A) Protocol
+
+### Register an Agent
+```bash
+curl -X POST https://cap402.com/agents/register \
+  -d '{"agent_id":"my-trading-bot","name":"Trading Bot","capabilities_provided":["cap.price.lookup.v1"]}'
+```
+
+### A2A Direct Invocation
+```bash
+# Agent-to-agent capability call
+curl -X POST https://cap402.com/a2a/invoke \
+  -d '{"from_agent":"bot-A","to_agent":"bot-B","capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'
+```
+
+### Agent Discovery
+```bash
+# Find agents that provide a capability
+curl https://cap402.com/a2a/discover/cap.price.lookup.v1
+```
+
+### Agent Auction
+```bash
+# Agents bid to fulfill your request
+curl -X POST https://cap402.com/a2a/auction \
+  -d '{"requester_agent":"my-bot","capability_id":"cap.price.lookup.v1","max_price":10}'
+```
+
+### Agent Swarm
+```bash
+# Coordinate multiple agents in parallel
+curl -X POST https://cap402.com/a2a/swarm \
+  -d '{"coordinator_agent":"my-bot","task":{"capability_id":"cap.price.lookup.v1"},"agents":["bot-1","bot-2"],"strategy":"parallel"}'
+```
+
+### Agent Leaderboard
+```bash
+curl https://cap402.com/a2a/leaderboard
+```
 
 ---
 
