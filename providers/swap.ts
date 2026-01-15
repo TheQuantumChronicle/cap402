@@ -67,10 +67,11 @@ export interface SwapResult {
 }
 
 class SwapProvider {
-  // Jupiter API v1 endpoints (new API requires API key)
-  private jupiterQuoteUrl = 'https://api.jup.ag/swap/v1/quote';
-  private jupiterSwapUrl = 'https://api.jup.ag/swap/v1/swap';
-  private jupiterPriceUrl = 'https://api.jup.ag/price/v2';
+  // Jupiter API endpoints - use env var or default to v6
+  private jupiterBaseUrl = process.env.JUPITER_API_URL || 'https://quote-api.jup.ag/v6';
+  private jupiterQuoteUrl = `${this.jupiterBaseUrl}/quote`;
+  private jupiterSwapUrl = `${this.jupiterBaseUrl}/swap`;
+  private jupiterPriceUrl = 'https://price.jup.ag/v6/price';
   private jupiterApiKey = process.env.JUPITER_API_KEY || '';
   
   // Rate limiter to avoid hitting Jupiter API limits
