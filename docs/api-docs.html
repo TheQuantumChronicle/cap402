@@ -163,8 +163,8 @@
   
   <div class="container">
     <div class="tabs">
-      <button class="tab active" onclick="showTab('api')">API Reference</button>
-      <button class="tab" onclick="showTab('whitepaper')">Whitepaper</button>
+      <button class="tab active" id="tab-api">API Reference</button>
+      <button class="tab" id="tab-whitepaper">Whitepaper</button>
     </div>
     
     <!-- API Reference Tab -->
@@ -175,7 +175,7 @@
       <div class="endpoint-group">
         <div class="endpoint-group-title">Capabilities</div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method post">POST</span>
             <span class="endpoint-path">/invoke</span>
@@ -189,7 +189,7 @@
           </div>
         </div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method get">GET</span>
             <span class="endpoint-path">/capabilities</span>
@@ -205,7 +205,7 @@
       <div class="endpoint-group">
         <div class="endpoint-group-title">A2A Protocol</div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method post">POST</span>
             <span class="endpoint-path">/a2a/invoke</span>
@@ -219,7 +219,7 @@
           </div>
         </div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method get">GET</span>
             <span class="endpoint-path">/a2a/discover/:capability_id</span>
@@ -231,7 +231,7 @@
           </div>
         </div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method post">POST</span>
             <span class="endpoint-path">/a2a/auction</span>
@@ -245,7 +245,7 @@
           </div>
         </div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method post">POST</span>
             <span class="endpoint-path">/a2a/swarm</span>
@@ -259,7 +259,7 @@
           </div>
         </div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method get">GET</span>
             <span class="endpoint-path">/a2a/leaderboard</span>
@@ -275,7 +275,7 @@
       <div class="endpoint-group">
         <div class="endpoint-group-title">MEV Protection</div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method post">POST</span>
             <span class="endpoint-path">/mev/analyze</span>
@@ -289,7 +289,7 @@
           </div>
         </div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method post">POST</span>
             <span class="endpoint-path">/mev/protected-swap</span>
@@ -307,7 +307,7 @@
       <div class="endpoint-group">
         <div class="endpoint-group-title">Trading Alpha</div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method get">GET</span>
             <span class="endpoint-path">/alpha/arbitrage</span>
@@ -319,7 +319,7 @@
           </div>
         </div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method get">GET</span>
             <span class="endpoint-path">/alpha/whale-tracker</span>
@@ -331,7 +331,7 @@
           </div>
         </div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method get">GET</span>
             <span class="endpoint-path">/alpha/liquidations</span>
@@ -347,7 +347,7 @@
       <div class="endpoint-group">
         <div class="endpoint-group-title">Agents</div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method post">POST</span>
             <span class="endpoint-path">/agents/register</span>
@@ -365,7 +365,7 @@
       <div class="endpoint-group">
         <div class="endpoint-group-title">System</div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method get">GET</span>
             <span class="endpoint-path">/sponsors/health</span>
@@ -377,7 +377,7 @@
           </div>
         </div>
         
-        <div class="endpoint" onclick="this.classList.toggle('open')">
+        <div class="endpoint">
           <div class="endpoint-header">
             <span class="method get">GET</span>
             <span class="endpoint-path">/system/dashboard</span>
@@ -485,12 +485,23 @@
   </div>
   
   <script>
-    function showTab(tabId) {
+    // Tab switching
+    document.getElementById('tab-api').addEventListener('click', function() {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
-      document.getElementById(tabId).classList.add('active');
-    }
+      this.classList.add('active');
+      document.getElementById('api').classList.add('active');
+    });
+    document.getElementById('tab-whitepaper').addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('whitepaper').classList.add('active');
+    });
+    // Endpoint toggling
+    document.querySelectorAll('.endpoint').forEach(ep => {
+      ep.addEventListener('click', function() { this.classList.toggle('open'); });
+    });
   </script>
 </body>
 </html>
