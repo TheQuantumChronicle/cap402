@@ -148,6 +148,9 @@
     .whitepaper-content blockquote { border-left: 3px solid var(--arcium-purple); padding-left: 1rem; margin: 1rem 0; color: var(--text-secondary); font-style: italic; }
     .whitepaper-content ul, .whitepaper-content ol { margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary); }
     .whitepaper-content li { margin-bottom: 0.5rem; }
+    .whitepaper-content pre.code-block { background: #111; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; overflow-x: auto; color: var(--green); white-space: pre; margin: 1rem 0; }
+    .whitepaper-content h3 { font-size: 1rem; margin: 1.5rem 0 0.75rem; color: var(--arcium-purple); }
+    .whitepaper-content a { color: var(--arcium-purple); }
   </style>
 </head>
 <body>
@@ -396,34 +399,24 @@
       <div class="whitepaper-content">
         <h1>CAP-402: Agent Infrastructure Standard</h1>
         <p><strong>A Protocol for Semantic Capability Routing Between Autonomous Agents</strong></p>
-        <p>Version 1.0 | January 2026</p>
+        <p>Version 1.0 | January 2026 | <a href="https://cap402.com" style="color:var(--arcium-purple)">cap402.com</a></p>
         
         <h2>Abstract</h2>
         <p>As autonomous AI agents proliferate across industries, a critical infrastructure gap has emerged: there is no standard protocol for agents to discover, negotiate, and execute capabilities from other agents or services. CAP-402 addresses this gap by introducing a semantic capability routing protocol that provides privacy-aware, economically-signaled execution with verifiable receipts.</p>
         <p>CAP-402 uniquely combines three complementary cryptographic technologies—<strong>Noir</strong> for zero-knowledge proofs, <strong>Arcium</strong> for confidential computation, and <strong>Inco</strong> for encrypted on-chain state—to deliver a complete privacy stack that enables fully private, verifiable, agent-driven authorization and execution.</p>
+        <p>This whitepaper presents the CAP-402 protocol specification, its architecture, security model, and economic framework. We demonstrate how CAP-402 enables a new paradigm where <strong>agents do not call APIs directly—agents call capabilities</strong>.</p>
         
-        <blockquote>Agents do not call APIs directly. Agents call capabilities.</blockquote>
+        <h2>1. Introduction</h2>
+        <p>The emergence of autonomous AI agents represents a fundamental shift in how software systems interact. Unlike traditional APIs designed for human developers, agent-to-agent communication requires:</p>
+        <ul>
+          <li><strong>Semantic understanding</strong>: Agents need to discover capabilities by intent, not by endpoint</li>
+          <li><strong>Privacy preservation</strong>: Sensitive operations must be executable without exposing data</li>
+          <li><strong>Economic coordination</strong>: Agents must negotiate costs and value exchange</li>
+          <li><strong>Verifiability</strong>: Execution results must be provable and auditable</li>
+          <li><strong>Composability</strong>: Complex workflows must be expressible as capability chains</li>
+        </ul>
         
-        <h2>The Privacy Stack</h2>
-        <table>
-          <tr><th>Technology</th><th>Role</th><th>Output</th></tr>
-          <tr><td><strong>Noir</strong></td><td>Proves private facts</td><td>ZK Proofs</td></tr>
-          <tr><td><strong>Arcium</strong></td><td>Decides privately using hidden logic</td><td>Signed Decisions</td></tr>
-          <tr><td><strong>Inco</strong></td><td>Stores & executes privately on-chain</td><td>Encrypted State</td></tr>
-        </table>
-        
-        <h2>Problem Statement</h2>
-        <p>Today's agent ecosystem suffers from critical limitations:</p>
-        <table>
-          <tr><th>Problem</th><th>Impact</th></tr>
-          <tr><td>No discovery standard</td><td>Agents must hard-code API endpoints</td></tr>
-          <tr><td>No privacy layer</td><td>All operations are visible, enabling front-running</td></tr>
-          <tr><td>No economic coordination</td><td>Ad-hoc pricing, no micropayments</td></tr>
-          <tr><td>No trust framework</td><td>No way to verify agent capabilities</td></tr>
-          <tr><td>No composability</td><td>Each integration built from scratch</td></tr>
-        </table>
-        
-        <h2>Design Principles</h2>
+        <h3>1.1 Design Principles</h3>
         <ol>
           <li><strong>Capabilities over APIs</strong>: Abstract what can be done, not how it's implemented</li>
           <li><strong>Privacy by default</strong>: Support confidential execution as a first-class feature</li>
@@ -432,54 +425,327 @@
           <li><strong>Progressive decentralization</strong>: Start centralized, evolve to fully decentralized</li>
         </ol>
         
-        <h2>Key Features</h2>
+        <h3>1.2 Key Innovation: The Privacy Stack</h3>
+        <p>CAP-402's primary differentiator is its unified privacy stack. While most applications choose a single privacy technology, CAP-402 integrates three complementary systems:</p>
+        <table>
+          <tr><th>Technology</th><th>Role</th><th>Output</th></tr>
+          <tr><td><strong>Noir</strong></td><td>Proves private facts</td><td>ZK Proofs</td></tr>
+          <tr><td><strong>Arcium</strong></td><td>Decides privately using hidden logic</td><td>Signed Decisions</td></tr>
+          <tr><td><strong>Inco</strong></td><td>Stores & executes privately on-chain</td><td>Encrypted State</td></tr>
+        </table>
+        <blockquote>Noir proves things privately, Arcium decides things privately, Inco stores and executes things privately.</blockquote>
+        
+        <h2>2. Problem Statement</h2>
+        <h3>2.1 The Current Landscape</h3>
+        <table>
+          <tr><th>Problem</th><th>Impact</th></tr>
+          <tr><td><strong>No discovery standard</strong></td><td>Agents must hard-code API endpoints</td></tr>
+          <tr><td><strong>No privacy layer</strong></td><td>All operations are visible, enabling front-running</td></tr>
+          <tr><td><strong>No economic coordination</strong></td><td>Ad-hoc pricing, no micropayments</td></tr>
+          <tr><td><strong>No trust framework</strong></td><td>No way to verify agent capabilities</td></tr>
+          <tr><td><strong>No composability</strong></td><td>Each integration built from scratch</td></tr>
+        </table>
+        
+        <h3>2.2 The Privacy Crisis</h3>
+        <p>Traditional blockchain applications leak everything:</p>
         <ul>
-          <li><strong>13 Capabilities</strong> - Price lookup, swaps, ZK proofs, FHE compute, and more</li>
-          <li><strong>A2A Protocol</strong> - Agent-to-agent invocation, discovery, auctions, swarms</li>
-          <li><strong>MEV Protection</strong> - Sandwich attack detection, protected execution</li>
-          <li><strong>Trading Alpha</strong> - Arbitrage scanner, whale tracker, liquidation monitor</li>
-          <li><strong>4 Sponsor Integrations</strong> - Arcium, Noir, Helius, Inco</li>
+          <li><strong>Trading strategies</strong> — Competitors can copy or front-run</li>
+          <li><strong>User balances</strong> — Portfolio exposure to adversaries</li>
+          <li><strong>Order logic</strong> — MEV bots exploit visible intents</li>
+          <li><strong>Risk models</strong> — Proprietary algorithms become public</li>
+          <li><strong>AI prompts/weights</strong> — Intellectual property exposed</li>
         </ul>
         
-        <h2>Use Cases</h2>
-        <h3>Treasury Execution</h3>
-        <p>A protocol treasury needs to rebalance $2M without moving markets. Arcium C-SPL wraps tokens → confidential swap → zero information leakage.</p>
-        
-        <h3>DAO Operations</h3>
-        <p>Governance votes reveal whale positions, enabling front-running of outcomes. ZK proofs confirm voting eligibility. FHE encrypts votes until tally.</p>
-        
-        <h3>Private OTC</h3>
-        <p>Two parties negotiating a large trade leak intent to the entire market. Encrypted agent-to-agent messaging. Terms hidden until execution.</p>
-        
-        <h3>Institutional DeFi</h3>
-        <p>Compliance requires proving KYC/AML without exposing client data. Noir circuits prove compliance level without revealing underlying data.</p>
-        
-        <h2>Sponsor Integrations</h2>
-        <h3>Arcium (Confidential Execution)</h3>
+        <h3>2.3 Consequences Without CAP-402</h3>
         <ul>
-          <li><code>cap.cspl.wrap.v1</code> - Convert public → confidential tokens</li>
-          <li><code>cap.cspl.transfer.v1</code> - Transfer with hidden amounts</li>
-          <li><code>cap.confidential.swap.v1</code> - Private swaps via MPC</li>
+          <li><strong>MEV extraction</strong>: Trading agents lose $500+ per large swap to front-runners</li>
+          <li><strong>Data exposure</strong>: Portfolio queries reveal positions to competitors</li>
+          <li><strong>Vendor lock-in</strong>: Agents tied to specific service providers</li>
+          <li><strong>Integration overhead</strong>: 10x development time for each new capability</li>
+          <li><strong>Trust vacuum</strong>: No reputation system for agent reliability</li>
         </ul>
         
-        <h3>Noir (Zero-Knowledge Proofs)</h3>
+        <h2>3. Protocol Overview</h2>
+        <h3>3.1 Core Concepts</h3>
+        <p><strong>Capability</strong>: A versioned, semantic contract defining:</p>
         <ul>
-          <li><code>balance_threshold</code> - Prove balance > X without revealing amount</li>
-          <li><code>kyc_compliance</code> - Prove compliance without exposing data</li>
-          <li><code>voting_eligibility</code> - Prove voting rights without revealing stake</li>
+          <li><strong>Identity</strong>: Stable ID (e.g., <code>cap.price.lookup.v1</code>)</li>
+          <li><strong>Interface</strong>: Typed inputs/outputs (JSON Schema)</li>
+          <li><strong>Execution</strong>: Mode (public/confidential) + proof type</li>
+          <li><strong>Economics</strong>: Cost hints, currency, payment methods</li>
+        </ul>
+        <p><strong>Invocation</strong>: A request to execute a capability with specific inputs, returning outputs, a cryptographic receipt, and economic hints.</p>
+        <p><strong>Composition</strong>: Chaining multiple capabilities into a single workflow with automatic data flow, error handling, and a single receipt for the entire chain.</p>
+        
+        <h3>3.2 Protocol Flow</h3>
+        <pre class="code-block">1. Discovery    Agent queries: "I need to swap tokens privately"
+                Router returns: [cap.confidential.swap.v1, cap.cspl.wrap.v1, ...]
+
+2. Negotiation  Agent requests options for cap.confidential.swap.v1
+                Router returns: [{privacy: 2, cost: 0.01}, {privacy: 3, cost: 0.05}]
+
+3. Invocation   Agent invokes with selected option
+                Router executes via appropriate executor
+
+4. Receipt      Agent receives cryptographic receipt
+                Receipt can be verified without re-execution
+
+5. Settlement   Economic hints enable payment (X.402 or on-chain)</pre>
+        
+        <h2>4. Architecture</h2>
+        <h3>4.1 Layer Model</h3>
+        <table>
+          <tr><th>Layer</th><th>Components</th></tr>
+          <tr><td><strong>Application</strong></td><td>Agents, SDKs, Integrations</td></tr>
+          <tr><td><strong>Protocol</strong></td><td>Capability Schema, Routing, Composition, Receipts</td></tr>
+          <tr><td><strong>Execution</strong></td><td>Public Executor, Confidential Executor</td></tr>
+          <tr><td><strong>Privacy</strong></td><td>Noir ZK Proofs, Arcium MPC, Inco FHE</td></tr>
+          <tr><td><strong>Security</strong></td><td>Tokens, Trust Network, Handshake, Semantic Encryption</td></tr>
+          <tr><td><strong>Economic</strong></td><td>X.402 Hints, Privacy Cash, Pricing</td></tr>
+          <tr><td><strong>Settlement</strong></td><td>Solana, Future: Multi-chain</td></tr>
+        </table>
+        
+        <h3>4.2 Component Overview</h3>
+        <table>
+          <tr><th>Component</th><th>Purpose</th></tr>
+          <tr><td><strong>Registry</strong></td><td>Stores capability definitions</td></tr>
+          <tr><td><strong>Router</strong></td><td>Routes invocations to executors</td></tr>
+          <tr><td><strong>Public Executor</strong></td><td>Standard API/RPC execution</td></tr>
+          <tr><td><strong>Confidential Executor</strong></td><td>Privacy-preserving via Arcium MPC</td></tr>
+          <tr><td><strong>Receipt Manager</strong></td><td>Generates and verifies receipts</td></tr>
+          <tr><td><strong>Token Manager</strong></td><td>Issues and validates capability tokens</td></tr>
+          <tr><td><strong>Trust Network</strong></td><td>Manages agent reputation</td></tr>
+        </table>
+        
+        <h2>5. Cryptographic Foundation</h2>
+        
+        <h3>5.1 Noir — Zero-Knowledge Proof Generation</h3>
+        <p><strong>What It Is</strong>: Noir is a domain-specific programming language designed for writing zero-knowledge programs—code that can prove something is true without revealing the underlying data.</p>
+        <p><strong>Role in CAP-402</strong>: Noir answers the question: <em>"Can you prove you're allowed to do this?"</em></p>
+        <pre class="code-block">User generates ZK proof that:
+  → They own a specific credential
+  → Their balance exceeds a threshold
+  → Their identity satisfies a condition
+  
+Result: Verifier learns ONLY that the condition is satisfied
+        No wallet balances, identities, or secrets exposed</pre>
+        <p><strong>Key Properties</strong>: Privacy (secrets never leave prover's device), Verifiability (proofs are mathematically sound), Portability (proofs can be verified anywhere).</p>
+        
+        <h3>5.2 Arcium — Confidential Computation</h3>
+        <p><strong>What It Is</strong>: Arcium provides encrypted compute on-chain. Unlike traditional blockchains where data and computation are public, Arcium enables computation on encrypted data while keeping inputs private and producing verifiable results.</p>
+        <p><strong>Role in CAP-402</strong>: Arcium answers the question: <em>"Given everything we know privately, should this be allowed?"</em></p>
+        <pre class="code-block">Arcium receives:
+  → Verified Noir proof
+  → Encrypted strategy state
+  → Encrypted thresholds and parameters
+  
+Arcium computes:
+  → Whether request satisfies all private rules
+  
+Result: ALLOW or DENY (signed/attested)
+        Nobody learns: strategy details, thresholds, 
+        risk models, or why it passed/failed</pre>
+        <p><strong>What Arcium Protects</strong>: Authorization rules and logic, Risk checks and thresholds, Strategy conditions, AI/scoring logic, User behavior signals.</p>
+        
+        <h3>5.3 Inco — Confidential On-Chain State</h3>
+        <p><strong>What It Is</strong>: Inco is the confidentiality layer for Web3—infrastructure that enables private smart contracts and encrypted on-chain state without sacrificing composability.</p>
+        <p><strong>Role in CAP-402</strong>: Inco answers the question: <em>"Where do we safely store and execute this without leaking it on-chain?"</em></p>
+        <pre class="code-block">If authorization ALLOWED:
+  → Inco executes the action
+  → Updates private balances
+  → Updates private usage counters
+  → Updates private permissions
+  → Stores everything confidentially
+  
+Public visibility: Only that something happened
+                   NOT what or why</pre>
+        <p><strong>What Inco Enables</strong>: Confidential token balances, Private DeFi positions, Hidden game logic, Selective disclosure, Confidential payroll and voting.</p>
+        
+        <h3>5.4 Why All Three Are Required</h3>
+        <table>
+          <tr><th>Technology</th><th>What Happens If Removed</th></tr>
+          <tr><td><strong>Noir</strong></td><td>Cannot generate portable proofs; users must expose data to prove conditions</td></tr>
+          <tr><td><strong>Arcium</strong></td><td>Decision logic becomes public; strategies can be copied or gamed</td></tr>
+          <tr><td><strong>Inco</strong></td><td>On-chain state leaks; execution results expose private information</td></tr>
+        </table>
+        
+        <h2>6. Privacy Gradient</h2>
+        <table>
+          <tr><th>Level</th><th>Name</th><th>Technology</th><th>Description</th><th>Cost</th></tr>
+          <tr><td>0</td><td><strong>Public</strong></td><td>Direct execution</td><td>Standard execution, visible results</td><td>1.0x</td></tr>
+          <tr><td>1</td><td><strong>Obscured</strong></td><td>Router attestation</td><td>Basic obfuscation, limited visibility</td><td>1.1x</td></tr>
+          <tr><td>2</td><td><strong>Encrypted</strong></td><td>Arcium MPC</td><td>Strong encryption, authorized access only</td><td>1.5x</td></tr>
+          <tr><td>3</td><td><strong>ZK Verifiable</strong></td><td>Noir + Inco</td><td>Zero-knowledge proofs, maximum privacy</td><td>2.0x</td></tr>
+        </table>
+        
+        <h2>7. Capability Schema</h2>
+        <pre class="code-block">interface Capability {
+  id: string;              // e.g., "cap.price.lookup.v1"
+  name: string;            // Human-readable name
+  description: string;     // What this capability does
+  version: string;         // Semantic version
+  
+  execution: {
+    mode: "public" | "confidential";
+    proof_type: ProofType;
+    timeout_ms: number;
+  };
+  
+  inputs: { schema: JSONSchema; required: string[]; };
+  outputs: { schema: JSONSchema; };
+  
+  economics: {
+    cost_hint: string;
+    currency: string;
+    payment_methods: string[];
+  };
+}</pre>
+        
+        <h3>7.1 Capability Categories</h3>
+        <table>
+          <tr><th>Category</th><th>Examples</th><th>Mode</th><th>Privacy Stack</th></tr>
+          <tr><td><strong>Price Data</strong></td><td><code>cap.price.lookup.v1</code></td><td>Public</td><td>—</td></tr>
+          <tr><td><strong>Wallet Operations</strong></td><td><code>cap.wallet.snapshot.v1</code></td><td>Public/Confidential</td><td>Inco</td></tr>
+          <tr><td><strong>Confidential Compute</strong></td><td><code>cap.fhe.compute.v1</code></td><td>Confidential</td><td>Inco FHE</td></tr>
+          <tr><td><strong>Private Swaps</strong></td><td><code>cap.confidential.swap.v1</code></td><td>Confidential</td><td>Arcium MPC</td></tr>
+          <tr><td><strong>ZK Proofs</strong></td><td><code>cap.zk.proof.balance.v1</code></td><td>Confidential</td><td>Noir</td></tr>
+          <tr><td><strong>Messaging</strong></td><td><code>cap.lightning.message.v1</code></td><td>Confidential</td><td>Inco + Arcium</td></tr>
+        </table>
+        
+        <h2>8. Economic Model</h2>
+        <h3>8.1 Trust-Based Pricing</h3>
+        <table>
+          <tr><th>Trust Level</th><th>Rate Limit</th><th>Discount</th></tr>
+          <tr><td>Anonymous</td><td>10 req/min</td><td>0%</td></tr>
+          <tr><td>Verified</td><td>50 req/min</td><td>10%</td></tr>
+          <tr><td>Trusted</td><td>200 req/min</td><td>20%</td></tr>
+          <tr><td>Premium</td><td>1000 req/min</td><td>50%</td></tr>
+        </table>
+        
+        <h3>8.2 Payment Methods</h3>
+        <ul>
+          <li><strong>X.402 Payment Hints</strong>: HTTP-native micropayments</li>
+          <li><strong>Privacy Cash</strong>: Anonymous payment notes</li>
+          <li><strong>On-chain Settlement</strong>: Solana SPL tokens</li>
+          <li><strong>Subscription</strong>: Pre-paid capability bundles</li>
         </ul>
         
-        <h3>Inco (Encrypted Compute)</h3>
+        <h2>9. Security Framework</h2>
+        <h3>9.1 Multi-Layer Authentication</h3>
+        <table>
+          <tr><th>Layer</th><th>Mechanism</th></tr>
+          <tr><td><strong>Layer 1</strong></td><td>API Key Authentication — Agent identity verification</td></tr>
+          <tr><td><strong>Layer 2</strong></td><td>Capability Tokens — Fine-grained access control, scoped to specific capabilities</td></tr>
+          <tr><td><strong>Layer 3</strong></td><td>Handshake Protocol — Multi-step authentication for confidential ops</td></tr>
+          <tr><td><strong>Layer 4</strong></td><td>Semantic Encryption — Payload-level encryption, intent obfuscation</td></tr>
+        </table>
+        
+        <h3>9.2 Security Properties</h3>
+        <table>
+          <tr><th>Property</th><th>Mechanism</th></tr>
+          <tr><td><strong>Timing-safe comparisons</strong></td><td><code>crypto.timingSafeEqual</code> for all secrets</td></tr>
+          <tr><td><strong>Request signing</strong></td><td>HMAC-SHA256 signatures</td></tr>
+          <tr><td><strong>Input sanitization</strong></td><td>XSS/injection prevention</td></tr>
+          <tr><td><strong>Rate limiting</strong></td><td>IP + agent-based limits</td></tr>
+          <tr><td><strong>Audit logging</strong></td><td>Full event trail</td></tr>
+        </table>
+        
+        <h2>10. Use Cases</h2>
+        
+        <h3>10.1 Private DeFi Trading</h3>
+        <p><strong>Problem</strong>: MEV bots front-run large swaps, extracting $500+ per trade.</p>
+        <pre class="code-block"># 1. Wrap tokens to confidential
+POST /invoke
+{"capability_id": "cap.cspl.wrap.v1", "inputs": {"amount": 1000, "mint": "SOL"}}
+
+# 2. Execute private swap (amount hidden)
+POST /invoke
+{"capability_id": "cap.confidential.swap.v1", "inputs": {...}}
+
+# Result: Zero MEV extraction, competitors don't see position size</pre>
+        
+        <h3>10.2 Proof of Wealth Without Disclosure</h3>
+        <p><strong>Problem</strong>: Proving creditworthiness exposes entire portfolio.</p>
+        <pre class="code-block">POST /invoke
+{
+  "capability_id": "cap.zk.proof.balance.v1",
+  "inputs": {
+    "wallet": "WALLET",
+    "threshold": 10000,
+    "currency": "USD"
+  }
+}
+
+# Returns: ZK proof that balance > $10K, without revealing actual amount</pre>
+        
+        <h3>10.3 Encrypted Agent Messaging</h3>
+        <p><strong>Problem</strong>: Agent communications are public, strategies leaked.</p>
+        <pre class="code-block">POST /invoke
+{
+  "capability_id": "cap.lightning.message.v1",
+  "inputs": {
+    "recipient": "agent_xyz",
+    "message": "Trading signal: BUY SOL",
+    "encryption": "fhe"
+  }
+}
+
+# Result: Only recipient can decrypt, even router can't read</pre>
+        
+        <h2>11. Implementation</h2>
+        <table>
+          <tr><th>Metric</th><th>Value</th></tr>
+          <tr><td><strong>TypeScript files</strong></td><td>58</td></tr>
+          <tr><td><strong>Tests</strong></td><td>306 (262 passing, 44 external API dependent)</td></tr>
+          <tr><td><strong>API endpoints</strong></td><td>100+</td></tr>
+          <tr><td><strong>Capabilities</strong></td><td>13</td></tr>
+          <tr><td><strong>Sponsor integrations</strong></td><td>4 (Arcium, Noir, Helius, Inco)</td></tr>
+        </table>
+        
+        <h2>12. Market Opportunity</h2>
+        <table>
+          <tr><th>Segment</th><th>2024</th><th>2026 (Projected)</th><th>CAGR</th></tr>
+          <tr><td>AI Agent Platforms</td><td>$2.1B</td><td>$8.4B</td><td>100%+</td></tr>
+          <tr><td>DeFi Infrastructure</td><td>$47B TVL</td><td>$150B TVL</td><td>78%</td></tr>
+          <tr><td>Privacy Tech (ZK/MPC)</td><td>$890M</td><td>$4.2B</td><td>117%</td></tr>
+          <tr><td><strong>Combined TAM</strong></td><td><strong>$50B</strong></td><td><strong>$162B</strong></td><td><strong>80%</strong></td></tr>
+        </table>
+        
+        <h2>13. Roadmap</h2>
+        <h3>Phase 1: Foundation ✅ Complete</h3>
         <ul>
-          <li><code>cap.fhe.compute.v1</code> - Compute on encrypted data</li>
-          <li><code>cap.lightning.message.v1</code> - Encrypted agent-to-agent messaging</li>
+          <li>Protocol specification (OpenAPI 3.1, JSON Schema, TypeScript types)</li>
+          <li>Reference router (58 TypeScript files, 100+ endpoints)</li>
+          <li>Privacy stack integration (Noir, Arcium, Inco fully integrated)</li>
+          <li>Security framework (Multi-layer auth, capability tokens, trust network)</li>
+          <li>Test coverage (306 tests)</li>
         </ul>
         
-        <h3>Helius (Real-Time Data)</h3>
+        <h3>Phase 2: Expansion (Q1 2026)</h3>
         <ul>
-          <li><code>cap.wallet.snapshot.v1</code> - Complete wallet state via DAS API</li>
-          <li>Real-time webhooks - Balance changes, transaction confirmations</li>
+          <li>Multi-language SDKs (Python, Rust, Go)</li>
+          <li>Capability expansion (50+ capabilities)</li>
+          <li>Mainnet deployment (Solana mainnet)</li>
         </ul>
+        
+        <h3>Phase 3: Decentralization (Q2 2026)</h3>
+        <ul>
+          <li>Distributed routers (10+ nodes)</li>
+          <li>On-chain registry (Solana program)</li>
+          <li>Staking & governance (CAP token)</li>
+          <li>Cross-chain support (EVM, Cosmos)</li>
+        </ul>
+        
+        <h2>14. Conclusion</h2>
+        <p>CAP-402 represents a fundamental shift in how autonomous agents interact. By introducing semantic capabilities, privacy gradients, and economic coordination, we enable a new paradigm where agents can:</p>
+        <ul>
+          <li><strong>Discover</strong> capabilities by intent, not implementation</li>
+          <li><strong>Execute</strong> with configurable privacy guarantees</li>
+          <li><strong>Verify</strong> results through cryptographic receipts</li>
+          <li><strong>Compose</strong> complex workflows atomically</li>
+          <li><strong>Transact</strong> through standardized economic hints</li>
+        </ul>
+        <blockquote>CAP-402 is not just a protocol—it's the infrastructure layer for the agent economy.<br><br><strong>"Agents don't call APIs. Agents call capabilities."</strong></blockquote>
       </div>
     </div>
   </div>
