@@ -69,13 +69,20 @@ export interface SwapResult {
 class SwapProvider {
   // Jupiter Lite API - free public endpoint (no API key required)
   private getJupiterBaseUrl(): string {
-    return process.env.JUPITER_API_URL || 'https://lite-api.jup.ag/swap/v1';
+    const url = process.env.JUPITER_API_URL || 'https://lite-api.jup.ag/swap/v1';
+    console.log(`[SwapProvider] JUPITER_API_URL env: ${process.env.JUPITER_API_URL}`);
+    console.log(`[SwapProvider] Base URL: ${url}`);
+    return url;
   }
   private get jupiterQuoteUrl(): string {
-    return `${this.getJupiterBaseUrl()}/quote`;
+    const base = this.getJupiterBaseUrl();
+    const url = `${base}/quote`;
+    console.log(`[SwapProvider] Quote URL: ${url}`);
+    return url;
   }
   private get jupiterSwapUrl(): string {
-    return `${this.getJupiterBaseUrl()}/swap`;
+    const base = this.getJupiterBaseUrl();
+    return `${base}/swap`;
   }
   private jupiterPriceUrl = 'https://price.jup.ag/v6/price';
   private jupiterApiKey = process.env.JUPITER_API_KEY || '';
@@ -197,7 +204,7 @@ class SwapProvider {
     this.swapCount++;
     
     // Safety check: limit swap amount to prevent accidents
-    const MAX_SWAP_SOL = 0.1; // Max 0.1 SOL per swap for safety
+    const MAX_SWAP_SOL = 0.001; // Max 0.001 SOL per swap for testing
     if (inputToken === TOKEN_MINTS.SOL && amount > MAX_SWAP_SOL) {
       throw new Error(`Swap amount ${amount} SOL exceeds safety limit of ${MAX_SWAP_SOL} SOL`);
     }
@@ -259,14 +266,31 @@ class SwapProvider {
       
       console.log(`🔄 Swap TX sent: ${txSignature}`);
       
-      // 5. Wait for confirmation
-      const confirmation = await connection.confirmTransaction(txSignature, 'confirmed');
-      
-      if (confirmation.value.err) {
-        throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+      // 5. Wait for confirmation using polling (Alchemy doesn't support signatureSubscribe)
+      let confirmed = false;
+      let confirmationSlot = 0;
+      for (let i = 0; i < 30; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+          const status = await connection.getSignatureStatus(txSignature);
+          if (status.value?.confirmationStatus === 'confirmed' || status.value?.confirmationStatus === 'finalized') {
+            confirmed = true;
+            confirmationSlot = status.context.slot;
+            break;
+          }
+          if (status.value?.err) {
+            throw new Error(`Transaction failed: ${JSON.stringify(status.value.err)}`);
+          }
+        } catch (e) {
+          // Continue polling
+        }
       }
       
-      console.log(`✅ Swap confirmed: ${txSignature}`);
+      if (!confirmed) {
+        console.log(`⚠️  Swap TX sent but confirmation timed out: ${txSignature}`);
+      } else {
+        console.log(`✅ Swap confirmed: ${txSignature}`);
+      }
       
       const outputAmount = parseInt(quoteData.outAmount) / 1e9;
       
@@ -282,8 +306,8 @@ class SwapProvider {
           platform_fee: parseInt(quoteData.platformFee?.amount || '0') / 1e9,
           network_fee: 0.000005
         },
-        confirmed: true,
-        slot: confirmation.context.slot
+        confirmed: confirmed,
+        slot: confirmationSlot
       };
       
     } catch (error) {
