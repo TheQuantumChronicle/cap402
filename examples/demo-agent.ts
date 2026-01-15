@@ -2,13 +2,13 @@ import { createClient } from '../sdk/client';
 import { Capability } from '../spec/capabilities';
 
 class DemoAgent {
-  private client = createClient('http://localhost:3402');
+  private client = createClient('https://cap402.com');
   private agentId = 'demo-agent-001';
 
   async run(): Promise<void> {
     console.log('\n🤖 CAP-402 Demo Agent Starting...\n');
     console.log(`Agent ID: ${this.agentId}`);
-    console.log(`Router: http://localhost:3402\n`);
+    console.log(`Router: https://cap402.com\n`);
 
     try {
       await this.discoverPhase();

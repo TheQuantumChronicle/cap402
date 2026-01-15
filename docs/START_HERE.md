@@ -20,7 +20,7 @@ npm start
 You should see:
 ```
 🚀 CAP-402 Reference Router
-📡 Listening on http://localhost:3402
+📡 Listening on https://cap402.com
 
 Endpoints:
   GET  /capabilities       - Discover all capabilities
@@ -50,13 +50,13 @@ With the router running, try these commands:
 
 ```bash
 # Discover all capabilities
-curl http://localhost:3402/capabilities | jq
+curl https://cap402.com/capabilities | jq
 
 # Get specific capability
-curl http://localhost:3402/capabilities/cap.price.lookup.v1 | jq
+curl https://cap402.com/capabilities/cap.price.lookup.v1 | jq
 
 # Invoke price lookup
-curl -X POST http://localhost:3402/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{
     "capability_id": "cap.price.lookup.v1",
@@ -67,7 +67,7 @@ curl -X POST http://localhost:3402/invoke \
   }' | jq
 
 # Invoke wallet snapshot
-curl -X POST http://localhost:3402/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{
     "capability_id": "cap.wallet.snapshot.v1",
@@ -79,7 +79,7 @@ curl -X POST http://localhost:3402/invoke \
   }' | jq
 
 # Invoke confidential document parse
-curl -X POST http://localhost:3402/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{
     "capability_id": "cap.document.parse.v1",

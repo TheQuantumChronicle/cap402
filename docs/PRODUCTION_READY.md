@@ -31,7 +31,7 @@ npm start
 You'll see:
 ```
 🚀 CAP-402 Reference Router v0.1.0
-📡 Listening on http://localhost:3402
+📡 Listening on https://cap402.com
 
 ✅ Real API Integrations:
   • CoinMarketCap (Price Data)
@@ -95,7 +95,7 @@ npm run test:integrations
 ### Core Capabilities
 ```bash
 # Get real SOL price
-curl -X POST http://localhost:3402/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{
     "capability_id": "cap.price.lookup.v1",
@@ -114,7 +114,7 @@ Response includes:
 
 ```bash
 # Get real wallet data
-curl -X POST http://localhost:3402/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{
     "capability_id": "cap.wallet.snapshot.v1",
@@ -136,13 +136,13 @@ Response includes:
 ### Health Monitoring
 ```bash
 # System health with integration status
-curl http://localhost:3402/health
+curl https://cap402.com/health
 
 # Detailed integration status
-curl http://localhost:3402/integrations/status
+curl https://cap402.com/integrations/status
 
 # Specific service health
-curl http://localhost:3402/integrations/price-api
+curl https://cap402.com/integrations/price-api
 ```
 
 ---
@@ -311,12 +311,12 @@ await integrationManager.subscribeToPriceUpdates('SOL', (update) => {
 ### cURL
 ```bash
 # Price lookup
-curl -X POST http://localhost:3402/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'
 
 # Wallet snapshot
-curl -X POST http://localhost:3402/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{"capability_id":"cap.wallet.snapshot.v1","inputs":{"address":"YourAddress"}}'
 ```
@@ -328,7 +328,7 @@ curl -X POST http://localhost:3402/invoke \
 Check system status anytime:
 
 ```bash
-curl http://localhost:3402/health | jq
+curl https://cap402.com/health | jq
 ```
 
 ```json
@@ -399,4 +399,4 @@ curl http://localhost:3402/health | jq
 npm start
 ```
 
-Then visit: http://localhost:3402/health
+Then visit: https://cap402.com/health

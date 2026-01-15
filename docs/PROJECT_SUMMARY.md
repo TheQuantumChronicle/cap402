@@ -72,7 +72,7 @@ npm start
 npm run demo
 
 # Test API
-curl http://localhost:3402/capabilities
+curl https://cap402.com/capabilities
 ```
 
 ## 📚 Documentation Provided

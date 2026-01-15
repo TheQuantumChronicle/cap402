@@ -59,7 +59,7 @@ info:
 servers:
   - url: https://api.cap402.com
     description: Production API
-  - url: http://localhost:3402
+  - url: https://cap402.com
     description: Local Development
 
 tags:

@@ -17,7 +17,7 @@ npm install
 npm start
 ```
 
-The router will start on `http://localhost:3402`
+The router will start on `https://cap402.com`
 
 ### 2. Run the Demo Agent (in a new terminal)
 
@@ -30,19 +30,19 @@ npm run demo
 ### Discover Capabilities
 
 ```bash
-curl http://localhost:3402/capabilities
+curl https://cap402.com/capabilities
 ```
 
 ### Get Specific Capability
 
 ```bash
-curl http://localhost:3402/capabilities/cap.price.lookup.v1
+curl https://cap402.com/capabilities/cap.price.lookup.v1
 ```
 
 ### Invoke a Capability
 
 ```bash
-curl -X POST http://localhost:3402/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{
     "capability_id": "cap.price.lookup.v1",
@@ -59,7 +59,7 @@ curl -X POST http://localhost:3402/invoke \
 ### Invoke Wallet Snapshot
 
 ```bash
-curl -X POST http://localhost:3402/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{
     "capability_id": "cap.wallet.snapshot.v1",
@@ -74,7 +74,7 @@ curl -X POST http://localhost:3402/invoke \
 ### Invoke Confidential Document Parse
 
 ```bash
-curl -X POST http://localhost:3402/invoke \
+curl -X POST https://cap402.com/invoke \
   -H "Content-Type: application/json" \
   -d '{
     "capability_id": "cap.document.parse.v1",

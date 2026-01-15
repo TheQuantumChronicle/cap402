@@ -534,7 +534,7 @@ The demo agent will:
 ```typescript
 import { createClient } from './sdk/client';
 
-const client = createClient('http://localhost:3402');
+const client = createClient('https://cap402.com');
 
 // Discover capabilities
 const capabilities = await client.discoverCapabilities();
@@ -1086,7 +1086,7 @@ Agents can request: *"Give me level ≥2 but cheapest option"*
 Agents can negotiate execution options before committing:
 
 ```bash
-curl -X POST http://localhost:3402/negotiate \
+curl -X POST https://cap402.com/negotiate \
   -d '{
     "capability_id": "cap.confidential.swap.v1",
     "inputs": {"amount": 1000},
@@ -1156,10 +1156,10 @@ Features:
 
 ```bash
 # Check health of all advanced features
-curl http://localhost:3402/advanced/health
+curl https://cap402.com/advanced/health
 
 # Run self-test on all 5 modules
-curl -X POST http://localhost:3402/advanced/self-test
+curl -X POST https://cap402.com/advanced/self-test
 ```
 
 ### Unified Import

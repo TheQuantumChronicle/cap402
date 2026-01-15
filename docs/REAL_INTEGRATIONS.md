@@ -166,7 +166,7 @@ console.log(`SOL Balance: ${balance}`);
 The system continuously monitors all integrations:
 
 ```bash
-GET http://localhost:3402/health
+GET https://cap402.com/health
 ```
 
 Response:

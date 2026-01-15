@@ -143,8 +143,8 @@ npm run demo
 
 ### Test API
 ```bash
-curl http://localhost:3402/capabilities
-curl http://localhost:3402/health
+curl https://cap402.com/capabilities
+curl https://cap402.com/health
 ```
 
 ## ✅ Design Principles Met
