@@ -94,6 +94,8 @@ app.use(express.static(path.join(process.cwd(), 'frontend')));
 app.use('/public', express.static(path.join(process.cwd(), 'public')));
 // Also serve public files at root for favicon.ico etc
 app.use(express.static(path.join(process.cwd(), 'public')));
+// Serve docs folder for API documentation (Swagger)
+app.use('/docs', express.static(path.join(process.cwd(), 'docs')));
 
 // CORS middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
