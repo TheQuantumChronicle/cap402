@@ -33,9 +33,38 @@ class HeliusWebhookManager {
   private apiKey: string;
   private webhooks: Map<string, HeliusWebhook> = new Map();
   private eventHandlers: Map<string, (event: HeliusEvent) => void> = new Map();
+  private stats = {
+    webhooksCreated: 0,
+    webhooksDeleted: 0,
+    eventsProcessed: 0,
+    eventsByType: new Map<string, number>()
+  };
 
   constructor() {
     this.apiKey = process.env.HELIUS_API_KEY || '';
+  }
+
+  /**
+   * Get webhook manager stats
+   */
+  getStats(): {
+    webhooks_active: number;
+    webhooks_created: number;
+    webhooks_deleted: number;
+    events_processed: number;
+    events_by_type: Record<string, number>;
+  } {
+    const eventsByType: Record<string, number> = {};
+    for (const [type, count] of this.stats.eventsByType.entries()) {
+      eventsByType[type] = count;
+    }
+    return {
+      webhooks_active: this.webhooks.size,
+      webhooks_created: this.stats.webhooksCreated,
+      webhooks_deleted: this.stats.webhooksDeleted,
+      events_processed: this.stats.eventsProcessed,
+      events_by_type: eventsByType
+    };
   }
 
   /**
@@ -67,6 +96,7 @@ class HeliusWebhookManager {
       };
 
       this.webhooks.set(wallet, webhook);
+      this.stats.webhooksCreated++;
       console.log(`✅ Helius webhook created for ${wallet}`);
       
       return webhook;
@@ -90,6 +120,7 @@ class HeliusWebhookManager {
       
       this.webhooks.delete(wallet);
       this.eventHandlers.delete(wallet);
+      this.stats.webhooksDeleted++;
       console.log(`✅ Helius webhook deleted for ${wallet}`);
     } catch (error) {
       console.error(`❌ Failed to delete Helius webhook: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -110,12 +141,18 @@ class HeliusWebhookManager {
     const handler = this.eventHandlers.get(wallet);
     if (!handler) return;
 
+    const eventType = this.determineEventType(eventData);
     const event: HeliusEvent = {
-      type: this.determineEventType(eventData),
+      type: eventType,
       wallet,
       timestamp: Date.now(),
       data: eventData
     };
+
+    // Track event stats
+    this.stats.eventsProcessed++;
+    const currentCount = this.stats.eventsByType.get(eventType) || 0;
+    this.stats.eventsByType.set(eventType, currentCount + 1);
 
     handler(event);
   }
