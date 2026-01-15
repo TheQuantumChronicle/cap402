@@ -3949,15 +3949,10 @@ export function stopServer(): Promise<void> {
 export { app };
 
 function startServerLegacy(): void {
-  // Listen on all interfaces - Railway requires this
-  const port = Number(PORT);
-  console.log(`Attempting to listen on port ${port}...`);
-  
-  server = app.listen(port, async () => {
-    console.log(`Server successfully bound to port ${port}`);
-    observability.info('server', `CAP-402 Router listening on port ${port}`);
+  server = app.listen(Number(PORT), HOST, async () => {
+    observability.info('server', `CAP-402 Router listening on ${HOST}:${PORT}`);
     console.log(`\n🚀 CAP-402 Reference Router v0.1.0`);
-    console.log(`📡 Listening on http://localhost:${port}`);
+    console.log(`📡 Listening on http://localhost:${PORT}`);
     
     // Initialize BirdEye WebSocket
     try {
@@ -5489,26 +5484,5 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 if (require.main === module) {
-  console.log('🚀 Starting CAP-402 server...');
-  console.log(`   PORT: ${PORT}`);
-  console.log(`   HOST: ${HOST}`);
-  console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
-  
-  try {
-    startServerLegacy();
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
+  startServerLegacy();
 }
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});

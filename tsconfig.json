@@ -23,7 +23,6 @@
     "sdk/**/*",
     "demo-agent/**/*",
     "chain/**/*",
-    "examples/**/*",
     "tests/**/*"
   ],
   "exclude": [

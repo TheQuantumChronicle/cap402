@@ -95,6 +95,11 @@ class CapabilityNegotiator {
     const options: NegotiationOption[] = [];
     const constraintsApplied: string[] = [];
 
+    // Default negotiate options if not provided
+    if (!request.negotiate) {
+      request.negotiate = { privacy: true, latency: true, batching: false, provider: true };
+    }
+
     // Get capability info
     const capability = registry.getCapability(request.capability_id);
     if (!capability) {
