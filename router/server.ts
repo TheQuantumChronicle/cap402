@@ -89,9 +89,11 @@ app.use(helmet({
 app.use(express.json({ limit: '1mb' })); // Limit request body size
 app.use(compression({ threshold: 1024 })); // Compress responses > 1KB
 
-// Serve frontend static files
-app.use(express.static(path.join(__dirname, '../frontend')));
-app.use('/public', express.static(path.join(__dirname, '../public')));
+// Serve frontend static files - use process.cwd() for correct path in Railway
+app.use(express.static(path.join(process.cwd(), 'frontend')));
+app.use('/public', express.static(path.join(process.cwd(), 'public')));
+// Also serve public files at root for favicon.ico etc
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // CORS middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
