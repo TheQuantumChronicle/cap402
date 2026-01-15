@@ -96,6 +96,10 @@ app.use('/public', express.static(path.join(process.cwd(), 'public')));
 app.use(express.static(path.join(process.cwd(), 'public')));
 // Serve docs folder for API documentation (Swagger)
 app.use('/docs', express.static(path.join(process.cwd(), 'docs')));
+// Redirect /docs to /docs/api-docs.html
+app.get('/docs', (req: Request, res: Response) => {
+  res.redirect('/docs/api-docs.html');
+});
 
 // CORS middleware
 app.use((req: Request, res: Response, next: NextFunction) => {

@@ -672,7 +672,7 @@
     <div class="nav-links">
       <a href="#capabilities">Capabilities</a>
       <a href="#infrastructure">Infrastructure</a>
-      <a href="/docs/api-docs.html">Docs</a>
+      <a href="/docs">Docs</a>
       <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" rel="noopener noreferrer" class="nav-cta" style="display: flex; align-items: center; gap: 0.5rem;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
         GitHub
@@ -809,7 +809,7 @@
   <!-- Start -->
   <section id="start" style="padding: 4vh 6vw;">
     <div class="code-block" style="max-width: 700px; margin: 0 auto; cursor: pointer;" onclick="navigator.clipboard.writeText(document.getElementById('curl-cmd').textContent); this.style.borderColor='#22c55e'; setTimeout(() => this.style.borderColor='', 500);" title="Click to copy">
-      <code class="mono" id="curl-cmd">curl cap402.com/invoke -d '{"capability_id":"cap.price.lookup.v1"}'</code>
+      <code class="mono" id="curl-cmd">curl -X POST cap402.com/invoke -d '{"capability_id":"cap.price.lookup.v1"}'</code>
     </div>
   </section>
 
@@ -817,7 +817,7 @@
   <section style="padding: 4vh 6vw; text-align: center;">
     <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">Click an endpoint to see example. Click the command to copy.</p>
     <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; max-width: 800px; margin: 0 auto;">
-      <span class="tag endpoint-tag" data-cmd="curl cap402.com/invoke -d '{\"capability_id\":\"cap.price.lookup.v1\"}'">/invoke</span>
+      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/invoke -d '{\"capability_id\":\"cap.price.lookup.v1\"}'">/invoke</span>
       <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/a2a/invoke -d '{\"from_agent\":\"bot-A\",\"to_agent\":\"bot-B\",\"capability_id\":\"cap.price.lookup.v1\"}'">/a2a/invoke</span>
       <span class="tag endpoint-tag" data-cmd="curl cap402.com/a2a/discover/cap.price.lookup.v1">/a2a/discover</span>
       <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/a2a/auction -d '{\"requester_agent\":\"my-bot\",\"capability_id\":\"cap.price.lookup.v1\"}'">/a2a/auction</span>
