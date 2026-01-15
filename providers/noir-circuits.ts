@@ -138,6 +138,27 @@ class NoirCircuitsProvider {
       public_inputs: ['proposal_id', 'dao_address'],
       private_inputs: ['token_balance', 'delegation_proof', 'voter_signature'],
       constraints: 2560
+    }],
+    ['credit_score_range', {
+      name: 'credit_score_range',
+      description: 'Prove credit score is within acceptable range without revealing exact score',
+      public_inputs: ['min_score', 'max_score', 'lender_id'],
+      private_inputs: ['actual_score', 'credit_report_hash', 'bureau_signature'],
+      constraints: 1536
+    }],
+    ['nft_ownership', {
+      name: 'nft_ownership',
+      description: 'Prove ownership of NFT from collection without revealing which one',
+      public_inputs: ['collection_address', 'merkle_root'],
+      private_inputs: ['nft_mint', 'owner_signature', 'merkle_proof'],
+      constraints: 2048
+    }],
+    ['income_verification', {
+      name: 'income_verification',
+      description: 'Prove income exceeds threshold without revealing exact amount',
+      public_inputs: ['income_threshold', 'currency', 'verification_date'],
+      private_inputs: ['actual_income', 'employer_attestation', 'pay_stub_hash'],
+      constraints: 1792
     }]
   ]);
 

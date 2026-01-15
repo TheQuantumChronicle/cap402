@@ -414,6 +414,9 @@ export class ConfidentialExecutor implements Executor {
       case 'add':
         result = await incoFHEProvider.fheAdd(encryptedOperands[0], encryptedOperands[1]);
         break;
+      case 'sub':
+        result = await incoFHEProvider.fheSub(encryptedOperands[0], encryptedOperands[1]);
+        break;
       case 'mul':
         result = await incoFHEProvider.fheMul(encryptedOperands[0], encryptedOperands[1]);
         break;
@@ -426,7 +429,7 @@ export class ConfidentialExecutor implements Executor {
       default:
         return {
           success: false,
-          outputs: { available_operations: ['add', 'mul', 'lt', 'select'] },
+          outputs: { available_operations: ['add', 'sub', 'mul', 'lt', 'select'] },
           error: `Unknown FHE operation: ${operation}`,
           metadata: {
             executor: this.name,
