@@ -67,10 +67,11 @@ export interface SwapResult {
 }
 
 class SwapProvider {
-  // Jupiter API endpoints
-  private jupiterQuoteUrl = 'https://quote-api.jup.ag/v6/quote';
-  private jupiterSwapUrl = 'https://quote-api.jup.ag/v6/swap';
-  private jupiterPriceUrl = 'https://price.jup.ag/v6/price';
+  // Jupiter API v1 endpoints (new API requires API key)
+  private jupiterQuoteUrl = 'https://api.jup.ag/swap/v1/quote';
+  private jupiterSwapUrl = 'https://api.jup.ag/swap/v1/swap';
+  private jupiterPriceUrl = 'https://api.jup.ag/price/v2';
+  private jupiterApiKey = process.env.JUPITER_API_KEY || '';
   
   // Rate limiter to avoid hitting Jupiter API limits
   private lastCall = 0;
@@ -124,13 +125,20 @@ class SwapProvider {
       // Convert SOL amount to lamports (1 SOL = 1e9 lamports)
       const amountInLamports = Math.floor(amount * 1e9);
       
+      const headers: Record<string, string> = {};
+      if (this.jupiterApiKey) {
+        headers['x-api-key'] = this.jupiterApiKey;
+      }
+      
       const response = await axios.get(this.jupiterQuoteUrl, {
         params: {
           inputMint,
           outputMint,
           amount: amountInLamports,
           slippageBps,
+          restrictIntermediateTokens: true,
         },
+        headers,
         timeout: 10000
       });
 
