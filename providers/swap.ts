@@ -155,22 +155,7 @@ class SwapProvider {
         other_amount_threshold: otherAmountThreshold
       };
     } catch (error) {
-      // Graceful degradation: return simulated quote when Jupiter API is unreachable
-      if (axios.isAxiosError(error) && (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED')) {
-        console.warn('⚠️  Jupiter API unreachable, returning simulated quote');
-        return {
-          input_mint: inputMint,
-          output_mint: outputMint,
-          input_amount: amount,
-          output_amount: amount * 144.5, // Approximate SOL/USDC rate
-          price_impact_pct: 0.01,
-          route_plan: [{ label: 'simulated', percent: 100 }],
-          fees: { total: 0.000005, platform_fee: 0, network_fee: 0.000005 },
-          minimum_received: amount * 144.5 * 0.995,
-          other_amount_threshold: amount * 144.5 * 0.995,
-          simulated: true
-        } as SwapQuote;
-      }
+      // NO SIMULATION - fail with clear error message
       if (axios.isAxiosError(error)) {
         this.lastError = `Jupiter API error: ${error.response?.data?.error || error.message}`;
         throw new Error(this.lastError);

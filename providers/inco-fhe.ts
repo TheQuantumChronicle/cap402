@@ -118,10 +118,8 @@ class IncoFHEProvider {
         console.log('⚠️  Inco FHE test mode - simulation enabled for tests');
         this.useLiveMode = false;
       } else {
-        // Graceful degradation - use simulation with warning
-        console.warn('⚠️  Inco FHE testnet unreachable - using simulation mode');
-        console.warn('   Set INCO_RPC_URL to a working Inco node for real FHE');
-        this.useLiveMode = false;
+        // NO SIMULATION - fail if testnet unreachable
+        throw new Error('Inco FHE testnet unreachable. Set INCO_RPC_URL to a working Inco node.');
       }
       this.initialized = true;
     } catch (error) {
@@ -131,10 +129,8 @@ class IncoFHEProvider {
         this.useLiveMode = false;
         this.initialized = true;
       } else {
-        // Graceful degradation in production too
-        console.warn('⚠️  Inco FHE initialization failed, using simulation:', error);
-        this.useLiveMode = false;
-        this.initialized = true;
+        // NO SIMULATION - rethrow error
+        throw error;
       }
     }
   }
@@ -179,20 +175,8 @@ class IncoFHEProvider {
       }
     }
 
-    // Simulation mode - works in both test and production when testnet is unreachable
-    const nonce = crypto.randomBytes(12);
-    const key = crypto.randomBytes(32);
-    const cipher = crypto.createCipheriv('aes-256-gcm', key, nonce);
-    const plaintext = JSON.stringify({ value, type: encryptionType });
-    let ciphertext = cipher.update(plaintext, 'utf8', 'hex');
-    ciphertext += cipher.final('hex');
-    const authTag = cipher.getAuthTag();
-    return {
-      ciphertext: '0x' + ciphertext + authTag.toString('hex'),
-      public_key: '0x' + crypto.randomBytes(32).toString('hex'),
-      encryption_type: encryptionType,
-      mode: 'simulation'
-    };
+    // NO SIMULATION - fail if not connected to real Inco testnet
+    throw new Error('Inco FHE requires real testnet connection. Set INCO_RPC_URL to a working Inco node.');
   }
 
   /**
