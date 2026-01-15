@@ -197,8 +197,11 @@ class SponsorStatusManager {
         features: [
           'Fully Homomorphic Encryption (FHE)',
           'Encrypted computation',
-          'Homomorphic addition',
-          'Homomorphic comparison',
+          'Homomorphic addition (fheAdd)',
+          'Homomorphic subtraction (fheSub)',
+          'Homomorphic multiplication (fheMul)',
+          'Homomorphic comparison (fheLt)',
+          'Conditional select (fheSelect)',
           'Confidential messaging',
           'Encrypted state management',
           'Private auctions',
