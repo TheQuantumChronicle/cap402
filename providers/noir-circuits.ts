@@ -356,6 +356,53 @@ class NoirCircuitsProvider {
     );
   }
 
+  /**
+   * Prove credit score is within acceptable range
+   */
+  async proveCreditScoreRange(
+    actualScore: number,
+    minScore: number,
+    maxScore: number,
+    lenderId: string
+  ): Promise<NoirProof> {
+    return this.generateProof(
+      'credit_score_range',
+      { min_score: minScore, max_score: maxScore, lender_id: lenderId },
+      { actual_score: actualScore, credit_report_hash: '0x' + require('crypto').randomBytes(32).toString('hex'), bureau_signature: 'sig_bureau' }
+    );
+  }
+
+  /**
+   * Prove NFT ownership from collection without revealing which NFT
+   */
+  async proveNFTOwnership(
+    nftMint: string,
+    collectionAddress: string,
+    merkleRoot: string,
+    merkleProof: string[]
+  ): Promise<NoirProof> {
+    return this.generateProof(
+      'nft_ownership',
+      { collection_address: collectionAddress, merkle_root: merkleRoot },
+      { nft_mint: nftMint, owner_signature: 'sig_owner', merkle_proof: merkleProof }
+    );
+  }
+
+  /**
+   * Prove income exceeds threshold without revealing exact amount
+   */
+  async proveIncomeVerification(
+    actualIncome: number,
+    incomeThreshold: number,
+    currency: string
+  ): Promise<NoirProof> {
+    return this.generateProof(
+      'income_verification',
+      { income_threshold: incomeThreshold, currency: currency, verification_date: new Date().toISOString().split('T')[0] },
+      { actual_income: actualIncome, employer_attestation: 'att_employer', pay_stub_hash: '0x' + require('crypto').randomBytes(32).toString('hex') }
+    );
+  }
+
   private computePublicOutputs(
     circuitName: string,
     publicInputs: Record<string, any>,
@@ -377,6 +424,23 @@ class NoirCircuitsProvider {
           is_compliant: true,
           compliance_level: publicInputs.compliance_level,
           jurisdiction: publicInputs.jurisdiction
+        };
+      case 'credit_score_range':
+        return {
+          score_in_range: privateInputs.actual_score >= publicInputs.min_score && privateInputs.actual_score <= publicInputs.max_score,
+          min_score: publicInputs.min_score,
+          max_score: publicInputs.max_score
+        };
+      case 'nft_ownership':
+        return {
+          owns_nft_in_collection: true,
+          collection_address: publicInputs.collection_address
+        };
+      case 'income_verification':
+        return {
+          meets_income_threshold: privateInputs.actual_income >= publicInputs.income_threshold,
+          threshold: publicInputs.income_threshold,
+          currency: publicInputs.currency
         };
       default:
         return { verified: true };
