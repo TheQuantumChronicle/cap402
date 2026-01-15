@@ -158,9 +158,9 @@ class AdvancedFeaturesHealthMonitor {
     try {
       const { negotiator } = await import('../capability-negotiation');
       const result = await negotiator.negotiate({
-        capability_id: 'cap.test.v1',
-        inputs: {},
-        negotiate: { privacy: true }
+        capability_id: 'cap.price.lookup.v1',
+        inputs: { base_token: 'SOL' },
+        negotiate: { privacy: true, latency: true }
       });
       results.push({ feature: 'capability-negotiation', passed: result.success });
       this.recordUsage('capability-negotiation', result.success, 1);
