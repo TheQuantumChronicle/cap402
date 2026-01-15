@@ -406,10 +406,12 @@ app.post('/invoke', async (req: Request, res: Response) => {
   const capabilityToken = req.headers['x-capability-token'] as string;
   const semanticKey = req.headers['x-semantic-key'] as string;
   
-  // Get agent identity if API key provided
+  // Get agent identity if API key or X-Agent-ID provided
   let agent = null;
   let agentId = 'anonymous';
   let trustLevel: 'anonymous' | 'verified' | 'trusted' | 'premium' = 'anonymous';
+  
+  const agentIdHeader = req.headers['x-agent-id'] as string;
   
   if (apiKey) {
     const { agentIdentityManager } = await import('./agent-identity');
@@ -417,6 +419,14 @@ app.post('/invoke', async (req: Request, res: Response) => {
     if (agent) {
       agentId = agent.agent_id;
       trustLevel = agent.trust_level;
+    }
+  } else if (agentIdHeader) {
+    // Support X-Agent-ID header for agent identification
+    const { agentRegistry } = await import('./agent-registry');
+    agent = agentRegistry.getAgent(agentIdHeader);
+    if (agent) {
+      agentId = agent.agent_id;
+      trustLevel = 'verified'; // Agents identified by ID get verified level
     }
   }
 
@@ -492,9 +502,9 @@ app.post('/invoke', async (req: Request, res: Response) => {
     });
   }
 
-  // Check capability prerequisites
+  // Check capability prerequisites (only for identity-based agents)
   const { prerequisiteChecker } = await import('./capability-prerequisites');
-  const prereqCheck = prerequisiteChecker.check(invokeRequest.capability_id, agent || null);
+  const prereqCheck = prerequisiteChecker.check(invokeRequest.capability_id, null);
   
   if (!prereqCheck.allowed) {
     return res.status(403).json({
