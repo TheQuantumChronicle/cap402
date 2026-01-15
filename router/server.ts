@@ -3500,22 +3500,7 @@ app.get('/sponsors/:name/security', async (req: Request, res: Response) => {
   }
 });
 
-// Sponsor Integration Status endpoint
-app.get('/sponsors', async (req: Request, res: Response) => {
-  try {
-    const { sponsorStatusManager, sponsorMetrics } = await import('./sponsor-status');
-    const report = await sponsorStatusManager.getFullReport();
-    const metrics = sponsorMetrics.getAllMetrics();
-    res.json({ success: true, ...report, sponsor_metrics: metrics });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Sponsor status failed'
-    });
-  }
-});
-
-// Live sponsor health check
+// Live sponsor health check (must be before /sponsors/:sponsor)
 app.get('/sponsors/health', async (req: Request, res: Response) => {
   try {
     const { sponsorStatusManager } = await import('./sponsor-status');
@@ -3537,6 +3522,21 @@ app.get('/sponsors/health', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Health check failed'
+    });
+  }
+});
+
+// Sponsor Integration Status endpoint
+app.get('/sponsors', async (req: Request, res: Response) => {
+  try {
+    const { sponsorStatusManager, sponsorMetrics } = await import('./sponsor-status');
+    const report = await sponsorStatusManager.getFullReport();
+    const metrics = sponsorMetrics.getAllMetrics();
+    res.json({ success: true, ...report, sponsor_metrics: metrics });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Sponsor status failed'
     });
   }
 });
