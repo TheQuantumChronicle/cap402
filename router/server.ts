@@ -95,6 +95,11 @@ app.use('/public', express.static(path.join(process.cwd(), 'public')));
 // Also serve public files at root for favicon.ico etc
 app.use(express.static(path.join(process.cwd(), 'public')));
 
+// Explicit favicon route to ensure correct content-type
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'favicon.ico'));
+});
+
 // CORS middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
