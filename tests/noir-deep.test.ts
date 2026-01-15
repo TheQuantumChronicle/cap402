@@ -28,7 +28,7 @@ describe('🔵 NOIR ZK DEEP INTEGRATION SUITE', () => {
   // ============================================
   describe('Circuit Registry', () => {
     
-    test('lists all 7 available circuits', () => {
+    test('lists all 10 available circuits', () => {
       const circuits = noirCircuitsProvider.getAvailableCircuits();
       
       console.log('\n📋 NOIR CIRCUIT REGISTRY:');
@@ -37,7 +37,7 @@ describe('🔵 NOIR ZK DEEP INTEGRATION SUITE', () => {
         console.log(`   • ${c.name} (${c.constraints} constraints)`);
       });
       
-      expect(circuits.length).toBe(7);
+      expect(circuits.length).toBe(10);
       
       const expectedCircuits = [
         'balance_threshold',
@@ -46,7 +46,10 @@ describe('🔵 NOIR ZK DEEP INTEGRATION SUITE', () => {
         'age_verification',
         'transaction_limit',
         'kyc_compliance',
-        'voting_eligibility'
+        'voting_eligibility',
+        'credit_score_range',
+        'nft_ownership',
+        'income_verification'
       ];
       
       expectedCircuits.forEach(name => {
