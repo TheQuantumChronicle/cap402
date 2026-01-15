@@ -808,29 +808,40 @@
 
   <!-- Start -->
   <section id="start" style="padding: 4vh 6vw;">
-    <div class="code-block" style="max-width: 600px; margin: 0 auto;">
-      <code class="mono">curl cap402.com/invoke -d '{"capability_id":"cap.price.lookup.v1"}'</code>
+    <div class="code-block" style="max-width: 700px; margin: 0 auto; cursor: pointer;" onclick="navigator.clipboard.writeText(document.getElementById('curl-cmd').textContent); this.style.borderColor='#22c55e'; setTimeout(() => this.style.borderColor='', 500);" title="Click to copy">
+      <code class="mono" id="curl-cmd">curl cap402.com/invoke -d '{"capability_id":"cap.price.lookup.v1"}'</code>
     </div>
   </section>
 
   <!-- Endpoints -->
   <section style="padding: 4vh 6vw; text-align: center;">
-    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">One surface. Multiple execution paths.</p>
+    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">Click an endpoint to see example. Click the command to copy.</p>
     <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; max-width: 800px; margin: 0 auto;">
-      <span class="tag">/invoke</span>
-      <span class="tag">/a2a/invoke</span>
-      <span class="tag">/a2a/discover</span>
-      <span class="tag">/a2a/auction</span>
-      <span class="tag">/a2a/swarm</span>
-      <span class="tag">/mev/analyze</span>
-      <span class="tag">/mev/protected-swap</span>
-      <span class="tag">/alpha/arbitrage</span>
-      <span class="tag">/alpha/whale-tracker</span>
-      <span class="tag">/alpha/liquidations</span>
-      <span class="tag">/capabilities</span>
-      <span class="tag">/sponsors/health</span>
+      <span class="tag endpoint-tag" data-cmd="curl cap402.com/invoke -d '{\"capability_id\":\"cap.price.lookup.v1\"}'">/invoke</span>
+      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/a2a/invoke -d '{\"from_agent\":\"bot-A\",\"to_agent\":\"bot-B\",\"capability_id\":\"cap.price.lookup.v1\"}'">/a2a/invoke</span>
+      <span class="tag endpoint-tag" data-cmd="curl cap402.com/a2a/discover/cap.price.lookup.v1">/a2a/discover</span>
+      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/a2a/auction -d '{\"requester_agent\":\"my-bot\",\"capability_id\":\"cap.price.lookup.v1\"}'">/a2a/auction</span>
+      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/a2a/swarm -d '{\"coordinator_agent\":\"my-bot\",\"task\":{\"capability_id\":\"cap.price.lookup.v1\"},\"agents\":[\"bot-1\",\"bot-2\"]}'">/a2a/swarm</span>
+      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/mev/analyze -d '{\"token_in\":\"SOL\",\"token_out\":\"USDC\",\"amount\":10000}'">/mev/analyze</span>
+      <span class="tag endpoint-tag" data-cmd="curl -X POST cap402.com/mev/protected-swap -d '{\"token_in\":\"SOL\",\"token_out\":\"USDC\",\"amount\":100,\"wallet_address\":\"...\"}'">/mev/protected-swap</span>
+      <span class="tag endpoint-tag" data-cmd="curl cap402.com/alpha/arbitrage">/alpha/arbitrage</span>
+      <span class="tag endpoint-tag" data-cmd="curl cap402.com/alpha/whale-tracker">/alpha/whale-tracker</span>
+      <span class="tag endpoint-tag" data-cmd="curl cap402.com/alpha/liquidations">/alpha/liquidations</span>
+      <span class="tag endpoint-tag" data-cmd="curl cap402.com/capabilities">/capabilities</span>
+      <span class="tag endpoint-tag" data-cmd="curl cap402.com/sponsors/health">/sponsors/health</span>
     </div>
   </section>
+  
+  <script>
+    document.querySelectorAll('.endpoint-tag').forEach(tag => {
+      tag.style.cursor = 'pointer';
+      tag.addEventListener('click', function() {
+        document.getElementById('curl-cmd').textContent = this.dataset.cmd;
+        document.querySelectorAll('.endpoint-tag').forEach(t => t.style.borderColor = '');
+        this.style.borderColor = 'var(--arcium-purple)';
+      });
+    });
+  </script>
 
   <div class="separator"></div>
 
