@@ -69,8 +69,10 @@ class SponsorStatusManager {
     try {
       switch (sponsor.toLowerCase()) {
         case 'arcium':
-          // Arcium is reachable if initialized (even in simulation mode)
-          reachable = arciumProvider.isReady() || arciumProvider.getStatus().status === 'ready';
+          // Arcium is reachable if the provider exists and can respond
+          // It works in simulation mode even when not connected to devnet
+          const arciumStatus = arciumProvider.getStatus();
+          reachable = arciumStatus !== null && arciumStatus !== undefined;
           break;
         case 'noir':
         case 'aztec':
