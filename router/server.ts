@@ -101,6 +101,217 @@ app.get('/docs', (req: Request, res: Response) => {
   res.redirect('/docs/api-docs.html');
 });
 
+// OpenAPI JSON endpoint for Swagger UI
+app.get('/openapi.json', (req: Request, res: Response) => {
+  const openApiSpec = {
+    openapi: '3.1.0',
+    info: {
+      title: 'CAP-402 Agent Infrastructure API',
+      description: 'Privacy-first capability routing for autonomous AI agents. Built on Arcium, Noir, Inco, and Helius.',
+      version: '1.0.0'
+    },
+    servers: [{ url: 'https://cap402.com', description: 'Production' }],
+    tags: [
+      { name: 'Capabilities', description: 'Core capability invocation' },
+      { name: 'A2A Protocol', description: 'Agent-to-agent communication' },
+      { name: 'MEV Protection', description: 'MEV analysis and protected execution' },
+      { name: 'Trading Alpha', description: 'Arbitrage, whale tracking, liquidations' },
+      { name: 'Agents', description: 'Agent registration and management' },
+      { name: 'System', description: 'Health and monitoring' }
+    ],
+    paths: {
+      '/invoke': {
+        post: {
+          tags: ['Capabilities'],
+          summary: 'Invoke a capability',
+          description: 'Execute any registered capability by ID',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['capability_id'],
+                  properties: {
+                    capability_id: { type: 'string', example: 'cap.price.lookup.v1' },
+                    inputs: { type: 'object', example: { base_token: 'SOL' } }
+                  }
+                }
+              }
+            }
+          },
+          responses: { '200': { description: 'Capability executed successfully' } }
+        }
+      },
+      '/capabilities': {
+        get: {
+          tags: ['Capabilities'],
+          summary: 'List all capabilities',
+          description: 'Get all available capabilities with their schemas',
+          responses: { '200': { description: 'List of capabilities' } }
+        }
+      },
+      '/a2a/invoke': {
+        post: {
+          tags: ['A2A Protocol'],
+          summary: 'Agent-to-agent invocation',
+          description: 'One agent invokes a capability on behalf of another',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['from_agent', 'to_agent', 'capability_id'],
+                  properties: {
+                    from_agent: { type: 'string', example: 'bot-A' },
+                    to_agent: { type: 'string', example: 'bot-B' },
+                    capability_id: { type: 'string', example: 'cap.price.lookup.v1' },
+                    inputs: { type: 'object' }
+                  }
+                }
+              }
+            }
+          },
+          responses: { '200': { description: 'A2A invocation result' } }
+        }
+      },
+      '/a2a/discover/{capability_id}': {
+        get: {
+          tags: ['A2A Protocol'],
+          summary: 'Discover agents by capability',
+          description: 'Find agents that provide a specific capability',
+          parameters: [{ name: 'capability_id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { '200': { description: 'List of agents providing the capability' } }
+        }
+      },
+      '/a2a/auction': {
+        post: {
+          tags: ['A2A Protocol'],
+          summary: 'Agent auction',
+          description: 'Agents bid to fulfill a capability request',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['requester_agent', 'capability_id'],
+                  properties: {
+                    requester_agent: { type: 'string' },
+                    capability_id: { type: 'string' },
+                    max_price: { type: 'number' }
+                  }
+                }
+              }
+            }
+          },
+          responses: { '200': { description: 'Auction result with winning agent' } }
+        }
+      },
+      '/a2a/swarm': {
+        post: {
+          tags: ['A2A Protocol'],
+          summary: 'Coordinate agent swarm',
+          description: 'Execute a task across multiple agents in parallel or sequentially',
+          responses: { '200': { description: 'Swarm execution results' } }
+        }
+      },
+      '/a2a/leaderboard': {
+        get: {
+          tags: ['A2A Protocol'],
+          summary: 'Agent leaderboard',
+          description: 'Get ranked list of agents by reputation',
+          responses: { '200': { description: 'Agent rankings' } }
+        }
+      },
+      '/mev/analyze': {
+        post: {
+          tags: ['MEV Protection'],
+          summary: 'Analyze MEV risk',
+          description: 'Detect sandwich attack probability and get protection recommendations',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['token_in', 'token_out', 'amount'],
+                  properties: {
+                    token_in: { type: 'string', example: 'SOL' },
+                    token_out: { type: 'string', example: 'USDC' },
+                    amount: { type: 'number', example: 10000 },
+                    slippage: { type: 'number', example: 0.5 }
+                  }
+                }
+              }
+            }
+          },
+          responses: { '200': { description: 'MEV risk analysis' } }
+        }
+      },
+      '/mev/protected-swap': {
+        post: {
+          tags: ['MEV Protection'],
+          summary: 'Execute protected swap',
+          description: 'Execute a swap with MEV protection via private mempool',
+          responses: { '200': { description: 'Protected swap result' } }
+        }
+      },
+      '/alpha/arbitrage': {
+        get: {
+          tags: ['Trading Alpha'],
+          summary: 'Scan for arbitrage',
+          description: 'Find cross-DEX price discrepancies',
+          parameters: [{ name: 'min_profit_bps', in: 'query', schema: { type: 'number' } }],
+          responses: { '200': { description: 'Arbitrage opportunities' } }
+        }
+      },
+      '/alpha/whale-tracker': {
+        get: {
+          tags: ['Trading Alpha'],
+          summary: 'Track whale movements',
+          description: 'Monitor large wallet transactions and market sentiment',
+          responses: { '200': { description: 'Whale activity and alerts' } }
+        }
+      },
+      '/alpha/liquidations': {
+        get: {
+          tags: ['Trading Alpha'],
+          summary: 'Monitor liquidations',
+          description: 'Find at-risk DeFi positions and liquidation opportunities',
+          responses: { '200': { description: 'Liquidation opportunities' } }
+        }
+      },
+      '/agents/register': {
+        post: {
+          tags: ['Agents'],
+          summary: 'Register an agent',
+          description: 'Register a new agent with capabilities',
+          responses: { '200': { description: 'Registered agent details' } }
+        }
+      },
+      '/sponsors/health': {
+        get: {
+          tags: ['System'],
+          summary: 'Sponsor health check',
+          description: 'Check connectivity to all sponsor integrations',
+          responses: { '200': { description: 'Health status of all sponsors' } }
+        }
+      },
+      '/system/dashboard': {
+        get: {
+          tags: ['System'],
+          summary: 'System dashboard',
+          description: 'Real-time overview of system status and metrics',
+          responses: { '200': { description: 'Dashboard data' } }
+        }
+      }
+    }
+  };
+  res.json(openApiSpec);
+});
+
 // CORS middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
