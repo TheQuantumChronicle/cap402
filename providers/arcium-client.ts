@@ -284,6 +284,90 @@ class ArciumProvider {
       }
     });
   }
+
+  /**
+   * Private auction - submit encrypted bid without revealing amount
+   */
+  async submitPrivateBid(
+    auctionId: string,
+    bidder: string,
+    encryptedBidAmount: string,
+    maxSlippage: number = 0.01
+  ): Promise<ArciumComputationResult> {
+    return this.submitComputation({
+      programId: ARCIUM_PROGRAM_ID,
+      inputs: {
+        operation: 'private_auction_bid',
+        auction_id: auctionId,
+        bidder,
+        encrypted_bid: encryptedBidAmount,
+        max_slippage: maxSlippage
+      }
+    });
+  }
+
+  /**
+   * Confidential voting - vote without revealing choice until tally
+   */
+  async castConfidentialVote(
+    proposalId: string,
+    voter: string,
+    encryptedVote: string,
+    votingPower: number
+  ): Promise<ArciumComputationResult> {
+    return this.submitComputation({
+      programId: ARCIUM_PROGRAM_ID,
+      inputs: {
+        operation: 'confidential_vote',
+        proposal_id: proposalId,
+        voter,
+        encrypted_vote: encryptedVote,
+        voting_power: votingPower
+      }
+    });
+  }
+
+  /**
+   * Private order book - place limit order without revealing price/size
+   */
+  async placePrivateOrder(
+    market: string,
+    trader: string,
+    side: 'buy' | 'sell',
+    encryptedPrice: string,
+    encryptedSize: string
+  ): Promise<ArciumComputationResult> {
+    return this.submitComputation({
+      programId: ARCIUM_PROGRAM_ID,
+      inputs: {
+        operation: 'private_order',
+        market,
+        trader,
+        side,
+        encrypted_price: encryptedPrice,
+        encrypted_size: encryptedSize
+      }
+    });
+  }
+
+  /**
+   * Confidential credit scoring - compute credit score without revealing financial data
+   */
+  async computeConfidentialCreditScore(
+    applicant: string,
+    encryptedFinancialData: string,
+    lenderId: string
+  ): Promise<ArciumComputationResult> {
+    return this.submitComputation({
+      programId: ARCIUM_PROGRAM_ID,
+      inputs: {
+        operation: 'confidential_credit_score',
+        applicant,
+        encrypted_financial_data: encryptedFinancialData,
+        lender_id: lenderId
+      }
+    });
+  }
 }
 
 export const arciumProvider = new ArciumProvider();

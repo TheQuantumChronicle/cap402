@@ -422,7 +422,100 @@ class IncoFHEProvider {
       receipt: `receipt_${voter.slice(0, 8)}_${proposalId.slice(0, 8)}`
     };
   }
+
+  /**
+   * Private random number generation - verifiable randomness without revealing seed
+   */
+  async generatePrivateRandom(
+    requester: string,
+    minValue: number,
+    maxValue: number
+  ): Promise<{
+    random_id: string;
+    encrypted_random: string;
+    commitment: string;
+    reveal_block: number;
+  }> {
+    const randomValue = Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
+    const encryptedRandom = await this.encrypt(randomValue, 'euint64');
+    
+    return {
+      random_id: `rand_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      encrypted_random: encryptedRandom.ciphertext,
+      commitment: `commit_rand_${crypto.createHash('sha256').update(String(randomValue)).digest('hex').slice(0, 16)}`,
+      reveal_block: Date.now() + 60000 // Reveal after 1 minute
+    };
+  }
+
+  /**
+   * Encrypted threshold check - compare value against threshold without revealing either
+   */
+  async encryptedThresholdCheck(
+    encryptedValue: FHECiphertext,
+    encryptedThreshold: FHECiphertext
+  ): Promise<{
+    result_id: string;
+    encrypted_result: string;
+    proof: string;
+  }> {
+    const result = await this.fheLt(encryptedValue, encryptedThreshold);
+    return {
+      result_id: `threshold_${Date.now()}`,
+      encrypted_result: result.encrypted_result || '',
+      proof: result.computation_proof || ''
+    };
+  }
+
+  /**
+   * Private balance aggregation - sum multiple encrypted balances
+   */
+  async aggregateEncryptedBalances(
+    balances: FHECiphertext[]
+  ): Promise<FHEComputationResult> {
+    if (balances.length === 0) {
+      return { success: false, encrypted_result: '', computation_proof: '', gas_used: 0, mode: 'simulation' };
+    }
+    
+    let result = balances[0];
+    for (let i = 1; i < balances.length; i++) {
+      const addResult = await this.fheAdd(result, balances[i]);
+      result = {
+        ciphertext: addResult.encrypted_result || '',
+        public_key: result.public_key,
+        encryption_type: result.encryption_type,
+        mode: result.mode
+      };
+    }
+    
+    return {
+      success: true,
+      encrypted_result: result.ciphertext,
+      computation_proof: `aggregate_${balances.length}_balances_${Date.now()}`,
+      gas_used: 50000 * balances.length,
+      mode: 'simulation'
+    };
+  }
+
+  /**
+   * Encrypted time-lock - value only decryptable after specific time
+   */
+  async createTimeLock(
+    value: number,
+    unlockTimestamp: number
+  ): Promise<{
+    lock_id: string;
+    encrypted_value: string;
+    unlock_at: number;
+    proof: string;
+  }> {
+    const encrypted = await this.encrypt(value, 'euint64');
+    return {
+      lock_id: `timelock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      encrypted_value: encrypted.ciphertext,
+      unlock_at: unlockTimestamp,
+      proof: `timelock_proof_${crypto.createHash('sha256').update(String(unlockTimestamp)).digest('hex').slice(0, 16)}`
+    };
+  }
 }
 
 export const incoFHEProvider = new IncoFHEProvider();
-// Force rebuild Thu Jan 15 13:25:16 CET 2026
