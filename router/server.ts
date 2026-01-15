@@ -3909,7 +3909,8 @@ app.post('/advanced/self-test', async (req: Request, res: Response) => {
   }
 });
 
-const PORT = process.env.ROUTER_PORT || process.env.PORT || 3402;
+const PORT = process.env.PORT || process.env.ROUTER_PORT || 3001;
+const HOST = process.env.HOST || '0.0.0.0';
 
 export function startServer(port?: number): Promise<any> {
   return new Promise((resolve) => {
@@ -3918,7 +3919,7 @@ export function startServer(port?: number): Promise<any> {
     rateLimiter.startCleanup(60000);
     capabilityTokenManager.startCleanup(60000);
     
-    server = app.listen(actualPort, async () => {
+    server = app.listen(Number(actualPort), HOST, async () => {
       resolve(server);
     });
   });
@@ -3937,8 +3938,8 @@ export function stopServer(): Promise<void> {
 export { app };
 
 function startServerLegacy(): void {
-  server = app.listen(PORT, async () => {
-    observability.info('server', `CAP-402 Router listening on port ${PORT}`);
+  server = app.listen(Number(PORT), HOST, async () => {
+    observability.info('server', `CAP-402 Router listening on ${HOST}:${PORT}`);
     console.log(`\n🚀 CAP-402 Reference Router v0.1.0`);
     console.log(`📡 Listening on http://localhost:${PORT}`);
     
