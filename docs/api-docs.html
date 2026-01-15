@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CAP-402 API Documentation</title>
-  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --arcium-purple: #6C44FC;
       --bg-dark: #0a0a0c;
-      --bg-card: rgba(255,255,255,0.02);
-      --border-subtle: rgba(255,255,255,0.06);
+      --bg-card: rgba(255,255,255,0.03);
+      --border-subtle: rgba(255,255,255,0.08);
       --text-primary: #fafafa;
       --text-secondary: #888;
+      --green: #22c55e;
     }
     
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,145 +23,474 @@
       background: var(--bg-dark);
       color: var(--text-primary);
       min-height: 100vh;
+      line-height: 1.6;
     }
     
     .topbar {
       background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
-      padding: 1.5rem 3rem;
+      padding: 1rem 2rem;
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     
     .topbar-left h1 {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 600;
       background: linear-gradient(135deg, #fff 0%, var(--arcium-purple) 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
     
-    .topbar-left p {
-      margin-top: 0.25rem;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-    
-    .topbar-left a {
-      color: var(--arcium-purple);
-      text-decoration: none;
-    }
-    
-    .nav-links {
-      display: flex;
-      gap: 0.75rem;
-    }
+    .nav-links { display: flex; gap: 0.5rem; }
     
     .nav-links a {
-      padding: 0.5rem 1rem;
+      padding: 0.4rem 0.8rem;
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: 6px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-secondary);
       text-decoration: none;
       transition: all 0.2s;
     }
     
-    .nav-links a:hover {
-      background: rgba(108, 68, 252, 0.1);
+    .nav-links a:hover, .nav-links a.active {
+      background: rgba(108, 68, 252, 0.15);
       border-color: var(--arcium-purple);
       color: var(--text-primary);
     }
     
-    #swagger-ui {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 2rem;
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem; }
+    .tab { padding: 0.5rem 1rem; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; border-radius: 6px; }
+    .tab:hover { color: var(--text-primary); }
+    .tab.active { background: var(--arcium-purple); color: white; }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    h2 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-primary); }
+    h3 { font-size: 1.1rem; margin: 1.5rem 0 0.75rem; color: var(--arcium-purple); }
+    p { color: var(--text-secondary); margin-bottom: 1rem; }
+    
+    .endpoint-group { margin-bottom: 2rem; }
+    .endpoint-group-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle); }
+    
+    .endpoint {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
     }
     
-    /* Swagger UI Dark Theme Overrides */
-    .swagger-ui { background: transparent; }
-    .swagger-ui .topbar { display: none; }
-    .swagger-ui .info { margin: 1rem 0 2rem; }
-    .swagger-ui .info .title { color: var(--text-primary); font-size: 2rem; }
-    .swagger-ui .info .description { color: var(--text-secondary); }
-    .swagger-ui .info .description p { color: var(--text-secondary); }
-    .swagger-ui .info .description h1, 
-    .swagger-ui .info .description h2,
-    .swagger-ui .info .description h3 { color: var(--text-primary); margin-top: 1.5rem; }
-    .swagger-ui .info .description code { background: rgba(108, 68, 252, 0.2); color: var(--arcium-purple); padding: 2px 6px; border-radius: 4px; }
-    .swagger-ui .info .description table { border-collapse: collapse; margin: 1rem 0; }
-    .swagger-ui .info .description th, .swagger-ui .info .description td { border: 1px solid var(--border-subtle); padding: 0.5rem 1rem; color: var(--text-secondary); }
-    .swagger-ui .info .description th { background: var(--bg-card); color: var(--text-primary); }
-    .swagger-ui .info .description blockquote { border-left: 3px solid var(--arcium-purple); padding-left: 1rem; margin: 1rem 0; color: var(--text-secondary); font-style: italic; }
-    .swagger-ui .scheme-container { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem; }
-    .swagger-ui .opblock-tag { color: var(--text-primary) !important; border-bottom: 1px solid var(--border-subtle); }
-    .swagger-ui .opblock { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; margin-bottom: 1rem; }
-    .swagger-ui .opblock .opblock-summary { border: none; }
-    .swagger-ui .opblock .opblock-summary-method { background: var(--arcium-purple); border-radius: 4px; }
-    .swagger-ui .opblock.opblock-get .opblock-summary-method { background: #22c55e; }
-    .swagger-ui .opblock.opblock-post .opblock-summary-method { background: var(--arcium-purple); }
-    .swagger-ui .opblock.opblock-delete .opblock-summary-method { background: #ef4444; }
-    .swagger-ui .opblock .opblock-summary-path { color: var(--text-primary); }
-    .swagger-ui .opblock .opblock-summary-description { color: var(--text-secondary); }
-    .swagger-ui .opblock-body { background: rgba(0,0,0,0.2); }
-    .swagger-ui .parameter__name { color: var(--text-primary); }
-    .swagger-ui .parameter__type { color: var(--arcium-purple); }
-    .swagger-ui .model-title { color: var(--text-primary); }
-    .swagger-ui .model { color: var(--text-secondary); }
-    .swagger-ui select { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-subtle); }
-    .swagger-ui input { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-subtle); }
-    .swagger-ui textarea { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-subtle); }
-    .swagger-ui .btn { background: var(--arcium-purple); color: white; border: none; }
-    .swagger-ui .btn:hover { background: #5a35e0; }
-    .swagger-ui .btn.cancel { background: #333; }
-    .swagger-ui .responses-inner { background: transparent; }
-    .swagger-ui .response-col_status { color: var(--text-primary); }
-    .swagger-ui .response-col_description { color: var(--text-secondary); }
-    .swagger-ui .filter-container input { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-subtle); }
-    .swagger-ui .filter-container .filter { background: var(--bg-card); }
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+    }
+    
+    .endpoint-header:hover { background: rgba(255,255,255,0.02); }
+    
+    .method {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      min-width: 50px;
+      text-align: center;
+    }
+    .method.get { background: var(--green); color: white; }
+    .method.post { background: var(--arcium-purple); color: white; }
+    
+    .endpoint-path { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-primary); }
+    .endpoint-desc { font-size: 0.8rem; color: var(--text-secondary); margin-left: auto; }
+    
+    .endpoint-body {
+      display: none;
+      padding: 1rem;
+      background: rgba(0,0,0,0.2);
+      border-top: 1px solid var(--border-subtle);
+    }
+    
+    .endpoint.open .endpoint-body { display: block; }
+    
+    .code-block {
+      background: #1a1a1a;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      color: var(--green);
+      margin: 0.5rem 0;
+    }
+    
+    .whitepaper-content { max-width: 800px; }
+    .whitepaper-content h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .whitepaper-content h2 { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); }
+    .whitepaper-content table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .whitepaper-content th, .whitepaper-content td { border: 1px solid var(--border-subtle); padding: 0.5rem 1rem; text-align: left; }
+    .whitepaper-content th { background: var(--bg-card); color: var(--text-primary); }
+    .whitepaper-content td { color: var(--text-secondary); }
+    .whitepaper-content code { background: rgba(108, 68, 252, 0.2); color: var(--arcium-purple); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+    .whitepaper-content blockquote { border-left: 3px solid var(--arcium-purple); padding-left: 1rem; margin: 1rem 0; color: var(--text-secondary); font-style: italic; }
+    .whitepaper-content ul, .whitepaper-content ol { margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary); }
+    .whitepaper-content li { margin-bottom: 0.5rem; }
   </style>
 </head>
 <body>
   <div class="topbar">
     <div class="topbar-left">
-      <h1>CAP-402 API Documentation</h1>
-      <p>Agent Infrastructure Standard — <a href="https://cap402.com">cap402.com</a></p>
+      <h1>CAP-402 Documentation</h1>
     </div>
     <div class="nav-links">
-      <a href="https://cap402.com">Home</a>
-      <a href="https://github.com/TheQuantumChronicle/CAP402/blob/main/docs/WHITEPAPER.md" target="_blank">Whitepaper</a>
+      <a href="/">Home</a>
       <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank">GitHub</a>
     </div>
   </div>
   
-  <div id="swagger-ui"></div>
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('api')">API Reference</button>
+      <button class="tab" onclick="showTab('whitepaper')">Whitepaper</button>
+    </div>
+    
+    <!-- API Reference Tab -->
+    <div id="api" class="tab-content active">
+      <h2>API Reference</h2>
+      <p>Base URL: <code>https://cap402.com</code></p>
+      
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Capabilities</div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/invoke</span>
+            <span class="endpoint-desc">Invoke any capability</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Execute a registered capability by ID.</p>
+            <div class="code-block">curl -X POST https://cap402.com/invoke \
+  -H "Content-Type: application/json" \
+  -d '{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'</div>
+          </div>
+        </div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/capabilities</span>
+            <span class="endpoint-desc">List all capabilities</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Get all available capabilities with their schemas.</p>
+            <div class="code-block">curl https://cap402.com/capabilities</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">A2A Protocol</div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/a2a/invoke</span>
+            <span class="endpoint-desc">Agent-to-agent invocation</span>
+          </div>
+          <div class="endpoint-body">
+            <p>One agent invokes a capability through another agent.</p>
+            <div class="code-block">curl -X POST https://cap402.com/a2a/invoke \
+  -H "Content-Type: application/json" \
+  -d '{"from_agent":"bot-A","to_agent":"bot-B","capability_id":"cap.price.lookup.v1"}'</div>
+          </div>
+        </div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/a2a/discover/:capability_id</span>
+            <span class="endpoint-desc">Find agents by capability</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Discover agents that provide a specific capability.</p>
+            <div class="code-block">curl https://cap402.com/a2a/discover/cap.price.lookup.v1</div>
+          </div>
+        </div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/a2a/auction</span>
+            <span class="endpoint-desc">Agents bid to fulfill request</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Multiple agents compete to fulfill a capability request.</p>
+            <div class="code-block">curl -X POST https://cap402.com/a2a/auction \
+  -H "Content-Type: application/json" \
+  -d '{"requester_agent":"my-bot","capability_id":"cap.price.lookup.v1","max_price":10}'</div>
+          </div>
+        </div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/a2a/swarm</span>
+            <span class="endpoint-desc">Coordinate multiple agents</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Execute a task across multiple agents in parallel or sequentially.</p>
+            <div class="code-block">curl -X POST https://cap402.com/a2a/swarm \
+  -H "Content-Type: application/json" \
+  -d '{"coordinator_agent":"my-bot","task":{"capability_id":"cap.price.lookup.v1"},"agents":["bot-1","bot-2"],"strategy":"parallel"}'</div>
+          </div>
+        </div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/a2a/leaderboard</span>
+            <span class="endpoint-desc">Agent reputation rankings</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Get ranked list of agents by composite reputation score.</p>
+            <div class="code-block">curl https://cap402.com/a2a/leaderboard</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">MEV Protection</div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/mev/analyze</span>
+            <span class="endpoint-desc">Analyze sandwich attack risk</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Detect MEV risk before executing a trade.</p>
+            <div class="code-block">curl -X POST https://cap402.com/mev/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"token_in":"SOL","token_out":"USDC","amount":10000,"slippage":0.5}'</div>
+          </div>
+        </div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/mev/protected-swap</span>
+            <span class="endpoint-desc">Execute with MEV protection</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Execute a swap via private mempool for MEV protection.</p>
+            <div class="code-block">curl -X POST https://cap402.com/mev/protected-swap \
+  -H "Content-Type: application/json" \
+  -d '{"token_in":"SOL","token_out":"USDC","amount":100,"wallet_address":"...","protection_level":"maximum"}'</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Trading Alpha</div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/alpha/arbitrage</span>
+            <span class="endpoint-desc">Cross-DEX opportunities</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Find arbitrage opportunities across DEXs.</p>
+            <div class="code-block">curl https://cap402.com/alpha/arbitrage?min_profit_bps=5</div>
+          </div>
+        </div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/alpha/whale-tracker</span>
+            <span class="endpoint-desc">Monitor large wallets</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Track whale movements and market sentiment.</p>
+            <div class="code-block">curl https://cap402.com/alpha/whale-tracker</div>
+          </div>
+        </div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/alpha/liquidations</span>
+            <span class="endpoint-desc">DeFi liquidation opportunities</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Monitor at-risk positions for liquidation opportunities.</p>
+            <div class="code-block">curl https://cap402.com/alpha/liquidations</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Agents</div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/agents/register</span>
+            <span class="endpoint-desc">Register a new agent</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Register an agent with capabilities it provides.</p>
+            <div class="code-block">curl -X POST https://cap402.com/agents/register \
+  -H "Content-Type: application/json" \
+  -d '{"agent_id":"my-bot","name":"My Trading Bot","capabilities_provided":["cap.price.lookup.v1"]}'</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">System</div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/sponsors/health</span>
+            <span class="endpoint-desc">Sponsor integration health</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Check connectivity to all sponsor integrations.</p>
+            <div class="code-block">curl https://cap402.com/sponsors/health</div>
+          </div>
+        </div>
+        
+        <div class="endpoint" onclick="this.classList.toggle('open')">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/system/dashboard</span>
+            <span class="endpoint-desc">Real-time system overview</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Get comprehensive system status and metrics.</p>
+            <div class="code-block">curl https://cap402.com/system/dashboard</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Whitepaper Tab -->
+    <div id="whitepaper" class="tab-content">
+      <div class="whitepaper-content">
+        <h1>CAP-402: Agent Infrastructure Standard</h1>
+        <p><strong>A Protocol for Semantic Capability Routing Between Autonomous Agents</strong></p>
+        <p>Version 1.0 | January 2026</p>
+        
+        <h2>Abstract</h2>
+        <p>As autonomous AI agents proliferate across industries, a critical infrastructure gap has emerged: there is no standard protocol for agents to discover, negotiate, and execute capabilities from other agents or services. CAP-402 addresses this gap by introducing a semantic capability routing protocol that provides privacy-aware, economically-signaled execution with verifiable receipts.</p>
+        <p>CAP-402 uniquely combines three complementary cryptographic technologies—<strong>Noir</strong> for zero-knowledge proofs, <strong>Arcium</strong> for confidential computation, and <strong>Inco</strong> for encrypted on-chain state—to deliver a complete privacy stack that enables fully private, verifiable, agent-driven authorization and execution.</p>
+        
+        <blockquote>Agents do not call APIs directly. Agents call capabilities.</blockquote>
+        
+        <h2>The Privacy Stack</h2>
+        <table>
+          <tr><th>Technology</th><th>Role</th><th>Output</th></tr>
+          <tr><td><strong>Noir</strong></td><td>Proves private facts</td><td>ZK Proofs</td></tr>
+          <tr><td><strong>Arcium</strong></td><td>Decides privately using hidden logic</td><td>Signed Decisions</td></tr>
+          <tr><td><strong>Inco</strong></td><td>Stores & executes privately on-chain</td><td>Encrypted State</td></tr>
+        </table>
+        
+        <h2>Problem Statement</h2>
+        <p>Today's agent ecosystem suffers from critical limitations:</p>
+        <table>
+          <tr><th>Problem</th><th>Impact</th></tr>
+          <tr><td>No discovery standard</td><td>Agents must hard-code API endpoints</td></tr>
+          <tr><td>No privacy layer</td><td>All operations are visible, enabling front-running</td></tr>
+          <tr><td>No economic coordination</td><td>Ad-hoc pricing, no micropayments</td></tr>
+          <tr><td>No trust framework</td><td>No way to verify agent capabilities</td></tr>
+          <tr><td>No composability</td><td>Each integration built from scratch</td></tr>
+        </table>
+        
+        <h2>Design Principles</h2>
+        <ol>
+          <li><strong>Capabilities over APIs</strong>: Abstract what can be done, not how it's implemented</li>
+          <li><strong>Privacy by default</strong>: Support confidential execution as a first-class feature</li>
+          <li><strong>Economic signaling</strong>: Enable value exchange without custody</li>
+          <li><strong>Verifiable execution</strong>: Every invocation produces a cryptographic receipt</li>
+          <li><strong>Progressive decentralization</strong>: Start centralized, evolve to fully decentralized</li>
+        </ol>
+        
+        <h2>Key Features</h2>
+        <ul>
+          <li><strong>13 Capabilities</strong> - Price lookup, swaps, ZK proofs, FHE compute, and more</li>
+          <li><strong>A2A Protocol</strong> - Agent-to-agent invocation, discovery, auctions, swarms</li>
+          <li><strong>MEV Protection</strong> - Sandwich attack detection, protected execution</li>
+          <li><strong>Trading Alpha</strong> - Arbitrage scanner, whale tracker, liquidation monitor</li>
+          <li><strong>4 Sponsor Integrations</strong> - Arcium, Noir, Helius, Inco</li>
+        </ul>
+        
+        <h2>Use Cases</h2>
+        <h3>Treasury Execution</h3>
+        <p>A protocol treasury needs to rebalance $2M without moving markets. Arcium C-SPL wraps tokens → confidential swap → zero information leakage.</p>
+        
+        <h3>DAO Operations</h3>
+        <p>Governance votes reveal whale positions, enabling front-running of outcomes. ZK proofs confirm voting eligibility. FHE encrypts votes until tally.</p>
+        
+        <h3>Private OTC</h3>
+        <p>Two parties negotiating a large trade leak intent to the entire market. Encrypted agent-to-agent messaging. Terms hidden until execution.</p>
+        
+        <h3>Institutional DeFi</h3>
+        <p>Compliance requires proving KYC/AML without exposing client data. Noir circuits prove compliance level without revealing underlying data.</p>
+        
+        <h2>Sponsor Integrations</h2>
+        <h3>Arcium (Confidential Execution)</h3>
+        <ul>
+          <li><code>cap.cspl.wrap.v1</code> - Convert public → confidential tokens</li>
+          <li><code>cap.cspl.transfer.v1</code> - Transfer with hidden amounts</li>
+          <li><code>cap.confidential.swap.v1</code> - Private swaps via MPC</li>
+        </ul>
+        
+        <h3>Noir (Zero-Knowledge Proofs)</h3>
+        <ul>
+          <li><code>balance_threshold</code> - Prove balance > X without revealing amount</li>
+          <li><code>kyc_compliance</code> - Prove compliance without exposing data</li>
+          <li><code>voting_eligibility</code> - Prove voting rights without revealing stake</li>
+        </ul>
+        
+        <h3>Inco (Encrypted Compute)</h3>
+        <ul>
+          <li><code>cap.fhe.compute.v1</code> - Compute on encrypted data</li>
+          <li><code>cap.lightning.message.v1</code> - Encrypted agent-to-agent messaging</li>
+        </ul>
+        
+        <h3>Helius (Real-Time Data)</h3>
+        <ul>
+          <li><code>cap.wallet.snapshot.v1</code> - Complete wallet state via DAS API</li>
+          <li>Real-time webhooks - Balance changes, transaction confirmations</li>
+        </ul>
+      </div>
+    </div>
+  </div>
   
-  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
   <script>
-    window.onload = function() {
-      SwaggerUIBundle({
-        url: "/openapi.json",
-        dom_id: '#swagger-ui',
-        deepLinking: true,
-        presets: [
-          SwaggerUIBundle.presets.apis,
-          SwaggerUIBundle.SwaggerUIStandalonePreset
-        ],
-        layout: "BaseLayout",
-        defaultModelsExpandDepth: 1,
-        defaultModelExpandDepth: 1,
-        docExpansion: "list",
-        filter: true,
-        showExtensions: true,
-        showCommonExtensions: true,
-        syntaxHighlight: {
-          theme: "monokai"
-        }
-      });
-    };
+    function showTab(tabId) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
   </script>
 </body>
 </html>
