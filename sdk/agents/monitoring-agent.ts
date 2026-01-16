@@ -491,15 +491,30 @@ export class MonitoringAgent extends EventEmitter {
     return { ...this.stats, uptime_ms: Date.now() - this.startTime };
   }
 
+  /**
+   * Print formatted monitoring statistics to console
+   */
   printStats(): void {
     const stats = this.getStats();
-    console.log('\n📊 Monitoring Agent Stats:');
-    console.log(`   Uptime: ${Math.round(stats.uptime_ms / 1000)}s`);
-    console.log(`   Checks Performed: ${stats.checks_performed}`);
-    console.log(`   Alerts Triggered: ${stats.alerts_triggered}`);
-    console.log(`   • Critical: ${stats.alerts_by_severity.critical}`);
-    console.log(`   • Warning: ${stats.alerts_by_severity.warning}`);
-    console.log(`   • Info: ${stats.alerts_by_severity.info}`);
+    const uptimeHours = (stats.uptime_ms / 3600000).toFixed(1);
+    const uptimeDisplay = stats.uptime_ms > 3600000 
+      ? `${uptimeHours} hours` 
+      : `${Math.round(stats.uptime_ms / 1000)}s`;
+    
+    console.log('\n╔════════════════════════════════════════╗');
+    console.log('║      👁️ Monitoring Agent Stats          ║');
+    console.log('╠════════════════════════════════════════╣');
+    console.log(`║  Uptime:          ${uptimeDisplay.padStart(12)}      ║`);
+    console.log(`║  Wallets:         ${String(this.config.watched_wallets.length).padStart(12)}      ║`);
+    console.log(`║  Protocols:       ${String(this.config.watched_protocols.length).padStart(12)}      ║`);
+    console.log(`║  Checks:          ${String(stats.checks_performed).padStart(12)}      ║`);
+    console.log('╠════════════════════════════════════════╣');
+    console.log('║  Alerts:                               ║');
+    console.log(`║    🚨 Critical:   ${String(stats.alerts_by_severity.critical).padStart(12)}      ║`);
+    console.log(`║    ⚠️  Warning:    ${String(stats.alerts_by_severity.warning).padStart(12)}      ║`);
+    console.log(`║    ℹ️  Info:       ${String(stats.alerts_by_severity.info).padStart(12)}      ║`);
+    console.log(`║    Total:         ${String(stats.alerts_triggered).padStart(12)}      ║`);
+    console.log('╚════════════════════════════════════════╝');
   }
 
   // ============================================

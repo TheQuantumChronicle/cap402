@@ -574,13 +574,30 @@ export class AnalyticsAgent extends EventEmitter {
     };
   }
 
+  /**
+   * Print formatted analytics statistics to console
+   */
   printStats(): void {
     const stats = this.getStats();
-    console.log('\n📊 Analytics Agent Stats:');
-    console.log(`   Uptime: ${Math.round(stats.uptime_ms / 1000)}s`);
-    console.log(`   Data Points: ${stats.data_points_collected}`);
-    console.log(`   Reports: ${stats.reports_generated}`);
-    console.log(`   Active Sources: ${stats.active_sources}`);
+    const uptimeHours = (stats.uptime_ms / 3600000).toFixed(1);
+    const uptimeDisplay = stats.uptime_ms > 3600000 
+      ? `${uptimeHours} hours` 
+      : `${Math.round(stats.uptime_ms / 1000)}s`;
+    
+    console.log('\n╔════════════════════════════════════════╗');
+    console.log('║      📊 Analytics Agent Stats          ║');
+    console.log('╠════════════════════════════════════════╣');
+    console.log(`║  Uptime:          ${uptimeDisplay.padStart(12)}      ║`);
+    console.log(`║  Data Points:     ${String(stats.data_points_collected).padStart(12)}      ║`);
+    console.log(`║  Reports:         ${String(stats.reports_generated).padStart(12)}      ║`);
+    console.log(`║  Active Sources:  ${String(stats.active_sources).padStart(12)}      ║`);
+    console.log('╠════════════════════════════════════════╣');
+    console.log('║  Data Sources:                         ║');
+    this.config.data_sources.filter(s => s.enabled).forEach(source => {
+      const points = this.timeSeries.get(source.id)?.length || 0;
+      console.log(`║    ${source.id.padEnd(20)} ${String(points).padStart(6)} pts ║`);
+    });
+    console.log('╚════════════════════════════════════════╝');
   }
 
   // ============================================

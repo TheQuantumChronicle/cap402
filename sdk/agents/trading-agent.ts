@@ -552,6 +552,10 @@ export class TradingAgent extends EventEmitter {
   // STATS & MONITORING
   // ============================================
 
+  /**
+   * Get comprehensive trading statistics
+   * @returns Trading stats including metrics, positions, and current prices
+   */
   getStats(): {
     agent_metrics: any;
     trading_stats: {
@@ -559,13 +563,20 @@ export class TradingAgent extends EventEmitter {
       daily_trades: number;
       positions_count: number;
       total_pnl: { unrealized: number; realized: number };
+      win_rate: number;
     };
     prices: Record<string, number>;
+    uptime_ms: number;
   } {
     const prices: Record<string, number> = {};
     this.prices.forEach((data, token) => {
       prices[token] = data.price;
     });
+
+    // Calculate win rate
+    const executedTrades = this.trades.filter(t => t.status === 'executed');
+    const profitableTrades = executedTrades.filter(t => t.amount_out > t.amount_in);
+    const winRate = executedTrades.length > 0 ? profitableTrades.length / executedTrades.length : 0;
 
     return {
       agent_metrics: this.agent.getMetrics(),
@@ -573,23 +584,37 @@ export class TradingAgent extends EventEmitter {
         total_trades: this.trades.length,
         daily_trades: this.dailyTradeCount,
         positions_count: this.positions.size,
-        total_pnl: this.getTotalPnL()
+        total_pnl: this.getTotalPnL(),
+        win_rate: winRate
       },
-      prices
+      prices,
+      uptime_ms: this.isRunning ? Date.now() - (this.trades[0]?.timestamp || Date.now()) : 0
     };
   }
 
+  /**
+   * Print formatted trading statistics to console
+   */
   printStats(): void {
     const stats = this.getStats();
-    console.log('\n📊 Trading Agent Stats:');
-    console.log(`   Total Trades: ${stats.trading_stats.total_trades}`);
-    console.log(`   Daily Trades: ${stats.trading_stats.daily_trades}`);
-    console.log(`   Open Positions: ${stats.trading_stats.positions_count}`);
-    console.log(`   Unrealized PnL: $${stats.trading_stats.total_pnl.unrealized.toFixed(2)}`);
-    console.log('\n   Current Prices:');
+    const uptimeHours = (stats.uptime_ms / 3600000).toFixed(1);
+    
+    console.log('\n╔════════════════════════════════════════╗');
+    console.log('║       📊 Trading Agent Stats           ║');
+    console.log('╠════════════════════════════════════════╣');
+    console.log(`║  Uptime:          ${uptimeHours.padStart(8)} hours      ║`);
+    console.log(`║  Total Trades:    ${String(stats.trading_stats.total_trades).padStart(8)}            ║`);
+    console.log(`║  Daily Trades:    ${String(stats.trading_stats.daily_trades).padStart(8)}            ║`);
+    console.log(`║  Win Rate:        ${(stats.trading_stats.win_rate * 100).toFixed(1).padStart(7)}%           ║`);
+    console.log(`║  Open Positions:  ${String(stats.trading_stats.positions_count).padStart(8)}            ║`);
+    console.log(`║  Unrealized PnL: $${stats.trading_stats.total_pnl.unrealized.toFixed(2).padStart(8)}           ║`);
+    console.log('╠════════════════════════════════════════╣');
+    console.log('║  Current Prices:                       ║');
     Object.entries(stats.prices).forEach(([token, price]) => {
-      console.log(`   • ${token}: $${price.toLocaleString()}`);
+      const priceStr = `$${price.toLocaleString()}`;
+      console.log(`║    ${token.padEnd(6)} ${priceStr.padStart(25)}   ║`);
     });
+    console.log('╚════════════════════════════════════════╝');
   }
 
   // ============================================
