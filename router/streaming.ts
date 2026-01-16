@@ -110,6 +110,7 @@ class StreamManager extends EventEmitter {
     const timeout = setTimeout(() => {
       this.error(request_id, 'unknown', 'Stream timeout');
     }, ms);
+    timeout.unref(); // Don't keep process alive
     this.activeStreams.set(request_id, timeout);
   }
 }

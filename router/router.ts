@@ -1,5 +1,5 @@
 import { registry } from './registry';
-import { Executor, ExecutionContext, ExecutionResult, ExecutionPreferences } from './execution/types';
+import { Executor, ExecutionContext, ExecutionResult, ExecutionPreferences, ExecutionMetadata } from './execution/types';
 import { PublicExecutor } from './execution/public-executor';
 import { ConfidentialExecutor } from './execution/confidential-executor';
 import { generateX402Hint } from './payments/x402';

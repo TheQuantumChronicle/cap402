@@ -160,6 +160,16 @@ export function toCAP402Error(error: any, request_id?: string): CAP402Error {
 }
 
 /**
+ * Extract error message from any error type
+ * Utility to reduce repetitive error handling patterns
+ */
+export function getErrorMessage(error: unknown, fallback = 'Unknown error'): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return fallback;
+}
+
+/**
  * HTTP status code mapping
  */
 export function getHttpStatus(code: ErrorCode): number {
