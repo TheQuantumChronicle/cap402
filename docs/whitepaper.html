@@ -66,6 +66,41 @@
     <p>As autonomous AI agents proliferate across industries, a critical infrastructure gap has emerged: there is no standard protocol for agents to discover, negotiate, and execute capabilities from other agents or services. CAP-402 addresses this gap by introducing a semantic capability routing protocol that provides privacy-aware, economically-signaled execution with verifiable receipts.</p>
     <p>CAP-402 uniquely combines three complementary cryptographic technologies—<strong>Noir</strong> for zero-knowledge proofs, <strong>Arcium</strong> for confidential computation, and <strong>Inco</strong> for encrypted on-chain state—to deliver a complete privacy stack that enables fully private, verifiable, agent-driven authorization and execution.</p>
     
+    <!-- Architecture Diagram -->
+    <h2>System Architecture</h2>
+    <pre class="code-block">
+                              CAP-402 ARCHITECTURE
+    ═══════════════════════════════════════════════════════════════════
+
+    ┌─────────────┐     ┌─────────────────────────────────┐     ┌─────────────┐
+    │   Agent A   │────▶│         CAP-402 Router          │────▶│  Service X  │
+    └─────────────┘     │  ┌─────────────────────────┐   │     └─────────────┘
+                        │  │   Privacy Stack          │   │     ┌─────────────┐
+    ┌─────────────┐     │  │  ┌─────┐ ┌──────┐ ┌────┐│   │────▶│  Service Y  │
+    │   Agent B   │────▶│  │  │Noir │ │Arcium│ │Inco││   │     └─────────────┘
+    └─────────────┘     │  │  └─────┘ └──────┘ └────┘│   │     ┌─────────────┐
+                        │  └─────────────────────────┘   │────▶│  Service Z  │
+                        └─────────────────────────────────┘     └─────────────┘
+
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │                           LAYER MODEL                                    │
+    ├─────────────────────────────────────────────────────────────────────────┤
+    │  Application    │  Agents, SDKs, Integrations                           │
+    ├─────────────────────────────────────────────────────────────────────────┤
+    │  Protocol       │  Capability Schema, Routing, Composition, Receipts    │
+    ├─────────────────────────────────────────────────────────────────────────┤
+    │  Execution      │  Public Executor, Confidential Executor               │
+    ├─────────────────────────────────────────────────────────────────────────┤
+    │  Privacy        │  Noir ZK Proofs, Arcium MPC, Inco FHE                 │
+    ├─────────────────────────────────────────────────────────────────────────┤
+    │  Security       │  Tokens, Trust Network, Handshake, Encryption         │
+    ├─────────────────────────────────────────────────────────────────────────┤
+    │  Economic       │  X.402 Hints, Privacy Cash, Trust-Based Pricing       │
+    ├─────────────────────────────────────────────────────────────────────────┤
+    │  Settlement     │  Solana (Future: Multi-chain)                         │
+    └─────────────────────────────────────────────────────────────────────────┘
+    </pre>
+    
     <h2>1. Introduction</h2>
     <h3>1.1 The Agent Infrastructure Gap</h3>
     <p>Current agent frameworks (AutoGPT, LangChain, CrewAI) focus on orchestration but lack standardized infrastructure for:</p>
@@ -108,6 +143,61 @@
     </table>
     
     <h2>3. Privacy Stack</h2>
+    
+    <!-- Privacy Stack Flow Diagram -->
+    <pre class="code-block">
+                         UNIFIED PRIVACY STACK FLOW
+    ═══════════════════════════════════════════════════════════════════
+
+    User / Agent
+         │
+         │ 1️⃣ Proves something privately (identity, limits, ownership)
+         ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    NOIR (Proof Layer)                            │
+    │                                                                 │
+    │  User generates ZK proof that:                                  │
+    │    • They own NFT credential X                                  │
+    │    • Their balance exceeds threshold                            │
+    │    • Their identity satisfies KYC requirements                  │
+    │                                                                 │
+    │  OUTPUT: Compact proof (no secrets revealed)                    │
+    └──────────────────────────────┬──────────────────────────────────┘
+                                   │
+                                   │ 2️⃣ Proof + encrypted context
+                                   ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                   ARCIUM (Decision Layer)                        │
+    │                                                                 │
+    │  Arcium receives:                                               │
+    │    • Verified Noir proof                                        │
+    │    • Encrypted strategy parameters                              │
+    │    • Encrypted risk thresholds                                  │
+    │                                                                 │
+    │  Arcium computes (on encrypted data):                           │
+    │    • Is risk_exposure < daily_limit?                            │
+    │    • Do all compliance rules pass?                              │
+    │                                                                 │
+    │  OUTPUT: ALLOW or DENY (signed attestation)                     │
+    │  LEAKED: Nothing about thresholds or strategy                   │
+    └──────────────────────────────┬──────────────────────────────────┘
+                                   │
+                                   │ 3️⃣ Decision + state update
+                                   ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    INCO (Execution Layer)                        │
+    │                                                                 │
+    │  If ALLOW:                                                      │
+    │    • Execute swap with hidden amount                            │
+    │    • Update encrypted daily exposure counter                    │
+    │    • Update encrypted position balances                         │
+    │    • Log encrypted audit trail                                  │
+    │                                                                 │
+    │  PUBLIC VISIBILITY: "A transaction occurred"                    │
+    │  HIDDEN: Amount, strategy, positions, everything else           │
+    └─────────────────────────────────────────────────────────────────┘
+    </pre>
+    
     <h3>3.1 Noir (Zero-Knowledge Proofs)</h3>
     <p>Noir enables agents to prove statements without revealing underlying data:</p>
     <ul>
@@ -132,8 +222,53 @@
       <li>Confidential smart contract execution</li>
     </ul>
     
+    <h3>3.4 Why All Three Are Required</h3>
+    <table>
+      <tr><th>Technology</th><th>What Happens If Removed</th></tr>
+      <tr><td><strong>Noir</strong></td><td>Cannot generate portable proofs; users must expose data to prove conditions</td></tr>
+      <tr><td><strong>Arcium</strong></td><td>Decision logic becomes public; strategies can be copied or gamed</td></tr>
+      <tr><td><strong>Inco</strong></td><td>On-chain state leaks; execution results expose private information</td></tr>
+    </table>
+    <blockquote><strong>The One-Sentence Mental Model:</strong><br>Noir proves things privately, Arcium decides things privately, Inco stores and executes things privately.</blockquote>
+    
     <h2>4. Agent-to-Agent Protocol</h2>
     <p>CAP-402 enables direct agent-to-agent communication:</p>
+    
+    <!-- A2A Protocol Diagram -->
+    <pre class="code-block">
+                           A2A PROTOCOL ARCHITECTURE
+    ═══════════════════════════════════════════════════════════════════
+
+       ┌─────────────┐    DIRECT INVOKE    ┌─────────────┐
+       │   Agent A   │ ──────────────────▶ │   Agent B   │
+       └─────────────┘                     └─────────────┘
+             │                                    │
+             │              AUCTION               │
+             │    ┌───────────────────────┐      │
+             └───▶│   AUCTION MANAGER     │◀─────┘
+                  │                       │
+                  │  • Bid collection     │
+                  │  • Winner selection   │
+                  │  • Escrow handling    │
+                  └───────────────────────┘
+                             │
+                             ▼
+                  ┌───────────────────────┐
+                  │    SWARM COORDINATOR  │
+                  │                       │
+                  │  • Task distribution  │
+                  │  • Result aggregation │
+                  │  • Consensus voting   │
+                  └───────────────────────┘
+                             │
+             ┌───────────────┼───────────────┐
+             ▼               ▼               ▼
+       ┌──────────┐   ┌──────────┐   ┌──────────┐
+       │ Agent 1  │   │ Agent 2  │   │ Agent N  │
+       └──────────┘   └──────────┘   └──────────┘
+    </pre>
+    
+    <h3>4.1 Communication Modes</h3>
     <ul>
       <li><strong>Discovery</strong> — Find agents by capability</li>
       <li><strong>Invocation</strong> — Request execution from another agent</li>
@@ -141,7 +276,58 @@
       <li><strong>Swarm</strong> — Coordinate multi-agent workflows</li>
     </ul>
     
-    <h2>5. Security Framework</h2>
+    <h3>4.2 A2A Message Types</h3>
+    <table>
+      <tr><th>Message Type</th><th>Purpose</th><th>Privacy</th></tr>
+      <tr><td><code>a2a.invoke</code></td><td>Direct capability invocation</td><td>Configurable</td></tr>
+      <tr><td><code>a2a.quote_request</code></td><td>Request trading quote</td><td>Encrypted</td></tr>
+      <tr><td><code>a2a.quote_response</code></td><td>Respond with quote</td><td>Encrypted</td></tr>
+      <tr><td><code>a2a.trade_execute</code></td><td>Execute agreed trade</td><td>Maximum</td></tr>
+      <tr><td><code>a2a.auction_bid</code></td><td>Submit auction bid</td><td>Sealed</td></tr>
+      <tr><td><code>a2a.swarm_task</code></td><td>Distribute swarm task</td><td>Configurable</td></tr>
+    </table>
+    
+    <h2>5. MEV Protection</h2>
+    <p>CAP-402 provides comprehensive MEV protection for trading operations:</p>
+    
+    <pre class="code-block">
+                         MEV PROTECTION FLOW
+    ═══════════════════════════════════════════════════════════════════
+
+    TRADE SUBMISSION: swap(SOL → USDC, amount: 10,000)
+                                   │
+                                   ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    MEV RISK ANALYSIS                             │
+    │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+    │  │ Sandwich Risk   │  │ Front-run Risk  │  │ Back-run Risk   │ │
+    │  │ Probability: 75%│  │ Probability: 60%│  │ Probability: 40%│ │
+    │  │ Est. Loss: $150 │  │ Est. Loss: $80  │  │ Est. Loss: $30  │ │
+    │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+    │                                                                 │
+    │  Overall Risk: HIGH | Potential Loss: $260 | Savings: $234     │
+    └──────────────────────────────┬──────────────────────────────────┘
+                                   │
+                    ┌──────────────┴──────────────┐
+                    ▼                             ▼
+    ┌───────────────────────────┐   ┌───────────────────────────────┐
+    │   STANDARD EXECUTION      │   │   PROTECTED EXECUTION         │
+    │   • Public mempool        │   │   • Private mempool (Jito)    │
+    │   • Visible to MEV bots   │   │   • Confidential amounts      │
+    │   • ~$260 expected loss   │   │   • Arcium C-SPL wrapping     │
+    └───────────────────────────┘   └───────────────────────────────┘
+    </pre>
+    
+    <h3>5.1 Protection Levels</h3>
+    <table>
+      <tr><th>Level</th><th>Method</th><th>Protection</th><th>Cost</th></tr>
+      <tr><td>None</td><td>Public mempool</td><td>0%</td><td>Free</td></tr>
+      <tr><td>Basic</td><td>Private RPC</td><td>40%</td><td>+0.1%</td></tr>
+      <tr><td>Standard</td><td>Jito bundles</td><td>70%</td><td>+0.2%</td></tr>
+      <tr><td>Maximum</td><td>Arcium C-SPL</td><td>95%</td><td>+0.5%</td></tr>
+    </table>
+    
+    <h2>6. Security Framework</h2>
     <ul>
       <li><strong>API Key Authentication</strong> — Rate limiting and access control</li>
       <li><strong>Capability Tokens</strong> — Scoped, time-limited authorization</li>
@@ -149,17 +335,32 @@
       <li><strong>Cryptographic Receipts</strong> — Verifiable execution proofs</li>
     </ul>
     
-    <h2>6. Implementation</h2>
+    <h2>7. Implementation</h2>
     <table>
       <tr><th>Metric</th><th>Value</th></tr>
-      <tr><td>TypeScript files</td><td>58</td></tr>
-      <tr><td>Tests</td><td>306 (262 passing, 44 external API dependent)</td></tr>
+      <tr><td>TypeScript files</td><td>60+</td></tr>
+      <tr><td>Tests</td><td>387 passing (19 test suites)</td></tr>
       <tr><td>API endpoints</td><td>100+</td></tr>
       <tr><td>Capabilities</td><td>13</td></tr>
       <tr><td>Sponsor integrations</td><td>4 (Arcium, Noir, Helius, Inco)</td></tr>
     </table>
     
-    <h2>7. Roadmap</h2>
+    <h3>7.1 SDK One-Liners</h3>
+    <pre class="code-block">import { prepareSwap, bestSwap, findAlpha } from '@cap402/sdk';
+
+// Prepare swap - no setup required
+const tx = await prepareSwap('SOL', 'USDC', 10);
+console.log(tx.summary.headline);  // "Swap 10 SOL → ~1,433 USDC"
+
+// Best execution - auto-picks DEX vs A2A
+const result = await bestSwap('SOL', 'USDC', 100);
+console.log(result.route, result.savings_vs_dex);
+
+// Detect alpha signals
+const signals = await findAlpha(['SOL', 'ETH', 'BTC']);
+signals.forEach(s => console.log(s.token, s.direction));</pre>
+    
+    <h2>8. Roadmap</h2>
     <h3>Phase 1: Foundation ✅ Complete</h3>
     <ul>
       <li>Protocol specification (OpenAPI 3.1, JSON Schema, TypeScript types)</li>
@@ -183,7 +384,7 @@
       <li>Cross-chain support (EVM, Cosmos)</li>
     </ul>
     
-    <h2>8. Conclusion</h2>
+    <h2>9. Conclusion</h2>
     <p>CAP-402 represents a fundamental shift in how autonomous agents interact. By introducing semantic capabilities, privacy gradients, and economic coordination, we enable a new paradigm where agents can:</p>
     <ul>
       <li><strong>Discover</strong> capabilities by intent, not implementation</li>
@@ -192,7 +393,41 @@
       <li><strong>Compose</strong> complex workflows atomically</li>
       <li><strong>Transact</strong> through standardized economic hints</li>
     </ul>
+    
+    <!-- Final Architecture Summary -->
+    <pre class="code-block">
+                         CAP-402 COMPLETE FLOW
+    ═══════════════════════════════════════════════════════════════════
+
+    ┌──────────┐                                           ┌──────────┐
+    │  AGENT   │                                           │ PROVIDER │
+    └────┬─────┘                                           └────┬─────┘
+         │                                                      │
+         │  1. invoke(capability_id, inputs, preferences)       │
+         │ ────────────────────────────────────────────────────▶│
+         │                                                      │
+         │                    ┌─────────────────┐               │
+         │                    │  CAP-402 ROUTER │               │
+         │                    │                 │               │
+         │                    │ • Validate      │               │
+         │                    │ • Route         │               │
+         │                    │ • Execute       │               │
+         │                    │ • Receipt       │               │
+         │                    └─────────────────┘               │
+         │                                                      │
+         │  2. {success, outputs, receipt, economic_hints}      │
+         │ ◀────────────────────────────────────────────────────│
+         │                                                      │
+    ═════╧══════════════════════════════════════════════════════╧═════
+    </pre>
+    
     <blockquote>CAP-402 is not just a protocol—it's the infrastructure layer for the agent economy.<br><br><strong>"Agents don't call APIs. Agents call capabilities."</strong></blockquote>
+    
+    <p style="text-align: center; margin-top: 2rem; color: var(--text-muted);">
+      <a href="https://github.com/TheQuantumChronicle/CAP402">GitHub</a> · 
+      <a href="https://cap402.com">Website</a> · 
+      <a href="mailto:cap402@proton.me">Contact</a>
+    </p>
   </div>
 </body>
 </html>
