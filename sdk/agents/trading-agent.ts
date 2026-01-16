@@ -3557,6 +3557,150 @@ export class TradingAgent extends EventEmitter {
     return Array.from(this.limitOrders.values()).filter(o => o.status === 'open');
   }
 
+  // ============================================
+  // PORTFOLIO REBALANCING
+  // ============================================
+
+  /**
+   * Rebalance portfolio to target allocations
+   * 
+   * @example
+   * // Rebalance to 60% SOL, 30% ETH, 10% USDC
+   * await agent.rebalance({
+   *   SOL: 60,
+   *   ETH: 30,
+   *   USDC: 10
+   * });
+   */
+  async rebalance(
+    targetAllocations: Record<string, number>,
+    options?: {
+      tolerance_percent?: number;
+      dry_run?: boolean;
+    }
+  ): Promise<{
+    success: boolean;
+    trades_executed: number;
+    before: Record<string, { amount: number; percent: number }>;
+    after: Record<string, { amount: number; percent: number }>;
+    trades: Array<{ from: string; to: string; amount: number }>;
+  }> {
+    const tolerance = options?.tolerance_percent || 2;
+    const dryRun = options?.dry_run || false;
+
+    // Validate allocations sum to 100
+    const totalAllocation = Object.values(targetAllocations).reduce((a, b) => a + b, 0);
+    if (Math.abs(totalAllocation - 100) > 0.01) {
+      throw new Error(`Target allocations must sum to 100%, got ${totalAllocation}%`);
+    }
+
+    // Get current portfolio value
+    const portfolio = await this.getPortfolioValue();
+    const totalValue = portfolio.total_usd;
+
+    if (totalValue === 0) {
+      return {
+        success: false,
+        trades_executed: 0,
+        before: {},
+        after: {},
+        trades: []
+      };
+    }
+
+    // Calculate current allocations
+    const currentAllocations: Record<string, { amount: number; percent: number }> = {};
+    for (const pos of portfolio.positions) {
+      currentAllocations[pos.token] = {
+        amount: pos.amount,
+        percent: (pos.usd_value / totalValue) * 100
+      };
+    }
+
+    // Calculate required trades
+    const trades: Array<{ from: string; to: string; amount: number }> = [];
+    const tokensToSell: Array<{ token: string; usdAmount: number }> = [];
+    const tokensToBuy: Array<{ token: string; usdAmount: number }> = [];
+
+    for (const [token, targetPercent] of Object.entries(targetAllocations)) {
+      const currentPercent = currentAllocations[token]?.percent || 0;
+      const diff = targetPercent - currentPercent;
+
+      if (Math.abs(diff) > tolerance) {
+        const usdAmount = (Math.abs(diff) / 100) * totalValue;
+        if (diff < 0) {
+          tokensToSell.push({ token, usdAmount });
+        } else {
+          tokensToBuy.push({ token, usdAmount });
+        }
+      }
+    }
+
+    // Execute trades: sell first, then buy
+    let tradesExecuted = 0;
+
+    if (!dryRun) {
+      // Sell overweight positions
+      for (const { token, usdAmount } of tokensToSell) {
+        const price = this.prices.get(token)?.price || 1;
+        const amount = usdAmount / price;
+        
+        try {
+          await this.smartTrade(token, 'USDC', amount);
+          trades.push({ from: token, to: 'USDC', amount });
+          tradesExecuted++;
+        } catch (error) {
+          console.error(`Rebalance sell failed for ${token}: ${error}`);
+        }
+      }
+
+      // Buy underweight positions
+      for (const { token, usdAmount } of tokensToBuy) {
+        try {
+          await this.smartTrade('USDC', token, usdAmount);
+          trades.push({ from: 'USDC', to: token, amount: usdAmount });
+          tradesExecuted++;
+        } catch (error) {
+          console.error(`Rebalance buy failed for ${token}: ${error}`);
+        }
+      }
+    } else {
+      // Dry run - just log what would happen
+      for (const { token, usdAmount } of tokensToSell) {
+        trades.push({ from: token, to: 'USDC', amount: usdAmount });
+      }
+      for (const { token, usdAmount } of tokensToBuy) {
+        trades.push({ from: 'USDC', to: token, amount: usdAmount });
+      }
+    }
+
+    // Get new allocations
+    const newPortfolio = await this.getPortfolioValue();
+    const afterAllocations: Record<string, { amount: number; percent: number }> = {};
+    for (const pos of newPortfolio.positions) {
+      afterAllocations[pos.token] = {
+        amount: pos.amount,
+        percent: (pos.usd_value / newPortfolio.total_usd) * 100
+      };
+    }
+
+    this.emit('rebalance_completed', {
+      trades_executed: tradesExecuted,
+      before: currentAllocations,
+      after: afterAllocations
+    });
+
+    console.log(`⚖️ Rebalance ${dryRun ? '(dry run)' : 'completed'}: ${tradesExecuted} trades`);
+
+    return {
+      success: true,
+      trades_executed: tradesExecuted,
+      before: currentAllocations,
+      after: dryRun ? currentAllocations : afterAllocations,
+      trades
+    };
+  }
+
   /**
    * Check and execute limit orders (called on price updates)
    */
