@@ -1972,6 +1972,101 @@ export class TradingAgent extends EventEmitter {
   }
 
   /**
+   * Race multiple execution paths and use the fastest one
+   * Executes swap via whichever method responds first
+   * 
+   * @example
+   * const result = await agent.raceSwap('SOL', 'USDC', 10);
+   * console.log(`Won by: ${result.winning_method} in ${result.latency_ms}ms`);
+   */
+  async raceSwap(
+    tokenIn: string,
+    tokenOut: string,
+    amount: number
+  ): Promise<InstantSwapResult & { winning_method: string }> {
+    const startTime = performance.now();
+    
+    this.validateToken(tokenIn);
+    this.validateToken(tokenOut);
+    this.validateAmount(amount);
+
+    // Race multiple execution methods
+    const axios = (await import('axios')).default;
+    const routerUrl = this.config.router_url;
+
+    const methods = [
+      {
+        name: 'instant_direct',
+        promise: axios.post(`${routerUrl}/trading/instant-swap`, {
+          token_in: tokenIn,
+          token_out: tokenOut,
+          amount,
+          wallet_address: this.config.agent_id
+        }, { timeout: 3000 })
+      },
+      {
+        name: 'mev_protected',
+        promise: axios.post(`${routerUrl}/mev/protected-swap`, {
+          token_in: tokenIn,
+          token_out: tokenOut,
+          amount,
+          wallet_address: this.config.agent_id,
+          protection_level: 'standard'
+        }, { timeout: 5000 })
+      }
+    ];
+
+    try {
+      // Race all methods - first to respond wins
+      const winner = await Promise.race(
+        methods.map(async (method) => {
+          const response = await method.promise;
+          return { method: method.name, data: response.data };
+        })
+      );
+
+      const latencyMs = Math.round(performance.now() - startTime);
+      this.trackLatency(latencyMs);
+
+      const result: InstantSwapResult & { winning_method: string } = {
+        swap_id: `race_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        status: 'executed',
+        token_in: tokenIn,
+        token_out: tokenOut,
+        amount_in: amount,
+        amount_out: winner.data.instant_swap?.amount_out || winner.data.swap_result?.amount_out || 0,
+        execution_price: winner.data.instant_swap?.execution_price || 0,
+        latency_ms: latencyMs,
+        optimizations_used: ['race_execution', winner.method],
+        mev_skipped: winner.method === 'instant_direct',
+        winning_method: winner.method,
+        tx_signature: winner.data.instant_swap?.tx_signature || winner.data.protected_execution?.tx_signature
+      };
+
+      this.emit('race_swap_completed', result);
+      console.log(`🏎️ Race Swap: ${winner.method} won in ${latencyMs}ms`);
+
+      return result;
+    } catch (error) {
+      const latencyMs = Math.round(performance.now() - startTime);
+      return {
+        swap_id: `race_${Date.now()}_failed`,
+        status: 'failed',
+        token_in: tokenIn,
+        token_out: tokenOut,
+        amount_in: amount,
+        amount_out: 0,
+        execution_price: 0,
+        latency_ms: latencyMs,
+        optimizations_used: ['race_execution'],
+        mev_skipped: false,
+        winning_method: 'none',
+        error: error instanceof Error ? error.message : 'Race swap failed'
+      };
+    }
+  }
+
+  /**
    * Get detailed latency statistics
    */
   getLatencyStats(): {
