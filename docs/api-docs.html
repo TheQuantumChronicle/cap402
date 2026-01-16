@@ -797,6 +797,60 @@
         <div class="endpoint">
           <div class="endpoint-header">
             <span class="method get">GET</span>
+            <span class="endpoint-path">/alpha/smart-money</span>
+            <span class="endpoint-desc">Smart Money Activity (Live Nansen Data)</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Track what smart money wallets are buying and selling using <strong>Nansen TGM API</strong>. Returns labeled traders (funds, whales, smart traders) with their 24h buy/sell volumes and net flow.</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Data Source</div>
+              <p>• <strong>Nansen</strong> - Token God Mode who-bought-sold endpoint (1 credit per call)</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Query Parameters</div>
+              <table class="params-table">
+                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                <tr><td class="param-name">token</td><td class="param-type">string</td><td class="param-optional">optional</td><td>Token symbol: SOL, JUP, BONK, WIF, PYTH (default: SOL)</td></tr>
+              </table>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Example Request</div>
+              <div class="code-block">curl "https://cap402.com/alpha/smart-money?token=SOL"</div>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Response</div>
+              <div class="response-block">{
+  <span class="key">"smart_money"</span>: {
+    <span class="key">"token"</span>: <span class="string">"SOL"</span>,
+    <span class="key">"traders"</span>: [
+      {
+        <span class="key">"address"</span>: <span class="string">"8aHV...3MXx"</span>,
+        <span class="key">"label"</span>: <span class="string">"Active SOL Millionaire"</span>,
+        <span class="key">"bought_volume_usd"</span>: <span class="number">1578603615</span>,
+        <span class="key">"sold_volume_usd"</span>: <span class="number">38696321</span>,
+        <span class="key">"net_volume_usd"</span>: <span class="number">1539907293</span>,
+        <span class="key">"action"</span>: <span class="string">"accumulating"</span>
+      }
+    ],
+    <span class="key">"summary"</span>: {
+      <span class="key">"accumulators"</span>: <span class="number">14</span>,
+      <span class="key">"distributors"</span>: <span class="number">3</span>,
+      <span class="key">"net_flow_usd"</span>: <span class="number">24500000</span>,
+      <span class="key">"sentiment"</span>: <span class="string">"BULLISH"</span>
+    },
+    <span class="key">"data_source"</span>: <span class="string">"nansen_tgm_who_bought_sold"</span>
+  }
+}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
             <span class="endpoint-path">/alpha/liquidations</span>
             <span class="endpoint-desc">DeFi liquidation opportunities</span>
           </div>
