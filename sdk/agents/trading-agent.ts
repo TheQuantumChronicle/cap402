@@ -967,6 +967,15 @@ export class TradingAgent extends EventEmitter {
     this.priceCache.clear();
     this.connectionPool.clear();
 
+    // Clear price alerts
+    this.priceAlerts.clear();
+
+    // Clear limit orders
+    this.limitOrders.clear();
+
+    // Clear conditional orders
+    this.conditionalOrders.clear();
+
     // Remove all event listeners to prevent memory leaks
     this.removeAllListeners();
 
