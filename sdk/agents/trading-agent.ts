@@ -1888,6 +1888,52 @@ export class TradingAgent extends EventEmitter {
     this.emit('warmup_complete', { pairs: pairsToWarm.length, time_ms: warmupTime });
   }
 
+  // Background refresh interval
+  private refreshInterval: NodeJS.Timeout | null = null;
+
+  /**
+   * Start background cache refresh for always-hot caches
+   * Keeps routes and prices fresh without blocking trades
+   */
+  startBackgroundRefresh(intervalMs: number = 10000): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+
+    console.log(`⚡ Starting background refresh every ${intervalMs}ms`);
+
+    this.refreshInterval = setInterval(async () => {
+      const pairs = Array.from(this.routeCache.keys());
+      
+      // Refresh in parallel, don't block
+      Promise.all(pairs.map(async (pairKey) => {
+        try {
+          await this.prefetchRoute(pairKey);
+        } catch {
+          // Silent fail - old cache still valid
+        }
+      })).catch(() => {});
+
+      // Also refresh watched token prices
+      for (const token of this.config.watched_tokens) {
+        this.getCachedPrice(token).catch(() => {});
+      }
+    }, intervalMs);
+
+    this.emit('background_refresh_started', { interval_ms: intervalMs });
+  }
+
+  /**
+   * Stop background cache refresh
+   */
+  stopBackgroundRefresh(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+      console.log('⚡ Background refresh stopped');
+    }
+  }
+
   /**
    * Get instant execution stats
    */
@@ -1895,11 +1941,13 @@ export class TradingAgent extends EventEmitter {
     cached_routes: number;
     cached_prices: number;
     avg_latency_ms: number;
+    background_refresh_active: boolean;
   } {
     return {
       cached_routes: this.routeCache.size,
       cached_prices: this.priceCache.size,
-      avg_latency_ms: 0 // Would track this over time
+      avg_latency_ms: 0, // Would track this over time
+      background_refresh_active: this.refreshInterval !== null
     };
   }
 
