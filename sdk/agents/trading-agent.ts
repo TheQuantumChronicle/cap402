@@ -527,6 +527,107 @@ export class TradingAgent extends EventEmitter {
     return true;
   }
 
+  /**
+   * Retry wrapper for operations with exponential backoff
+   */
+  async withRetry<T>(
+    operation: () => Promise<T>,
+    options?: {
+      maxRetries?: number;
+      initialDelayMs?: number;
+      maxDelayMs?: number;
+      retryOn?: (error: any) => boolean;
+    }
+  ): Promise<T> {
+    const maxRetries = options?.maxRetries ?? 3;
+    const initialDelay = options?.initialDelayMs ?? 1000;
+    const maxDelay = options?.maxDelayMs ?? 30000;
+    const shouldRetry = options?.retryOn ?? ((error: any) => {
+      const msg = error?.message || '';
+      return msg.includes('timeout') || 
+             msg.includes('ECONNREFUSED') || 
+             msg.includes('503') ||
+             msg.includes('502') ||
+             msg.includes('rate limit');
+    });
+
+    let lastError: any;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+        
+        if (attempt === maxRetries || !shouldRetry(error)) {
+          throw error;
+        }
+
+        const delay = Math.min(initialDelay * Math.pow(2, attempt), maxDelay);
+        this.emit('retry', { attempt: attempt + 1, maxRetries, delay, error });
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    throw lastError;
+  }
+
+  /**
+   * Safe wrapper that catches errors and returns result object
+   */
+  async safe<T>(
+    operation: () => Promise<T>
+  ): Promise<{ success: true; data: T } | { success: false; error: string }> {
+    try {
+      const data = await operation();
+      return { success: true, data };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Unknown error' };
+    }
+  }
+
+  /**
+   * Execute operation with timeout
+   */
+  async withTimeout<T>(operation: () => Promise<T>, timeoutMs: number): Promise<T> {
+    return Promise.race([
+      operation(),
+      new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs)
+      )
+    ]);
+  }
+
+  /**
+   * Batch multiple operations with concurrency limit
+   */
+  async batch<T, R>(
+    items: T[],
+    operation: (item: T) => Promise<R>,
+    options?: { concurrency?: number; stopOnError?: boolean }
+  ): Promise<{ results: R[]; errors: Array<{ item: T; error: string }> }> {
+    const concurrency = options?.concurrency ?? 5;
+    const stopOnError = options?.stopOnError ?? false;
+    const results: R[] = [];
+    const errors: Array<{ item: T; error: string }> = [];
+
+    for (let i = 0; i < items.length; i += concurrency) {
+      const batch = items.slice(i, i + concurrency);
+      const promises = batch.map(async (item) => {
+        try {
+          const result = await operation(item);
+          results.push(result);
+        } catch (error: any) {
+          errors.push({ item, error: error.message });
+          if (stopOnError) throw error;
+        }
+      });
+
+      await Promise.all(promises);
+    }
+
+    return { results, errors };
+  }
+
   // ============================================
   // LIFECYCLE
   // ============================================
