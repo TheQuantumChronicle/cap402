@@ -6681,6 +6681,386 @@ app.get('/system/health', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// TRADING INFRASTRUCTURE - Deep Value for Agents
+// ============================================
+
+// Real-time trading signals subscription
+app.get('/trading/signals/stream', async (req: Request, res: Response) => {
+  try {
+    const { signalService } = await import('./trading/realtime-signals');
+    
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    // Parse subscription options
+    const types = req.query.types 
+      ? (req.query.types as string).split(',') as any[]
+      : ['price_movement', 'mev_risk', 'arbitrage_opportunity', 'whale_activity', 'a2a_quote_available'];
+    const assets = req.query.assets 
+      ? (req.query.assets as string).split(',')
+      : undefined;
+    const minPriority = req.query.min_priority as any;
+
+    // Send initial connection event
+    res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: Date.now(), subscribed_types: types })}\n\n`);
+
+    // Subscribe to signals
+    const subId = signalService.subscribe(
+      req.query.agent_id as string || 'anonymous',
+      types,
+      (signal) => {
+        res.write(`data: ${JSON.stringify(signal)}\n\n`);
+      },
+      { assets, min_priority: minPriority }
+    );
+
+    // Cleanup on disconnect
+    req.on('close', () => {
+      signalService.unsubscribe(subId);
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Signal stream failed'
+    });
+  }
+});
+
+// Get recent trading signals
+app.get('/trading/signals', async (req: Request, res: Response) => {
+  try {
+    const { signalService } = await import('./trading/realtime-signals');
+    
+    const signals = signalService.getRecentSignals({
+      type: req.query.type as any,
+      asset: req.query.asset as string,
+      limit: parseInt(req.query.limit as string) || 50,
+      since: req.query.since ? parseInt(req.query.since as string) : undefined
+    });
+    
+    res.json({
+      success: true,
+      count: signals.length,
+      signals
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get signals'
+    });
+  }
+});
+
+// Get signal statistics
+app.get('/trading/signals/stats', async (req: Request, res: Response) => {
+  try {
+    const { signalService } = await import('./trading/realtime-signals');
+    res.json({ success: true, ...signalService.getStats() });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get signal stats'
+    });
+  }
+});
+
+// MEV Risk Analysis
+app.post('/trading/mev/analyze', async (req: Request, res: Response) => {
+  try {
+    const { mevProtection } = await import('./trading/mev-protection');
+    const { token_in, token_out, amount_in, amount_in_usd, expected_out, slippage_tolerance } = req.body;
+    
+    if (!token_in || !token_out || !amount_in) {
+      return res.status(400).json({
+        success: false,
+        error: 'Required: token_in, token_out, amount_in'
+      });
+    }
+    
+    const analysis = mevProtection.analyzeRisk(
+      token_in,
+      token_out,
+      amount_in,
+      amount_in_usd || amount_in * 100, // Estimate if not provided
+      expected_out || amount_in,
+      slippage_tolerance || 0.5
+    );
+    
+    res.json({
+      success: true,
+      analysis
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'MEV analysis failed'
+    });
+  }
+});
+
+// Execute with MEV protection
+app.post('/trading/mev/execute', async (req: Request, res: Response) => {
+  try {
+    const { mevProtection } = await import('./trading/mev-protection');
+    const { analysis_id, option_id } = req.body;
+    
+    if (!analysis_id || !option_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Required: analysis_id, option_id'
+      });
+    }
+    
+    const execution = await mevProtection.executeProtected(analysis_id, option_id);
+    
+    res.json({
+      success: true,
+      execution
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Protected execution failed'
+    });
+  }
+});
+
+// Get MEV execution status
+app.get('/trading/mev/execution/:execution_id', async (req: Request, res: Response) => {
+  try {
+    const { mevProtection } = await import('./trading/mev-protection');
+    const execution = mevProtection.getExecution(req.params.execution_id);
+    
+    if (!execution) {
+      return res.status(404).json({ success: false, error: 'Execution not found' });
+    }
+    
+    res.json({ success: true, execution });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get execution'
+    });
+  }
+});
+
+// Get MEV protection statistics
+app.get('/trading/mev/stats', async (req: Request, res: Response) => {
+  try {
+    const { mevProtection } = await import('./trading/mev-protection');
+    res.json({ success: true, ...mevProtection.getStats() });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get MEV stats'
+    });
+  }
+});
+
+// Create sealed-bid auction
+app.post('/trading/auction/create', async (req: Request, res: Response) => {
+  try {
+    const { sealedAuction } = await import('./trading/sealed-auction');
+    const { 
+      agent_id, token, amount, amount_usd,
+      type, min_bid_usd, reserve_price_usd, buy_now_price_usd,
+      bidding_duration_seconds, reveal_duration_seconds,
+      min_trust_score, allowed_agents, max_participants
+    } = req.body;
+    
+    if (!agent_id || !token || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: 'Required: agent_id, token, amount'
+      });
+    }
+    
+    const auction = sealedAuction.createAuction(
+      agent_id,
+      token,
+      amount,
+      amount_usd || amount * 100,
+      {
+        type, min_bid_usd, reserve_price_usd, buy_now_price_usd,
+        bidding_duration_seconds, reveal_duration_seconds,
+        min_trust_score, allowed_agents, max_participants
+      }
+    );
+    
+    res.json({
+      success: true,
+      auction: {
+        auction_id: auction.auction_id,
+        type: auction.type,
+        status: auction.status,
+        asset: auction.asset,
+        parameters: auction.parameters,
+        creator: auction.creator
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Auction creation failed'
+    });
+  }
+});
+
+// Submit sealed bid
+app.post('/trading/auction/:auction_id/bid', async (req: Request, res: Response) => {
+  try {
+    const { sealedAuction } = await import('./trading/sealed-auction');
+    const { agent_id, amount_usd } = req.body;
+    
+    if (!agent_id || !amount_usd) {
+      return res.status(400).json({
+        success: false,
+        error: 'Required: agent_id, amount_usd'
+      });
+    }
+    
+    const result = sealedAuction.submitBid(
+      req.params.auction_id,
+      agent_id,
+      amount_usd
+    );
+    
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    
+    res.json({
+      success: true,
+      bid_id: result.bid_id,
+      commitment: result.commitment,
+      nonce: result.nonce, // Agent must save this to reveal later!
+      important: 'Save the nonce - you need it to reveal your bid'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Bid submission failed'
+    });
+  }
+});
+
+// Reveal bid
+app.post('/trading/auction/:auction_id/reveal', async (req: Request, res: Response) => {
+  try {
+    const { sealedAuction } = await import('./trading/sealed-auction');
+    const { agent_id, amount_usd, nonce } = req.body;
+    
+    if (!agent_id || !amount_usd || !nonce) {
+      return res.status(400).json({
+        success: false,
+        error: 'Required: agent_id, amount_usd, nonce'
+      });
+    }
+    
+    const result = sealedAuction.revealBid(
+      req.params.auction_id,
+      agent_id,
+      amount_usd,
+      nonce
+    );
+    
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    
+    res.json({
+      success: true,
+      valid: result.valid,
+      message: result.valid ? 'Bid revealed successfully' : 'Commitment mismatch - bid invalid'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Bid reveal failed'
+    });
+  }
+});
+
+// Get auction details
+app.get('/trading/auction/:auction_id', async (req: Request, res: Response) => {
+  try {
+    const { sealedAuction } = await import('./trading/sealed-auction');
+    const auction = sealedAuction.getAuction(req.params.auction_id);
+    
+    if (!auction) {
+      return res.status(404).json({ success: false, error: 'Auction not found' });
+    }
+    
+    // Don't expose bid amounts until reveal phase
+    const safeAuction = {
+      ...auction,
+      sealed_bids: auction.sealed_bids.map(b => ({
+        bid_id: b.bid_id,
+        agent_id: b.agent_id,
+        submitted_at: b.submitted_at
+        // commitment hidden
+      })),
+      revealed_bids: auction.status === 'completed' ? auction.revealed_bids : 
+        auction.revealed_bids.map(b => ({ ...b, amount_usd: undefined }))
+    };
+    
+    res.json({ success: true, auction: safeAuction });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get auction'
+    });
+  }
+});
+
+// List active auctions
+app.get('/trading/auctions', async (req: Request, res: Response) => {
+  try {
+    const { sealedAuction } = await import('./trading/sealed-auction');
+    const auctions = sealedAuction.getActiveAuctions(req.query.token as string);
+    
+    res.json({
+      success: true,
+      count: auctions.length,
+      auctions: auctions.map(a => ({
+        auction_id: a.auction_id,
+        type: a.type,
+        status: a.status,
+        asset: a.asset,
+        parameters: {
+          min_bid_usd: a.parameters.min_bid_usd,
+          bidding_ends_at: a.parameters.bidding_ends_at,
+          reveal_ends_at: a.parameters.reveal_ends_at
+        },
+        bid_count: a.sealed_bids.length,
+        creator: a.creator.agent_id
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to list auctions'
+    });
+  }
+});
+
+// Get auction statistics
+app.get('/trading/auctions/stats', async (req: Request, res: Response) => {
+  try {
+    const { sealedAuction } = await import('./trading/sealed-auction');
+    res.json({ success: true, ...sealedAuction.getStats() });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get auction stats'
+    });
+  }
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 
