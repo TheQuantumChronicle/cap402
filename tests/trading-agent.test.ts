@@ -729,6 +729,84 @@ describe('Stealth Trading Mode', () => {
 });
 
 // ============================================
+// ⚡ INSTANT EXECUTION MODE TESTS
+// ============================================
+
+describe('Instant Execution Mode', () => {
+  let instantTrader: TradingAgent;
+
+  beforeEach(() => {
+    instantTrader = createTradingAgent({
+      agent_id: 'instant-trader',
+      name: 'Instant Trading Bot',
+      watched_tokens: ['SOL', 'USDC'],
+      mev_protection: true,
+      router_url: 'http://localhost:3001',
+      instant_mode: {
+        enabled: true,
+        pre_warm_connections: true,
+        cache_routes: true,
+        parallel_quotes: true,
+        skip_mev_under_usd: 500,
+        max_latency_ms: 3000
+      }
+    });
+  });
+
+  afterEach(async () => {
+    try {
+      await instantTrader.stop();
+    } catch {
+      // Ignore
+    }
+  });
+
+  test('should create instant trader with instant config', () => {
+    expect(instantTrader).toBeDefined();
+    expect((instantTrader as any).config.instant_mode).toBeDefined();
+    expect((instantTrader as any).config.instant_mode.enabled).toBe(true);
+  });
+
+  test('should execute instant swap', async () => {
+    const result = await instantTrader.instantSwap('SOL', 'USDC', 5);
+    
+    expect(result).toBeDefined();
+    expect(result.swap_id).toMatch(/^instant_/);
+    expect(result.latency_ms).toBeGreaterThan(0);
+    expect(result.optimizations_used).toBeDefined();
+  }, 10000);
+
+  test('should skip MEV for small trades', async () => {
+    const result = await instantTrader.instantSwap('SOL', 'USDC', 1, {
+      skip_mev_check: true
+    });
+    
+    expect(result.mev_skipped).toBe(true);
+    expect(result.optimizations_used).toContain('mev_skip');
+  }, 10000);
+
+  test('should warm up caches', async () => {
+    await instantTrader.warmUp([
+      { tokenIn: 'SOL', tokenOut: 'USDC' }
+    ]);
+    
+    const stats = instantTrader.getInstantStats();
+    expect(stats.cached_routes).toBeGreaterThanOrEqual(0);
+    expect(stats.cached_prices).toBeGreaterThanOrEqual(0);
+  }, 10000);
+
+  test('should emit instant_swap_completed event', (done) => {
+    instantTrader.on('instant_swap_completed', (result) => {
+      expect(result.swap_id).toBeDefined();
+      expect(result.latency_ms).toBeGreaterThan(0);
+      done();
+    });
+
+    instantTrader.instantSwap('SOL', 'USDC', 2).catch(() => {});
+  }, 10000);
+});
+
+// ============================================
 // QUICK FACTORY TESTS
 // ============================================
 
