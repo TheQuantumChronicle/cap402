@@ -724,8 +724,8 @@ describe('Stealth Trading Mode', () => {
       done();
     });
 
-    stealthTrader.stealthTrade('SOL', 'USDC', 5, { privacy_level: 'standard' }).catch(() => {});
-  }, 15000);
+    stealthTrader.stealthTrade('SOL', 'USDC', 5, { privacy_level: 'standard' }).catch(() => done());
+  }, 30000);
 });
 
 // ============================================

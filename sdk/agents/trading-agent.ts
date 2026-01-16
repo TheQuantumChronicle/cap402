@@ -3389,6 +3389,88 @@ export class TradingAgent extends EventEmitter {
   }
 
   /**
+   * Calculate optimal position size based on risk parameters
+   * 
+   * @example
+   * // Risk 2% of portfolio on this trade with 5% stop-loss
+   * const size = trader.calculatePositionSize('SOL', 2, 5);
+   */
+  calculatePositionSize(
+    token: string,
+    riskPercent: number = 2,
+    stopLossPercent: number = 5
+  ): {
+    token: string;
+    recommended_amount: number;
+    recommended_usd: number;
+    risk_amount_usd: number;
+    stop_loss_price: number;
+    current_price: number;
+    portfolio_value: number;
+  } | null {
+    const priceData = this.prices.get(token);
+    if (!priceData) return null;
+
+    // Get portfolio value
+    let portfolioValue = 0;
+    this.positions.forEach(pos => {
+      const price = this.prices.get(pos.token)?.price || 0;
+      portfolioValue += pos.amount * price;
+    });
+
+    if (portfolioValue === 0) portfolioValue = 10000; // Default for empty portfolio
+
+    const riskAmount = portfolioValue * (riskPercent / 100);
+    const stopLossPrice = priceData.price * (1 - stopLossPercent / 100);
+    const priceRisk = priceData.price - stopLossPrice;
+    
+    // Position size = Risk Amount / Price Risk per unit
+    const recommendedAmount = priceRisk > 0 ? riskAmount / priceRisk : 0;
+    const recommendedUsd = recommendedAmount * priceData.price;
+
+    return {
+      token,
+      recommended_amount: recommendedAmount,
+      recommended_usd: recommendedUsd,
+      risk_amount_usd: riskAmount,
+      stop_loss_price: stopLossPrice,
+      current_price: priceData.price,
+      portfolio_value: portfolioValue
+    };
+  }
+
+  /**
+   * Get risk/reward ratio for a potential trade
+   */
+  getRiskReward(
+    token: string,
+    entryPrice: number,
+    stopLoss: number,
+    takeProfit: number
+  ): {
+    risk_reward_ratio: number;
+    risk_usd: number;
+    reward_usd: number;
+    recommendation: 'good' | 'acceptable' | 'poor';
+  } {
+    const risk = Math.abs(entryPrice - stopLoss);
+    const reward = Math.abs(takeProfit - entryPrice);
+    const ratio = reward / risk;
+
+    let recommendation: 'good' | 'acceptable' | 'poor';
+    if (ratio >= 3) recommendation = 'good';
+    else if (ratio >= 1.5) recommendation = 'acceptable';
+    else recommendation = 'poor';
+
+    return {
+      risk_reward_ratio: ratio,
+      risk_usd: risk,
+      reward_usd: reward,
+      recommendation
+    };
+  }
+
+  /**
    * Check if market conditions are favorable for trading
    */
   isTradingFavorable(token: string): {
