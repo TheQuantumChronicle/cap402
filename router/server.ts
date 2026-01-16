@@ -3675,6 +3675,26 @@ app.get('/alpha/liquidations', async (req: Request, res: Response) => {
   }
 });
 
+// Smart Money Tracker - Real Nansen data on who's buying/selling (FREE TIER)
+app.get('/alpha/smart-money', async (req: Request, res: Response) => {
+  try {
+    const { token } = req.query;
+    
+    const { smartMoneyService } = await import('../providers/smart-money');
+    const result = await smartMoneyService.getSmartMoneyActivity(token as string || 'SOL');
+    
+    res.json({
+      success: true,
+      smart_money: result
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Smart money tracking failed'
+    });
+  }
+});
+
 // Private Trade Execution - Confidential swap with hidden amounts
 app.post('/alpha/private-trade', async (req: Request, res: Response) => {
   try {
