@@ -749,6 +749,7 @@
             <div class="endpoint-section">
               <div class="endpoint-section-title">Data Sources</div>
               <p>• <strong>Helius</strong> - Real-time transaction data with 3 API keys for high availability<br>
+              • <strong>Nansen</strong> - Smart money labels and wallet categorization (when credits available)<br>
               • <strong>Jupiter</strong> - Current token prices for USD valuations</p>
             </div>
             <div class="endpoint-section">
@@ -770,6 +771,7 @@
     <span class="key">"movements"</span>: [
       {
         <span class="key">"wallet"</span>: <span class="string">"FWzn...ouN5"</span>,
+        <span class="key">"wallet_label"</span>: <span class="string">"Jump Trading (smart_money)"</span>,
         <span class="key">"action"</span>: <span class="string">"buy"</span>,
         <span class="key">"token"</span>: <span class="string">"SOL"</span>,
         <span class="key">"amount"</span>: <span class="number">50000</span>,
@@ -785,7 +787,7 @@
       <span class="key">"net_flow_usd"</span>: <span class="number">33000000</span>,
       <span class="key">"market_sentiment"</span>: <span class="string">"BULLISH"</span>
     },
-    <span class="key">"data_source"</span>: <span class="string">"helius_enhanced_transactions"</span>
+    <span class="key">"data_source"</span>: <span class="string">"helius_enhanced_transactions + nansen_labels"</span>
   }
 }</div>
             </div>
