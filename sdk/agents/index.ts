@@ -16,7 +16,7 @@
  */
 
 export { TradingAgent, createTradingAgent } from './trading-agent';
-export type { TradingConfig, PriceData, TradeSignal, TradeExecution, Position, PreparedTransaction, TransactionSummary, AlphaSignal } from './trading-agent';
+export type { TradingConfig, PriceData, TradeSignal, TradeExecution, Position, PreparedTransaction, TransactionSummary, AlphaSignal, A2AQuote, A2ATradingPartner, A2ATradeResult, A2AAuctionResult, A2ASwarmResult } from './trading-agent';
 
 export { MonitoringAgent, createMonitoringAgent } from './monitoring-agent';
 export type { MonitoringConfig, WalletSnapshot, ProtocolHealth, Alert } from './monitoring-agent';

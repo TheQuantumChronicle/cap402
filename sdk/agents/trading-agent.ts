@@ -175,6 +175,77 @@ export interface Position {
 }
 
 // ============================================
+// A2A TRADING INTERFACES
+// ============================================
+
+/**
+ * Quote from another trading agent
+ */
+export interface A2AQuote {
+  quote_id: string;
+  from_agent: string;
+  to_agent: string;
+  token_in: string;
+  token_out: string;
+  amount_in: number;
+  amount_out: number;
+  price: number;
+  valid_until: number;
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  terms?: string;
+}
+
+/**
+ * Trading partner discovered via A2A
+ */
+export interface A2ATradingPartner {
+  agent_id: string;
+  name: string;
+  trust_score: number;
+  quote: A2AQuote;
+  available: boolean;
+  capabilities: string[];
+}
+
+/**
+ * Result of an A2A trade execution
+ */
+export interface A2ATradeResult {
+  trade_id: string;
+  status: 'executed' | 'failed' | 'pending';
+  quote: A2AQuote;
+  tx_hash?: string;
+  amount_received?: number;
+  execution_price?: number;
+  error?: string;
+}
+
+/**
+ * Result of an A2A auction
+ */
+export interface A2AAuctionResult {
+  auction_id: string;
+  winner?: { agent_id: string; bid: number };
+  bids: Array<{ agent_id: string; price: number; trust_score: number }>;
+  best_price?: number;
+  total_bidders: number;
+  error?: string;
+}
+
+/**
+ * Result of a swarm trade
+ */
+export interface A2ASwarmResult {
+  swarm_id: string;
+  participants: string[];
+  total_amount_in: number;
+  total_amount_out: number;
+  execution_time_ms: number;
+  individual_results?: any[];
+  error?: string;
+}
+
+// ============================================
 // TRADING AGENT
 // ============================================
 
@@ -831,6 +902,349 @@ export class TradingAgent extends EventEmitter {
   getPendingTransactions(): PreparedTransaction[] {
     // This would be stored in a real implementation
     return [];
+  }
+
+  // ============================================
+  // AGENT-TO-AGENT (A2A) TRADING
+  // ============================================
+
+  /**
+   * Request a price quote from another trading agent
+   * Enables agent-to-agent price discovery and negotiation
+   * 
+   * @example
+   * const quote = await trader.requestQuote('agent-xyz', 'SOL', 'USDC', 100);
+   * if (quote.accepted) {
+   *   const tx = await trader.executeA2ATrade(quote);
+   * }
+   */
+  async requestQuote(
+    targetAgent: string,
+    tokenIn: string,
+    tokenOut: string,
+    amount: number
+  ): Promise<A2AQuote> {
+    const quoteId = `quote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    try {
+      const result = await this.agent.a2aInvoke<{
+        price: number;
+        amount_out: number;
+        valid_until: number;
+        terms?: string;
+      }>({
+        to_agent: targetAgent,
+        capability_id: 'cap.a2a.quote.v1',
+        inputs: {
+          from_agent: this.config.agent_id,
+          token_in: tokenIn,
+          token_out: tokenOut,
+          amount_in: amount,
+          quote_id: quoteId
+        }
+      });
+
+      if (result.success && result.outputs) {
+        return {
+          quote_id: quoteId,
+          from_agent: this.config.agent_id,
+          to_agent: targetAgent,
+          token_in: tokenIn,
+          token_out: tokenOut,
+          amount_in: amount,
+          amount_out: result.outputs.amount_out,
+          price: result.outputs.price,
+          valid_until: result.outputs.valid_until,
+          status: 'pending',
+          terms: result.outputs.terms
+        };
+      }
+    } catch (error) {
+      console.error(`Quote request to ${targetAgent} failed:`, error);
+    }
+
+    return {
+      quote_id: quoteId,
+      from_agent: this.config.agent_id,
+      to_agent: targetAgent,
+      token_in: tokenIn,
+      token_out: tokenOut,
+      amount_in: amount,
+      amount_out: 0,
+      price: 0,
+      valid_until: 0,
+      status: 'rejected'
+    };
+  }
+
+  /**
+   * Find trading agents that can execute a specific swap
+   * Returns agents sorted by trust score and price
+   */
+  async findTradingPartners(
+    tokenIn: string,
+    tokenOut: string,
+    amount: number
+  ): Promise<A2ATradingPartner[]> {
+    const partners: A2ATradingPartner[] = [];
+
+    try {
+      // Discover agents with swap capability
+      const agents = await this.agent.discoverAgents({
+        capability: 'cap.swap.execute.v1',
+        min_trust_score: 0.5,
+        limit: 10
+      });
+
+      // Request quotes from each
+      for (const agent of agents) {
+        if (agent.agent_id === this.config.agent_id) continue;
+
+        const quote = await this.requestQuote(agent.agent_id, tokenIn, tokenOut, amount);
+        
+        if (quote.status !== 'rejected') {
+          partners.push({
+            agent_id: agent.agent_id,
+            name: agent.name,
+            trust_score: agent.trust_score,
+            quote,
+            available: agent.available,
+            capabilities: agent.capabilities
+          });
+        }
+      }
+
+      // Sort by best price (highest amount_out)
+      partners.sort((a, b) => b.quote.amount_out - a.quote.amount_out);
+
+    } catch (error) {
+      console.error('Failed to find trading partners:', error);
+    }
+
+    return partners;
+  }
+
+  /**
+   * Execute an A2A trade with a partner agent
+   * Coordinates the swap between two agents
+   */
+  async executeA2ATrade(quote: A2AQuote): Promise<A2ATradeResult> {
+    const tradeId = `a2a_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Validate quote is still valid
+    if (Date.now() > quote.valid_until) {
+      return {
+        trade_id: tradeId,
+        status: 'failed',
+        error: 'Quote expired',
+        quote
+      };
+    }
+
+    try {
+      // Execute via A2A protocol
+      const result = await this.agent.a2aInvoke<{
+        tx_hash?: string;
+        amount_received: number;
+        execution_price: number;
+      }>({
+        to_agent: quote.to_agent,
+        capability_id: 'cap.a2a.execute.v1',
+        inputs: {
+          quote_id: quote.quote_id,
+          from_agent: this.config.agent_id,
+          token_in: quote.token_in,
+          token_out: quote.token_out,
+          amount_in: quote.amount_in,
+          expected_out: quote.amount_out
+        }
+      });
+
+      if (result.success && result.outputs) {
+        this.emit('a2a_trade_executed', {
+          trade_id: tradeId,
+          partner: quote.to_agent,
+          amount_in: quote.amount_in,
+          amount_out: result.outputs.amount_received
+        });
+
+        return {
+          trade_id: tradeId,
+          status: 'executed',
+          quote,
+          tx_hash: result.outputs.tx_hash,
+          amount_received: result.outputs.amount_received,
+          execution_price: result.outputs.execution_price
+        };
+      }
+
+      return {
+        trade_id: tradeId,
+        status: 'failed',
+        error: result.error || 'Execution failed',
+        quote
+      };
+
+    } catch (error: any) {
+      return {
+        trade_id: tradeId,
+        status: 'failed',
+        error: error.message,
+        quote
+      };
+    }
+  }
+
+  /**
+   * Broadcast a trading signal to other agents
+   * Enables collaborative trading and signal sharing
+   */
+  async broadcastSignal(signal: TradeSignal | AlphaSignal): Promise<{ delivered_to: string[] }> {
+    const deliveredTo: string[] = [];
+
+    try {
+      // Find agents interested in this token
+      const agents = await this.agent.discoverAgents({
+        tags: ['trading', signal.token.toLowerCase()],
+        limit: 20
+      });
+
+      for (const agent of agents) {
+        if (agent.agent_id === this.config.agent_id) continue;
+
+        try {
+          await this.agent.sendMessage(agent.agent_id, {
+            type: 'trading_signal',
+            signal,
+            from: this.config.agent_id,
+            timestamp: Date.now()
+          });
+          deliveredTo.push(agent.agent_id);
+        } catch {
+          // Continue on individual failures
+        }
+      }
+
+    } catch (error) {
+      console.error('Failed to broadcast signal:', error);
+    }
+
+    return { delivered_to: deliveredTo };
+  }
+
+  /**
+   * Subscribe to signals from other trading agents
+   * Polls for new messages and emits events
+   */
+  async pollA2ASignals(): Promise<(TradeSignal | AlphaSignal)[]> {
+    const signals: (TradeSignal | AlphaSignal)[] = [];
+
+    try {
+      const messages = await this.agent.getMessages(Date.now() - 60000); // Last minute
+
+      for (const msg of messages) {
+        if (msg.payload?.type === 'trading_signal' && msg.payload?.signal) {
+          signals.push(msg.payload.signal);
+          this.emit('a2a_signal', {
+            from: msg.from_agent,
+            signal: msg.payload.signal
+          });
+        }
+      }
+
+    } catch (error) {
+      console.error('Failed to poll A2A signals:', error);
+    }
+
+    return signals;
+  }
+
+  /**
+   * Request best execution from multiple agents (auction)
+   * Agents compete to offer the best price
+   */
+  async auctionTrade(
+    tokenIn: string,
+    tokenOut: string,
+    amount: number,
+    maxPrice?: number
+  ): Promise<A2AAuctionResult> {
+    try {
+      const result = await this.agent.startAuction({
+        capability_id: 'cap.swap.execute.v1',
+        inputs: {
+          token_in: tokenIn,
+          token_out: tokenOut,
+          amount_in: amount
+        },
+        max_price: maxPrice,
+        min_trust_score: 0.6,
+        timeout_ms: 10000
+      });
+
+      return {
+        auction_id: result.auction_id,
+        winner: result.winner,
+        bids: result.bids,
+        best_price: result.winner?.bid,
+        total_bidders: result.bids.length
+      };
+
+    } catch (error: any) {
+      return {
+        auction_id: '',
+        bids: [],
+        total_bidders: 0,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Coordinate a swarm trade - multiple agents execute in parallel
+   * Useful for large orders that need to be split
+   */
+  async swarmTrade(
+    tokenIn: string,
+    tokenOut: string,
+    totalAmount: number,
+    options?: { minAgents?: number; maxAgents?: number }
+  ): Promise<A2ASwarmResult> {
+    try {
+      const result = await this.agent.coordinateSwarm({
+        capability_id: 'cap.swap.execute.v1',
+        inputs: {
+          token_in: tokenIn,
+          token_out: tokenOut,
+          amount_in: totalAmount
+        },
+        min_agents: options?.minAgents || 2,
+        max_agents: options?.maxAgents || 5,
+        strategy: 'parallel'
+      });
+
+      const totalReceived = result.results.reduce((sum: number, r: any) => 
+        sum + (r.outputs?.amount_out || 0), 0);
+
+      return {
+        swarm_id: result.swarm_id,
+        participants: result.participants,
+        total_amount_in: totalAmount,
+        total_amount_out: totalReceived,
+        execution_time_ms: result.execution_time_ms,
+        individual_results: result.results
+      };
+
+    } catch (error: any) {
+      return {
+        swarm_id: '',
+        participants: [],
+        total_amount_in: totalAmount,
+        total_amount_out: 0,
+        execution_time_ms: 0,
+        error: error.message
+      };
+    }
   }
 
   private updatePositions(trade: TradeExecution): void {
