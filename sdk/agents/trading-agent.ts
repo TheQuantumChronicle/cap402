@@ -1663,6 +1663,57 @@ export class TradingAgent extends EventEmitter {
   private readonly MAX_LATENCY_SAMPLES = 100;
 
   /**
+   * Smart trade - automatically selects the best execution method
+   * 
+   * Decision logic:
+   * - < $100: instant (skip MEV, fastest)
+   * - $100-$10K: protected (standard MEV protection)
+   * - > $10K: stealth (split + maximum privacy)
+   * 
+   * @example
+   * // Just call smartTrade - it picks the right method
+   * const result = await agent.smartTrade('SOL', 'USDC', 100);
+   */
+  async smartTrade(
+    tokenIn: string,
+    tokenOut: string,
+    amount: number
+  ): Promise<{ method: string; result: any; latency_ms: number }> {
+    const startTime = performance.now();
+    
+    // Get USD value
+    const prices = this.prices;
+    const priceData = prices.get(tokenIn);
+    const usdValue = priceData ? amount * priceData.price : amount * 100;
+
+    let method: string;
+    let result: any;
+
+    if (usdValue < 100) {
+      // Small trade: instant, no MEV check
+      method = 'instant';
+      result = await this.instantSwap(tokenIn, tokenOut, amount, { skip_mev_check: true });
+    } else if (usdValue < 10000) {
+      // Medium trade: protected
+      method = 'protected';
+      result = await this.instantSwap(tokenIn, tokenOut, amount);
+    } else {
+      // Large trade: stealth with splitting
+      method = 'stealth';
+      result = await this.stealthTrade(tokenIn, tokenOut, amount, {
+        privacy_level: 'maximum',
+        split_order: usdValue > 50000
+      });
+    }
+
+    const latencyMs = Math.round(performance.now() - startTime);
+    
+    console.log(`🎯 Smart Trade: ${method} for $${usdValue.toFixed(0)} in ${latencyMs}ms`);
+    
+    return { method, result, latency_ms: latencyMs };
+  }
+
+  /**
    * Execute an instant trade with minimal latency
    * 
    * Optimizations:
