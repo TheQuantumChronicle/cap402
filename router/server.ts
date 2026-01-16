@@ -6896,6 +6896,65 @@ app.get('/trading/signals/stats', async (req: Request, res: Response) => {
   }
 });
 
+// ⚡ Instant Swap - Optimized for minimum latency
+app.post('/trading/instant-swap', async (req: Request, res: Response) => {
+  const startTime = Date.now();
+  
+  try {
+    const { token_in, token_out, amount, wallet_address, max_slippage_bps, priority_fee } = req.body;
+
+    if (!token_in || !token_out || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: 'Required: token_in, token_out, amount'
+      });
+    }
+
+    // Skip MEV analysis for speed - go straight to execution
+    const { swapProvider } = await import('../providers/swap');
+    
+    // Execute swap directly
+    const swapResult = await swapProvider.executeSwap(
+      wallet_address || 'instant-user',
+      token_in,
+      token_out,
+      String(amount),
+      max_slippage_bps || 50
+    );
+
+    const latencyMs = Date.now() - startTime;
+
+    res.json({
+      success: true,
+      instant_swap: {
+        swap_id: `instant_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        status: 'executed',
+        token_in,
+        token_out,
+        amount_in: amount,
+        amount_out: swapResult.output_amount || 0,
+        execution_price: (swapResult.output_amount || 0) / amount,
+        latency_ms: latencyMs,
+        optimizations: ['skip_mev_analysis', 'direct_swap', 'no_protection_overhead'],
+        route_hops: swapResult.route?.length || 1,
+        tx_signature: swapResult.transaction_signature
+      },
+      performance: {
+        total_latency_ms: latencyMs,
+        target_latency_ms: 1000,
+        within_target: latencyMs < 1000
+      }
+    });
+  } catch (error) {
+    const latencyMs = Date.now() - startTime;
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Instant swap failed',
+      latency_ms: latencyMs
+    });
+  }
+});
+
 // MEV Risk Analysis
 app.post('/trading/mev/analyze', async (req: Request, res: Response) => {
   try {
