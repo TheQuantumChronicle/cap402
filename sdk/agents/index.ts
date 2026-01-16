@@ -63,7 +63,10 @@ export function quickTrader(
  */
 export async function autoTrader(
   tokens: string[],
-  options?: { onSignal?: (signal: any) => void; onAlpha?: (alpha: any) => void }
+  options?: { 
+    onSignal?: (signal: import('./trading-agent').TradeSignal) => void; 
+    onAlpha?: (alpha: import('./trading-agent').AlphaSignal) => void 
+  }
 ): Promise<import('./trading-agent').TradingAgent> {
   const trader = quickTrader(tokens);
   
@@ -112,7 +115,7 @@ export async function bestSwap(
   amount: number
 ): Promise<{
   route: 'dex' | 'a2a' | 'auction' | 'swarm';
-  result: any;
+  result: import('./trading-agent').PreparedTransaction | import('./trading-agent').A2ATradeResult;
   savings_vs_dex?: number;
   execution_summary: string;
 }> {
