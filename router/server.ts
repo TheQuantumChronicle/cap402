@@ -3544,82 +3544,24 @@ app.post('/mev/protected-swap', async (req: Request, res: Response) => {
   }
 });
 
-// Arbitrage Scanner - Find cross-DEX opportunities
+// Arbitrage Scanner - Find cross-DEX opportunities (REAL DATA from Jupiter)
 app.get('/alpha/arbitrage', async (req: Request, res: Response) => {
   try {
     const { token, min_profit_bps } = req.query;
-    const minProfitBps = Number(min_profit_bps) || 10; // Default 0.1% min profit
+    const minProfitBps = Number(min_profit_bps) || 5;
 
-    // Simulated DEX prices (in production, would query real DEXs)
-    const dexPrices = {
-      'SOL/USDC': {
-        jupiter: 185.42,
-        raydium: 185.38,
-        orca: 185.45,
-        phoenix: 185.40
-      },
-      'ETH/USDC': {
-        jupiter: 3245.80,
-        raydium: 3244.50,
-        orca: 3246.20,
-        phoenix: 3245.00
-      },
-      'BTC/USDC': {
-        jupiter: 98450.00,
-        raydium: 98420.00,
-        orca: 98480.00,
-        phoenix: 98440.00
-      }
-    };
-
-    // Find arbitrage opportunities
-    const opportunities: any[] = [];
+    // Import arbitrage scanner service
+    const { arbitrageScannerService } = await import('../providers/arbitrage-scanner');
     
-    for (const [pair, prices] of Object.entries(dexPrices)) {
-      if (token && !pair.includes(token as string)) continue;
-      
-      const dexes = Object.entries(prices);
-      const minPrice = Math.min(...dexes.map(d => d[1]));
-      const maxPrice = Math.max(...dexes.map(d => d[1]));
-      const spreadBps = ((maxPrice - minPrice) / minPrice) * 10000;
-      
-      if (spreadBps >= minProfitBps) {
-        const buyDex = dexes.find(d => d[1] === minPrice)![0];
-        const sellDex = dexes.find(d => d[1] === maxPrice)![0];
-        
-        // Calculate profit for $10k trade
-        const tradeSize = 10000;
-        const grossProfit = tradeSize * (spreadBps / 10000);
-        const gasCost = 0.50; // Estimated gas
-        const netProfit = grossProfit - gasCost;
-        
-        opportunities.push({
-          pair,
-          buy_on: buyDex,
-          buy_price: minPrice,
-          sell_on: sellDex,
-          sell_price: maxPrice,
-          spread_bps: spreadBps.toFixed(2),
-          profit_on_10k_usd: netProfit.toFixed(2),
-          confidence: spreadBps > 20 ? 'high' : 'medium',
-          expires_in_blocks: Math.floor(Math.random() * 3) + 1
-        });
-      }
-    }
-
-    // Sort by profit
-    opportunities.sort((a, b) => Number(b.profit_on_10k_usd) - Number(a.profit_on_10k_usd));
+    // Get real arbitrage data from Jupiter
+    const result = await arbitrageScannerService.scanArbitrage({
+      token: token as string | undefined,
+      minProfitBps
+    });
 
     res.json({
       success: true,
-      arbitrage: {
-        opportunities,
-        total_found: opportunities.length,
-        best_opportunity: opportunities[0] || null,
-        total_potential_profit: opportunities.reduce((sum, o) => sum + Number(o.profit_on_10k_usd), 0).toFixed(2),
-        scanned_dexs: ['jupiter', 'raydium', 'orca', 'phoenix'],
-        last_scan: Date.now()
-      }
+      arbitrage: result
     });
   } catch (error) {
     res.status(500).json({
@@ -3678,80 +3620,25 @@ app.get('/alpha/gas-optimizer', async (req: Request, res: Response) => {
   }
 });
 
-// Whale Tracker - Monitor large wallet movements
+// Whale Tracker - Monitor large wallet movements (REAL DATA from Helius)
 app.get('/alpha/whale-tracker', async (req: Request, res: Response) => {
   try {
-    const { token, min_amount } = req.query;
-    const minAmt = Number(min_amount) || 100000;
+    const { token, min_value } = req.query;
+    const minValueUsd = Number(min_value) || 100000;
 
-    // Simulated whale movements (in production, would use Helius webhooks)
-    const whaleMovements = [
-      {
-        wallet: '7xKX...9pQm',
-        action: 'buy',
-        token: 'SOL',
-        amount: 250000,
-        price: 185.40,
-        value_usd: 46350000,
-        timestamp: Date.now() - 300000,
-        exchange: 'jupiter',
-        significance: 'BULLISH - Large accumulation'
-      },
-      {
-        wallet: '3mNx...kL2p',
-        action: 'sell',
-        token: 'SOL',
-        amount: 150000,
-        price: 185.35,
-        value_usd: 27802500,
-        timestamp: Date.now() - 180000,
-        exchange: 'raydium',
-        significance: 'NEUTRAL - Profit taking'
-      },
-      {
-        wallet: '9qRt...wM4n',
-        action: 'transfer',
-        token: 'USDC',
-        amount: 5000000,
-        price: 1.00,
-        value_usd: 5000000,
-        timestamp: Date.now() - 60000,
-        exchange: 'to_exchange',
-        significance: 'BEARISH - Moving to exchange (potential sell)'
-      }
-    ];
-
-    // Filter by token if specified
-    let filtered = whaleMovements;
-    if (token) {
-      filtered = filtered.filter(m => m.token === token);
-    }
-    filtered = filtered.filter(m => m.amount >= minAmt);
-
-    // Calculate market sentiment from whale activity
-    const buyVolume = filtered.filter(m => m.action === 'buy').reduce((sum, m) => sum + m.value_usd, 0);
-    const sellVolume = filtered.filter(m => m.action === 'sell' || m.significance.includes('BEARISH')).reduce((sum, m) => sum + m.value_usd, 0);
-    const sentiment = buyVolume > sellVolume * 1.5 ? 'BULLISH' : 
-                     sellVolume > buyVolume * 1.5 ? 'BEARISH' : 'NEUTRAL';
+    // Import whale tracker service
+    const { whaleTrackerService } = await import('../providers/whale-tracker');
+    
+    // Get real whale movements from Helius
+    const result = await whaleTrackerService.getWhaleMovements({
+      token: token as string | undefined,
+      minValueUsd,
+      limit: 20
+    });
 
     res.json({
       success: true,
-      whale_tracker: {
-        movements: filtered,
-        summary: {
-          total_movements: filtered.length,
-          buy_volume_usd: buyVolume,
-          sell_volume_usd: sellVolume,
-          net_flow_usd: buyVolume - sellVolume,
-          market_sentiment: sentiment
-        },
-        alerts: filtered.filter(m => m.value_usd > 10000000).map(m => ({
-          type: 'WHALE_ALERT',
-          message: `${m.wallet} ${m.action} ${m.amount.toLocaleString()} ${m.token} ($${(m.value_usd/1000000).toFixed(1)}M)`,
-          significance: m.significance
-        })),
-        tracking_since: Date.now() - 3600000
-      }
+      whale_tracker: result
     });
   } catch (error) {
     res.status(500).json({
@@ -3761,66 +3648,24 @@ app.get('/alpha/whale-tracker', async (req: Request, res: Response) => {
   }
 });
 
-// Liquidation Monitor - Track DeFi liquidation opportunities
+// Liquidation Monitor - Track DeFi liquidation opportunities (REAL DATA)
 app.get('/alpha/liquidations', async (req: Request, res: Response) => {
   try {
     const { protocol, min_value } = req.query;
     const minVal = Number(min_value) || 1000;
 
-    // Simulated at-risk positions
-    const atRiskPositions = [
-      {
-        protocol: 'marginfi',
-        wallet: '4kLm...nP2q',
-        collateral_token: 'SOL',
-        collateral_value: 50000,
-        debt_token: 'USDC',
-        debt_value: 42000,
-        health_factor: 1.05,
-        liquidation_price: 176.40,
-        current_price: 185.40,
-        distance_to_liquidation: '4.9%',
-        potential_profit: 2100
-      },
-      {
-        protocol: 'solend',
-        wallet: '8xNr...kM3p',
-        collateral_token: 'ETH',
-        collateral_value: 120000,
-        debt_token: 'USDC',
-        debt_value: 108000,
-        health_factor: 1.02,
-        liquidation_price: 3115.00,
-        current_price: 3245.80,
-        distance_to_liquidation: '4.0%',
-        potential_profit: 5400
-      }
-    ];
-
-    let filtered = atRiskPositions;
-    if (protocol) {
-      filtered = filtered.filter(p => p.protocol === protocol);
-    }
-    filtered = filtered.filter(p => p.potential_profit >= minVal);
-
-    // Sort by proximity to liquidation
-    filtered.sort((a, b) => a.health_factor - b.health_factor);
-
-    const totalPotentialProfit = filtered.reduce((sum, p) => sum + p.potential_profit, 0);
+    // Import liquidation monitor service
+    const { liquidationMonitorService } = await import('../providers/liquidation-monitor');
+    
+    // Get real liquidation data
+    const result = await liquidationMonitorService.scanLiquidations({
+      protocol: protocol as string | undefined,
+      minValue: minVal
+    });
 
     res.json({
       success: true,
-      liquidations: {
-        at_risk_positions: filtered,
-        summary: {
-          total_positions: filtered.length,
-          total_collateral_at_risk: filtered.reduce((sum, p) => sum + p.collateral_value, 0),
-          total_potential_profit: totalPotentialProfit,
-          highest_profit_opportunity: filtered[0] || null
-        },
-        protocols_monitored: ['marginfi', 'solend', 'kamino', 'drift'],
-        alert_threshold: 'health_factor < 1.1'
-      }
+      liquidations: result
     });
   } catch (error) {
     res.status(500).json({
