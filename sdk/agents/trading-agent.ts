@@ -3,6 +3,18 @@
  * 
  * A production-ready trading agent that monitors prices, executes trades,
  * and manages portfolio positions using CAP-402 capabilities.
+ * 
+ * ⚠️ SAFETY WARNINGS:
+ * 
+ * 1. ALWAYS start with dry_run: true to test without real transactions
+ * 2. Set appropriate trading_limits to prevent excessive losses
+ * 3. Use mev_protection: true for trades above $100
+ * 4. Monitor the agent and set up alerts for anomalies
+ * 5. Never run unattended without proper safety guardrails
+ * 6. Test thoroughly on testnet before mainnet
+ * 
+ * The authors are not responsible for any financial losses incurred
+ * through the use of this software. Trade at your own risk.
  */
 
 import { CAP402Agent, createAgent, AgentConfig, InvokeResult } from '../agent';
@@ -138,6 +150,20 @@ export class TradingAgent extends EventEmitter {
     console.log(`   Quote: ${this.config.quote_currency}`);
     console.log(`   MEV Protection: ${this.config.mev_protection ? 'ON' : 'OFF'}`);
     console.log(`   Dry Run: ${this.config.dry_run ? 'YES' : 'NO'}\n`);
+
+    // Safety warnings
+    if (!this.config.dry_run) {
+      console.warn('⚠️  WARNING: Dry run is DISABLED. Real transactions will be executed!');
+      console.warn('⚠️  Ensure you have reviewed all trading limits and safety settings.');
+    }
+    
+    if (!this.config.mev_protection) {
+      console.warn('⚠️  WARNING: MEV protection is OFF. Large trades may be front-run.');
+    }
+
+    if (!this.config.trading_limits?.max_position_size) {
+      console.warn('⚠️  WARNING: No max_position_size set. Consider adding trading limits.');
+    }
 
     await this.agent.start();
     this.isRunning = true;

@@ -82,5 +82,13 @@ export {
   createWebhookManager
 } from './webhooks';
 
+// Safety Guardrails
+export {
+  SafetyGuardrails,
+  createSafetyGuardrails,
+  SAFETY_PRESETS,
+  DEFAULT_SAFETY_CONFIG
+} from './safety';
+
 // Re-export capability types from spec
 export type { Capability } from '../spec/capabilities';
