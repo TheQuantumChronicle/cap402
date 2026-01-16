@@ -170,6 +170,224 @@
       opacity: 0.02;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     }
+
+    /* ============================================
+       CAP-402 BRAND ICONS - CSS-only, no emojis
+       ============================================ */
+    .cap-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, rgba(108,68,252,0.15) 0%, rgba(108,68,252,0.05) 100%);
+      border: 1px solid rgba(108,68,252,0.3);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .cap-icon::before {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+    }
+
+    /* A2A Trading - Two connected nodes */
+    .cap-icon.icon-a2a::before {
+      width: 6px;
+      height: 6px;
+      background: var(--arcium-purple);
+      border-radius: 50%;
+      box-shadow: 8px 0 0 var(--arcium-purple);
+    }
+    .cap-icon.icon-a2a::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 2px;
+      background: rgba(108,68,252,0.6);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* Alpha/Target - Crosshair */
+    .cap-icon.icon-alpha::before {
+      width: 10px;
+      height: 10px;
+      border: 2px solid var(--arcium-purple);
+      border-radius: 50%;
+      background: transparent;
+    }
+    .cap-icon.icon-alpha::after {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: 14px;
+      background: var(--arcium-purple);
+      box-shadow: 0 0 0 0, 6px -6px 0 -5px var(--arcium-purple), -6px 6px 0 -5px var(--arcium-purple);
+    }
+
+    /* Lock/Security */
+    .cap-icon.icon-lock::before {
+      width: 10px;
+      height: 7px;
+      background: var(--arcium-purple);
+      border-radius: 2px;
+      margin-top: 3px;
+    }
+    .cap-icon.icon-lock::after {
+      content: '';
+      position: absolute;
+      width: 6px;
+      height: 5px;
+      border: 2px solid var(--arcium-purple);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      top: 6px;
+    }
+
+    /* Globe/Cross-Protocol */
+    .cap-icon.icon-globe::before {
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--arcium-purple);
+      border-radius: 50%;
+    }
+    .cap-icon.icon-globe::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 2px;
+      background: var(--arcium-purple);
+      box-shadow: 0 -4px 0 0 var(--arcium-purple), 0 4px 0 0 var(--arcium-purple);
+    }
+
+    /* Lightning/Fast */
+    .cap-icon.icon-bolt::before {
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-bottom: 8px solid var(--arcium-purple);
+      margin-top: -4px;
+    }
+    .cap-icon.icon-bolt::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 8px solid var(--arcium-purple);
+      margin-top: 4px;
+      margin-left: -2px;
+    }
+
+    /* Document/Summary */
+    .cap-icon.icon-doc::before {
+      width: 10px;
+      height: 12px;
+      background: transparent;
+      border: 2px solid var(--arcium-purple);
+      border-radius: 2px;
+    }
+    .cap-icon.icon-doc::after {
+      content: '';
+      position: absolute;
+      width: 5px;
+      height: 2px;
+      background: var(--arcium-purple);
+      box-shadow: 0 3px 0 0 var(--arcium-purple), 0 6px 0 0 var(--arcium-purple);
+      margin-top: -2px;
+    }
+
+    /* Chart/Trading */
+    .cap-icon.icon-chart::before {
+      width: 3px;
+      height: 8px;
+      background: var(--arcium-purple);
+      box-shadow: 5px 2px 0 0 var(--arcium-purple), -5px 4px 0 0 var(--arcium-purple);
+      margin-top: 2px;
+    }
+
+    /* Eye/Monitoring */
+    .cap-icon.icon-eye::before {
+      width: 14px;
+      height: 8px;
+      border: 2px solid var(--arcium-purple);
+      border-radius: 50%;
+    }
+    .cap-icon.icon-eye::after {
+      content: '';
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--arcium-purple);
+      border-radius: 50%;
+    }
+
+    /* Analytics/Data */
+    .cap-icon.icon-analytics::before {
+      width: 12px;
+      height: 12px;
+      border-left: 2px solid var(--arcium-purple);
+      border-bottom: 2px solid var(--arcium-purple);
+    }
+    .cap-icon.icon-analytics::after {
+      content: '';
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: var(--arcium-purple);
+      border-radius: 50%;
+      box-shadow: 4px -3px 0 0 var(--arcium-purple), 8px -6px 0 0 var(--arcium-purple);
+      margin-left: -2px;
+      margin-top: 2px;
+    }
+
+    /* Book/Docs */
+    .cap-icon.icon-book::before {
+      width: 12px;
+      height: 10px;
+      background: transparent;
+      border: 2px solid var(--arcium-purple);
+      border-radius: 0 3px 3px 0;
+      border-left: none;
+    }
+    .cap-icon.icon-book::after {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: 10px;
+      background: var(--arcium-purple);
+      margin-left: -6px;
+    }
+
+    /* Large icon variant */
+    .cap-icon.icon-lg {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+    }
+    .cap-icon.icon-lg::before {
+      transform: scale(1.4);
+    }
+    .cap-icon.icon-lg::after {
+      transform: scale(1.4);
+    }
+
+    /* Green variant for success/alpha */
+    .cap-icon.icon-green {
+      background: linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%);
+      border-color: rgba(34,197,94,0.3);
+    }
+    .cap-icon.icon-green::before,
+    .cap-icon.icon-green::after {
+      background-color: #22c55e;
+      border-color: #22c55e;
+    }
     
     /* Navigation - Arcium style */
     nav {
@@ -826,10 +1044,10 @@
     <!-- Code Examples Tabs -->
     <div style="max-width: 900px; margin: 0 auto;">
       <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; justify-content: center;">
-        <button class="sdk-tab active" data-tab="oneliner" style="padding: 0.5rem 1rem; background: var(--arcium-purple); border: none; border-radius: 6px; color: white; font-size: 0.8rem; cursor: pointer;">⚡ One-Liners</button>
-        <button class="sdk-tab" data-tab="trading" style="padding: 0.5rem 1rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; color: var(--text-secondary); font-size: 0.8rem; cursor: pointer;">📈 Trading</button>
-        <button class="sdk-tab" data-tab="a2a" style="padding: 0.5rem 1rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; color: var(--text-secondary); font-size: 0.8rem; cursor: pointer;">🤝 A2A Trading</button>
-        <button class="sdk-tab" data-tab="alpha" style="padding: 0.5rem 1rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; color: var(--text-secondary); font-size: 0.8rem; cursor: pointer;">🎯 Alpha Detection</button>
+        <button class="sdk-tab active" data-tab="oneliner" style="padding: 0.5rem 1rem; background: var(--arcium-purple); border: none; border-radius: 6px; color: white; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;"><span class="cap-icon icon-bolt" style="width: 18px; height: 18px; background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3);"></span> One-Liners</button>
+        <button class="sdk-tab" data-tab="trading" style="padding: 0.5rem 1rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; color: var(--text-secondary); font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;"><span class="cap-icon icon-chart" style="width: 18px; height: 18px;"></span> Trading</button>
+        <button class="sdk-tab" data-tab="a2a" style="padding: 0.5rem 1rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; color: var(--text-secondary); font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;"><span class="cap-icon icon-a2a" style="width: 18px; height: 18px;"></span> A2A Trading</button>
+        <button class="sdk-tab" data-tab="alpha" style="padding: 0.5rem 1rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; color: var(--text-secondary); font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;"><span class="cap-icon icon-alpha" style="width: 18px; height: 18px;"></span> Alpha Detection</button>
       </div>
       
       <!-- One-Liner Example -->
@@ -937,7 +1155,7 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
     <div style="max-width: 900px; margin: 2rem auto 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
       <div style="background: linear-gradient(135deg, rgba(108,68,252,0.1) 0%, rgba(108,68,252,0.05) 100%); border: 1px solid rgba(108,68,252,0.3); border-radius: 8px; padding: 1.25rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span style="font-size: 1.25rem;">🤝</span>
+          <span class="cap-icon icon-a2a"></span>
           <span style="font-weight: 600; color: var(--text-primary);">Agent-to-Agent Trading</span>
           <span style="font-size: 0.6rem; padding: 0.15rem 0.4rem; background: var(--arcium-purple); color: white; border-radius: 4px;">NEW</span>
         </div>
@@ -945,7 +1163,7 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
       </div>
       <div style="background: linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(34,197,94,0.05) 100%); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 1.25rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span style="font-size: 1.25rem;">🎯</span>
+          <span class="cap-icon icon-alpha icon-green"></span>
           <span style="font-weight: 600; color: var(--text-primary);">Alpha Detection</span>
           <span style="font-size: 0.6rem; padding: 0.15rem 0.4rem; background: #22c55e; color: white; border-radius: 4px;">NEW</span>
         </div>
@@ -953,28 +1171,28 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
       </div>
       <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span style="font-size: 1.25rem;">🔒</span>
+          <span class="cap-icon icon-lock"></span>
           <span style="font-weight: 600; color: var(--text-primary);">Secure Communication</span>
         </div>
         <span style="font-size: 0.8rem; color: var(--text-secondary);">Encrypted A2A messaging with privacy levels: public, confidential, private, maximum.</span>
       </div>
       <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span style="font-size: 1.25rem;">🌐</span>
+          <span class="cap-icon icon-globe"></span>
           <span style="font-weight: 600; color: var(--text-primary);">Cross-Protocol</span>
         </div>
         <span style="font-size: 0.8rem; color: var(--text-secondary);">Interop with Google A2A, MCP, and custom protocols.</span>
       </div>
       <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span style="font-size: 1.25rem;">⚡</span>
+          <span class="cap-icon icon-bolt"></span>
           <span style="font-weight: 600; color: var(--text-primary);">Fault Tolerance</span>
         </div>
         <span style="font-size: 0.8rem; color: var(--text-secondary);">Retries, circuit breakers, fallback agents, exponential backoff.</span>
       </div>
       <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span style="font-size: 1.25rem;">📝</span>
+          <span class="cap-icon icon-doc"></span>
           <span style="font-weight: 600; color: var(--text-primary);">Human-Readable Summaries</span>
         </div>
         <span style="font-size: 0.8rem; color: var(--text-secondary);">Every transaction includes headline, details, warnings, and confidence score.</span>
@@ -984,17 +1202,17 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
     <!-- Agent Templates -->
     <div style="max-width: 900px; margin: 2rem auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
       <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; text-align: center;">
-        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📈</span>
+        <span class="cap-icon icon-chart icon-lg" style="margin: 0 auto 0.75rem;"></span>
         <span style="font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Trading Agent</span>
         <span style="font-size: 0.75rem; color: var(--text-secondary);">Price monitoring, signals, MEV protection, A2A trading</span>
       </div>
       <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; text-align: center;">
-        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">👁️</span>
+        <span class="cap-icon icon-eye icon-lg" style="margin: 0 auto 0.75rem;"></span>
         <span style="font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Monitoring Agent</span>
         <span style="font-size: 0.75rem; color: var(--text-secondary);">Wallet tracking, alerts, protocol health</span>
       </div>
       <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; text-align: center;">
-        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📊</span>
+        <span class="cap-icon icon-analytics icon-lg" style="margin: 0 auto 0.75rem;"></span>
         <span style="font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Analytics Agent</span>
         <span style="font-size: 0.75rem; color: var(--text-secondary);">Data collection, reports, correlations</span>
       </div>
@@ -1002,7 +1220,8 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
     
     <div style="text-align: center; margin-top: 2rem;">
       <a href="/docs/sdk-docs.html" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
-        📚 SDK Documentation
+        <span class="cap-icon icon-book" style="width: 20px; height: 20px;"></span>
+        SDK Documentation
       </a>
     </div>
   </section>

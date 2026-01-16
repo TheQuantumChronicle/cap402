@@ -37,6 +37,103 @@
     ul { margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary); }
     li { margin-bottom: 0.5rem; }
     strong { color: var(--text-primary); }
+
+    /* CAP-402 Brand Icons */
+    .cap-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      background: linear-gradient(135deg, rgba(108,68,252,0.15) 0%, rgba(108,68,252,0.05) 100%);
+      border: 1px solid rgba(108,68,252,0.3);
+      position: relative;
+      flex-shrink: 0;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .cap-icon::before {
+      content: '';
+      position: absolute;
+    }
+    .cap-icon.icon-a2a::before {
+      width: 5px;
+      height: 5px;
+      background: var(--arcium-purple);
+      border-radius: 50%;
+      box-shadow: 7px 0 0 var(--arcium-purple);
+    }
+    .cap-icon.icon-a2a::after {
+      content: '';
+      position: absolute;
+      width: 7px;
+      height: 2px;
+      background: rgba(108,68,252,0.6);
+    }
+    .cap-icon.icon-lock::before {
+      width: 8px;
+      height: 6px;
+      background: var(--arcium-purple);
+      border-radius: 2px;
+      margin-top: 2px;
+    }
+    .cap-icon.icon-lock::after {
+      content: '';
+      position: absolute;
+      width: 5px;
+      height: 4px;
+      border: 2px solid var(--arcium-purple);
+      border-bottom: none;
+      border-radius: 5px 5px 0 0;
+      top: 5px;
+    }
+    .cap-icon.icon-bolt::before {
+      width: 0;
+      height: 0;
+      border-left: 3px solid transparent;
+      border-right: 3px solid transparent;
+      border-bottom: 6px solid var(--arcium-purple);
+      margin-top: -3px;
+    }
+    .cap-icon.icon-bolt::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 3px solid transparent;
+      border-right: 3px solid transparent;
+      border-top: 6px solid var(--arcium-purple);
+      margin-top: 3px;
+      margin-left: -1px;
+    }
+    .cap-icon.icon-chart::before {
+      width: 3px;
+      height: 7px;
+      background: var(--arcium-purple);
+      box-shadow: 4px 2px 0 0 var(--arcium-purple), -4px 3px 0 0 var(--arcium-purple);
+    }
+    .cap-icon.icon-globe::before {
+      width: 10px;
+      height: 10px;
+      border: 2px solid var(--arcium-purple);
+      border-radius: 50%;
+    }
+    .cap-icon.icon-doc::before {
+      width: 8px;
+      height: 10px;
+      border: 2px solid var(--arcium-purple);
+      border-radius: 2px;
+    }
+    .cap-icon.icon-green {
+      background: linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%);
+      border-color: rgba(34,197,94,0.3);
+    }
+    .cap-icon.icon-green::before,
+    .cap-icon.icon-green::after {
+      background-color: #22c55e;
+      border-color: #22c55e;
+    }
   </style>
 </head>
 <body>
@@ -437,95 +534,4 @@ log.trade('execute', { token_in: 'SOL', token_out: 'USDC', amount: 10 });
 log.a2a('quote_received', { from_agent: 'agent-xyz', price: 143.34 });
 log.signal('buy', 'SOL', { confidence: 85 });
 
-// Timer for performance
-log.time('swap');
-await trader.prepareSwap('SOL', 'USDC', 10);
-log.timeEnd('swap', 'trade', 'Swap prepared');
 
-// Get recent logs
-const errors = log.getLogs({ level: 'error', limit: 10 });
-
-// Set global log level
-setLogLevel('warn'); // Only warn and error</pre>
-
-    <h2>Input Validation & Rate Limiting</h2>
-    <p>Built-in protection against invalid inputs and abuse:</p>
-    <pre class="code-block">// All inputs are validated automatically
-await trader.prepareSwap('SOL', 'USDC', 10);
-// Validates: token format, amount > 0, amount < max
-
-// Rate limits per operation (per minute)
-// prepareSwap: 60, executeTrade: 20, requestQuote: 100
-
-// If rate limit exceeded:
-// Error: "Rate limit exceeded for prepareSwap. Try again in 45s"</pre>
-
-    <h3>Rate Limits</h3>
-    <table>
-      <tr><th>Operation</th><th>Limit</th><th>Window</th></tr>
-      <tr><td>prepareSwap</td><td>60</td><td>1 minute</td></tr>
-      <tr><td>executeTrade</td><td>20</td><td>1 minute</td></tr>
-      <tr><td>requestQuote</td><td>100</td><td>1 minute</td></tr>
-      <tr><td>detectAlpha</td><td>30</td><td>1 minute</td></tr>
-    </table>
-
-    <h2>Large Trade Confirmation</h2>
-    <p>Trades over $500 require explicit confirmation:</p>
-    <pre class="code-block">// Check if confirmation needed
-if (trader.requiresConfirmation('SOL', 100)) {
-  const confirmId = trader.requestTradeConfirmation('SOL', 'USDC', 100);
-  // Emits 'confirmation_required' event
-  
-  // User confirms (e.g., via UI)
-  if (trader.confirmTrade(confirmId)) {
-    await trader.executeTrade('SOL', 'USDC', 100);
-  }
-}
-
-// Listen for confirmation events
-trader.on('confirmation_required', ({ confirmation_id, amount, usd_value, message }) => {
-  console.log(message);
-  // "Large trade detected: 100 SOL (~$14,334). Confirm to proceed."
-});</pre>
-
-    <h2>Resilience Utilities</h2>
-    <p>Built-in wrappers for reliable operations:</p>
-    <pre class="code-block">// Retry with exponential backoff
-const result = await trader.withRetry(
-  () => trader.prepareSwap('SOL', 'USDC', 10),
-  { maxRetries: 5, initialDelayMs: 1000 }
-);
-
-// Safe wrapper - no try/catch needed
-const { success, data, error } = await trader.safe(
-  () => trader.requestQuote('agent-xyz', 'SOL', 'USDC', 100)
-);
-if (success) console.log(data);
-
-// With timeout
-const tx = await trader.withTimeout(
-  () => trader.prepareSwap('SOL', 'USDC', 10),
-  5000 // 5 second timeout
-);
-
-// Batch with concurrency limit
-const tokens = ['SOL', 'ETH', 'BTC', 'AVAX', 'MATIC'];
-const { results, errors } = await trader.batch(
-  tokens,
-  (token) => trader.prepareSwap(token, 'USDC', 10),
-  { concurrency: 3 }
-);</pre>
-
-    <h2>Key Principles</h2>
-    <ul>
-      <li><strong>Autonomous Decision-Making</strong> — Agents monitor, analyze, and prepare transactions 24/7</li>
-      <li><strong>User Control</strong> — You sign transactions in your own wallet. We never hold keys.</li>
-      <li><strong>Safety First</strong> — Spending limits, rate controls, and emergency stop built-in</li>
-      <li><strong>MEV Protection</strong> — Risk analysis before every trade</li>
-      <li><strong>Zero Configuration</strong> — Sensible defaults, one-liner APIs</li>
-      <li><strong>Actionable Errors</strong> — Every error includes suggestions and docs links</li>
-      <li><strong>Structured Logging</strong> — Debug with context, categories, and timers</li>
-    </ul>
-  </div>
-</body>
-</html>
