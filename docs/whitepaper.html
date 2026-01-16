@@ -10,13 +10,46 @@
       --arcium-purple: #6C44FC;
       --bg-dark: #0a0a0c;
       --bg-card: rgba(255,255,255,0.03);
+      --bg-elevated: rgba(255,255,255,0.05);
       --border-subtle: rgba(255,255,255,0.08);
       --text-primary: #fafafa;
       --text-secondary: #888;
+      --text-muted: #555;
       --green: #22c55e;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.7; }
+    
+    /* Layout with sidebar TOC */
+    .page-wrapper { display: flex; }
+    .toc-sidebar { 
+      width: 260px; 
+      height: 100vh; 
+      position: sticky; 
+      top: 0; 
+      background: var(--bg-card); 
+      border-right: 1px solid var(--border-subtle); 
+      overflow-y: auto; 
+      padding: 1.5rem 1rem;
+      flex-shrink: 0;
+    }
+    .toc-sidebar h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; }
+    .toc-sidebar a { 
+      display: block; 
+      padding: 0.4rem 0.75rem; 
+      font-size: 0.8rem; 
+      color: var(--text-secondary); 
+      text-decoration: none; 
+      border-radius: 4px; 
+      margin-bottom: 2px;
+      transition: all 0.15s;
+    }
+    .toc-sidebar a:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .toc-sidebar a.active { background: rgba(108,68,252,0.15); color: var(--arcium-purple); border-left: 2px solid var(--arcium-purple); }
+    .toc-sidebar .toc-sub { padding-left: 1rem; font-size: 0.75rem; }
+    
+    .main-content { flex: 1; min-width: 0; }
     .topbar { background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%); padding: 1rem 2rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
     .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
     .topbar-left img { height: 28px; }
@@ -24,30 +57,65 @@
     .nav-links { display: flex; gap: 0.5rem; }
     .nav-links a { padding: 0.4rem 0.8rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8rem; color: var(--text-secondary); text-decoration: none; transition: all 0.2s; }
     .nav-links a:hover { background: rgba(108, 68, 252, 0.15); border-color: var(--arcium-purple); color: var(--text-primary); }
-    .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
-    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    h2 { font-size: 1.25rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); color: var(--text-primary); }
-    h3 { font-size: 1rem; margin: 1.5rem 0 0.75rem; color: var(--arcium-purple); }
+    
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem 3rem; }
+    h1 { font-size: 2.25rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle); color: var(--text-primary); scroll-margin-top: 80px; }
+    h3 { font-size: 1.1rem; margin: 2rem 0 1rem; color: var(--arcium-purple); scroll-margin-top: 80px; }
+    h4 { font-size: 0.95rem; margin: 1.5rem 0 0.75rem; color: var(--text-primary); }
     p { color: var(--text-secondary); margin-bottom: 1rem; }
-    .code-block { background: #111; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--green); overflow-x: auto; margin: 1rem 0; white-space: pre; }
-    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-    th, td { border: 1px solid var(--border-subtle); padding: 0.5rem 1rem; text-align: left; }
-    th { background: var(--bg-card); color: var(--text-primary); }
+    .code-block { background: #0d0d0d; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--green); overflow-x: auto; margin: 1.5rem 0; white-space: pre; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+    th, td { border: 1px solid var(--border-subtle); padding: 0.75rem 1rem; text-align: left; }
+    th { background: var(--bg-card); color: var(--text-primary); font-weight: 600; }
     td { color: var(--text-secondary); }
     ul, ol { margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary); }
     li { margin-bottom: 0.5rem; }
     strong { color: var(--text-primary); }
-    code { background: rgba(108, 68, 252, 0.2); color: var(--arcium-purple); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
-    blockquote { border-left: 3px solid var(--arcium-purple); padding-left: 1rem; margin: 1rem 0; color: var(--text-secondary); font-style: italic; }
+    code { background: rgba(108, 68, 252, 0.15); color: var(--arcium-purple); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+    blockquote { border-left: 3px solid var(--arcium-purple); padding: 1rem 1.5rem; margin: 1.5rem 0; background: var(--bg-card); border-radius: 0 8px 8px 0; }
+    blockquote p { margin: 0; }
     a { color: var(--arcium-purple); }
+    .subtitle { color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .meta { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; }
+    
+    /* Mobile: hide sidebar */
+    @media (max-width: 1024px) {
+      .toc-sidebar { display: none; }
+      .container { padding: 1.5rem; }
+    }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="topbar-left">
-      <a href="/"><img src="/public/CAP402logo.png" alt="CAP-402"></a>
-      <h1>Whitepaper</h1>
-    </div>
+  <div class="page-wrapper">
+    <!-- Sticky Table of Contents Sidebar -->
+    <nav class="toc-sidebar">
+      <h3>Table of Contents</h3>
+      <a href="#abstract">Abstract</a>
+      <a href="#introduction">1. Introduction</a>
+      <a href="#problem">2. Problem Statement</a>
+      <a href="#protocol">3. Protocol Overview</a>
+      <a href="#architecture">4. Architecture</a>
+      <a href="#crypto">5. Cryptographic Foundation</a>
+      <a href="#privacy">6. Privacy Gradient</a>
+      <a href="#schema">7. Capability Schema</a>
+      <a href="#economic">8. Economic Model</a>
+      <a href="#security">9. Security Framework</a>
+      <a href="#advanced">10. Advanced Features</a>
+      <a href="#implementation">11. Implementation</a>
+      <a href="#usecases">12. Use Cases</a>
+      <a href="#market">13. Market Opportunity</a>
+      <a href="#roadmap">14. Roadmap</a>
+      <a href="#conclusion">15. Conclusion</a>
+      <a href="#references">References</a>
+    </nav>
+    
+    <div class="main-content">
+      <div class="topbar">
+        <div class="topbar-left">
+          <a href="/"><img src="/public/CAP402logo.png" alt="CAP-402"></a>
+          <h1>Whitepaper</h1>
+        </div>
     <div class="nav-links">
       <a href="/docs">Docs</a>
       <a href="/docs/api-docs.html">API</a>
@@ -59,15 +127,115 @@
   
   <div class="container">
     <h1>CAP-402: Agent Infrastructure Standard</h1>
-    <p><strong>A Protocol for Semantic Capability Routing Between Autonomous Agents</strong></p>
-    <p>Version 1.0 | January 2026 | <a href="https://cap402.com">cap402.com</a></p>
+    <p class="subtitle">A Protocol for Semantic Capability Routing Between Autonomous Agents</p>
+    <p class="meta">Version 1.0 | January 2026 | <a href="https://cap402.com">cap402.com</a></p>
     
-    <h2>Abstract</h2>
+    <h2 id="abstract">Abstract</h2>
     <p>As autonomous AI agents proliferate across industries, a critical infrastructure gap has emerged: there is no standard protocol for agents to discover, negotiate, and execute capabilities from other agents or services. CAP-402 addresses this gap by introducing a semantic capability routing protocol that provides privacy-aware, economically-signaled execution with verifiable receipts.</p>
     <p>CAP-402 uniquely combines three complementary cryptographic technologies—<strong>Noir</strong> for zero-knowledge proofs, <strong>Arcium</strong> for confidential computation, and <strong>Inco</strong> for encrypted on-chain state—to deliver a complete privacy stack that enables fully private, verifiable, agent-driven authorization and execution.</p>
     
     <!-- Architecture Diagram -->
-    <h2>System Architecture</h2>
+    <h2 id="introduction">1. Introduction</h2>
+    <p>This whitepaper presents the CAP-402 protocol specification, its architecture, security model, and economic framework. We demonstrate how CAP-402 enables a new paradigm where <strong>agents do not call APIs directly—agents call capabilities</strong>.</p>
+    
+    <h3>1.1 Design Principles</h3>
+    <ol>
+      <li><strong>Capabilities over APIs</strong>: Abstract what can be done, not how it's implemented</li>
+      <li><strong>Privacy by default</strong>: Support confidential execution as a first-class feature</li>
+      <li><strong>Economic signaling</strong>: Enable value exchange without custody</li>
+      <li><strong>Verifiable execution</strong>: Every invocation produces a cryptographic receipt</li>
+      <li><strong>Progressive decentralization</strong>: Start centralized, evolve to fully decentralized</li>
+    </ol>
+    
+    <h3>1.2 Key Innovation</h3>
+    <p>CAP-402's primary differentiator is its unified privacy stack. While most applications choose a single privacy technology, CAP-402 integrates three complementary systems:</p>
+    <table>
+      <tr><th>Technology</th><th>Role</th><th>Output</th></tr>
+      <tr><td><strong>Noir</strong></td><td>Proves private facts</td><td>ZK Proofs</td></tr>
+      <tr><td><strong>Arcium</strong></td><td>Decides privately using hidden logic</td><td>Signed Decisions</td></tr>
+      <tr><td><strong>Inco</strong></td><td>Stores & executes privately on-chain</td><td>Encrypted State</td></tr>
+    </table>
+    
+    <h2 id="problem">2. Problem Statement</h2>
+    <h3>2.1 The Current Landscape</h3>
+    <p>Today's agent ecosystem suffers from critical limitations:</p>
+    <table>
+      <tr><th>Problem</th><th>Impact</th></tr>
+      <tr><td>No discovery standard</td><td>Agents must hard-code API endpoints</td></tr>
+      <tr><td>No privacy layer</td><td>All operations are visible, enabling front-running</td></tr>
+      <tr><td>No economic coordination</td><td>Ad-hoc pricing, no micropayments</td></tr>
+      <tr><td>No trust framework</td><td>No way to verify agent capabilities</td></tr>
+      <tr><td>No composability</td><td>Each integration built from scratch</td></tr>
+    </table>
+    
+    <h3>2.2 The Privacy Crisis</h3>
+    <p>Traditional blockchain applications leak everything:</p>
+    <ul>
+      <li><strong>Trading strategies</strong> — Competitors can copy or front-run</li>
+      <li><strong>User balances</strong> — Portfolio exposure to adversaries</li>
+      <li><strong>Order logic</strong> — MEV bots exploit visible intents</li>
+      <li><strong>Risk models</strong> — Proprietary algorithms become public</li>
+      <li><strong>AI prompts/weights</strong> — Intellectual property exposed</li>
+    </ul>
+    
+    <h3>2.3 Consequences</h3>
+    <p>Without a standard protocol:</p>
+    <ul>
+      <li><strong>MEV extraction</strong>: Trading agents lose $500+ per large swap to front-runners</li>
+      <li><strong>Data exposure</strong>: Portfolio queries reveal positions to competitors</li>
+      <li><strong>Vendor lock-in</strong>: Agents tied to specific service providers</li>
+      <li><strong>Integration overhead</strong>: 10x development time for each new capability</li>
+      <li><strong>Trust vacuum</strong>: No reputation system for agent reliability</li>
+    </ul>
+    
+    <h3>2.4 The CAP-402 Solution</h3>
+    <p>CAP-402 introduces a semantic capability layer with integrated privacy infrastructure:</p>
+    <pre class="code-block">┌─────────────┐     ┌─────────────────────────────────┐     ┌─────────────┐
+│   Agent A   │────▶│         CAP-402 Router          │────▶│  Service X  │
+└─────────────┘     │  ┌─────────────────────────┐   │     └─────────────┘
+                    │  │   Privacy Stack          │   │     ┌─────────────┐
+┌─────────────┐     │  │  ┌─────┐ ┌──────┐ ┌────┐│   │────▶│  Service Y  │
+│   Agent B   │────▶│  │  │Noir │ │Arcium│ │Inco││   │     └─────────────┘
+└─────────────┘     │  │  └─────┘ └──────┘ └────┘│   │     ┌─────────────┐
+                    │  └─────────────────────────┘   │────▶│  Service Z  │
+                    └─────────────────────────────────┘     └─────────────┘</pre>
+
+    <h2 id="protocol">3. Protocol Overview</h2>
+    <h3>3.1 Core Concepts</h3>
+    <h4>Capability</h4>
+    <p>A versioned, semantic contract defining:</p>
+    <ul>
+      <li><strong>Identity</strong>: Stable ID (e.g., <code>cap.price.lookup.v1</code>)</li>
+      <li><strong>Interface</strong>: Typed inputs/outputs (JSON Schema)</li>
+      <li><strong>Execution</strong>: Mode (public/confidential) + proof type</li>
+      <li><strong>Economics</strong>: Cost hints, currency, payment methods</li>
+    </ul>
+    
+    <h4>Invocation</h4>
+    <p>A request to execute a capability with specific inputs, returning:</p>
+    <ul>
+      <li><strong>Outputs</strong>: Capability-specific results</li>
+      <li><strong>Receipt</strong>: Cryptographic proof of execution</li>
+      <li><strong>Economic hints</strong>: Payment information</li>
+    </ul>
+    
+    <h3>3.2 Protocol Flow</h3>
+    <pre class="code-block">1. Discovery    Agent queries: "I need to swap tokens privately"
+                Router returns: [cap.confidential.swap.v1, cap.cspl.wrap.v1, ...]
+
+2. Negotiation  Agent requests options for cap.confidential.swap.v1
+                Router returns: [{privacy: 2, cost: 0.01}, {privacy: 3, cost: 0.05}]
+
+3. Invocation   Agent invokes with selected option
+                Router executes via appropriate executor
+
+4. Receipt      Agent receives cryptographic receipt
+                Receipt can be verified without re-execution
+
+5. Settlement   Economic hints enable payment (X.402 or on-chain)</pre>
+
+    <h2 id="architecture">4. Architecture</h2>
+    <h3>4.1 Layer Model</h3>
     <pre class="code-block">
                               CAP-402 ARCHITECTURE
     ═══════════════════════════════════════════════════════════════════
@@ -142,7 +310,7 @@
       <tr><td>3</td><td>Maximum</td><td>Full MPC/FHE computation</td></tr>
     </table>
     
-    <h2>3. Privacy Stack</h2>
+    <h2 id="crypto">5. Cryptographic Foundation</h2>
     
     <!-- Privacy Stack Flow Diagram -->
     <pre class="code-block">
@@ -230,8 +398,71 @@
       <tr><td><strong>Inco</strong></td><td>On-chain state leaks; execution results expose private information</td></tr>
     </table>
     <blockquote><strong>The One-Sentence Mental Model:</strong><br>Noir proves things privately, Arcium decides things privately, Inco stores and executes things privately.</blockquote>
+
+    <h2 id="privacy">6. Privacy Gradient</h2>
+    <p>CAP-402 introduces a 4-level privacy gradient that maps to the cryptographic foundation:</p>
+    <table>
+      <tr><th>Level</th><th>Name</th><th>Technology</th><th>Description</th><th>Cost</th></tr>
+      <tr><td>0</td><td>Public</td><td>Direct execution</td><td>Standard execution, visible results</td><td>1.0x</td></tr>
+      <tr><td>1</td><td>Obscured</td><td>Router attestation</td><td>Basic obfuscation, limited visibility</td><td>1.1x</td></tr>
+      <tr><td>2</td><td>Encrypted</td><td>Arcium MPC</td><td>Strong encryption, authorized access only</td><td>1.5x</td></tr>
+      <tr><td>3</td><td>ZK Verifiable</td><td>Noir + Inco</td><td>Zero-knowledge proofs, maximum privacy</td><td>2.0x</td></tr>
+    </table>
+
+    <h2 id="schema">7. Capability Schema</h2>
+    <h3>7.1 Schema Definition</h3>
+    <pre class="code-block">interface Capability {
+  id: string;              // e.g., "cap.price.lookup.v1"
+  name: string;            // Human-readable name
+  description: string;     // What this capability does
+  version: string;         // Semantic version
+  
+  execution: {
+    mode: "public" | "confidential";
+    proof_type: ProofType;
+    timeout_ms: number;
+  };
+  
+  inputs: { schema: JSONSchema; required: string[]; };
+  outputs: { schema: JSONSchema; };
+  
+  economics: {
+    cost_hint: string;
+    currency: string;
+    payment_methods: string[];
+  };
+}</pre>
+
+    <h3>7.2 Capability Categories</h3>
+    <table>
+      <tr><th>Category</th><th>Examples</th><th>Execution Mode</th><th>Privacy Stack</th></tr>
+      <tr><td>Price Data</td><td><code>cap.price.lookup.v1</code></td><td>Public</td><td>—</td></tr>
+      <tr><td>Wallet Operations</td><td><code>cap.wallet.snapshot.v1</code></td><td>Public/Confidential</td><td>Inco</td></tr>
+      <tr><td>Confidential Compute</td><td><code>cap.fhe.compute.v1</code></td><td>Confidential</td><td>Inco FHE</td></tr>
+      <tr><td>Private Swaps</td><td><code>cap.confidential.swap.v1</code></td><td>Confidential</td><td>Arcium MPC</td></tr>
+      <tr><td>ZK Proofs</td><td><code>cap.zk.proof.balance.v1</code></td><td>Confidential</td><td>Noir</td></tr>
+    </table>
+
+    <h2 id="economic">8. Economic Model</h2>
+    <h3>8.1 Trust-Based Pricing</h3>
+    <table>
+      <tr><th>Trust Level</th><th>Rate Limit</th><th>Discount</th></tr>
+      <tr><td>Anonymous</td><td>10 req/min</td><td>0%</td></tr>
+      <tr><td>Verified</td><td>50 req/min</td><td>10%</td></tr>
+      <tr><td>Trusted</td><td>200 req/min</td><td>20%</td></tr>
+      <tr><td>Premium</td><td>1000 req/min</td><td>50%</td></tr>
+    </table>
+
+    <h3>8.2 Payment Methods</h3>
+    <ul>
+      <li><strong>X.402 Payment Hints</strong>: HTTP-native micropayments</li>
+      <li><strong>Privacy Cash</strong>: Anonymous payment notes</li>
+      <li><strong>On-chain Settlement</strong>: Solana SPL tokens</li>
+      <li><strong>Subscription</strong>: Pre-paid capability bundles</li>
+    </ul>
     
-    <h2>4. Agent-to-Agent Protocol</h2>
+    <h2 id="advanced">10. Advanced Features</h2>
+    <h3>10.1 Agent-to-Agent (A2A) Protocol</h3>
     <p>CAP-402 enables direct agent-to-agent communication:</p>
     
     <!-- A2A Protocol Diagram -->
@@ -287,7 +518,7 @@
       <tr><td><code>a2a.swarm_task</code></td><td>Distribute swarm task</td><td>Configurable</td></tr>
     </table>
     
-    <h2>5. MEV Protection</h2>
+    <h3>10.2 MEV Protection</h3>
     <p>CAP-402 provides comprehensive MEV protection for trading operations:</p>
     
     <pre class="code-block">
@@ -327,7 +558,7 @@
       <tr><td>Maximum</td><td>Arcium C-SPL</td><td>95%</td><td>+0.5%</td></tr>
     </table>
     
-    <h2>6. Security Framework</h2>
+    <h2 id="security">9. Security Framework</h2>
     <ul>
       <li><strong>API Key Authentication</strong> — Rate limiting and access control</li>
       <li><strong>Capability Tokens</strong> — Scoped, time-limited authorization</li>
@@ -335,7 +566,43 @@
       <li><strong>Cryptographic Receipts</strong> — Verifiable execution proofs</li>
     </ul>
     
-    <h2>7. Implementation</h2>
+    <h2 id="usecases">12. Use Cases</h2>
+    <h3>12.1 Private DeFi Trading</h3>
+    <p><strong>Problem:</strong> MEV bots front-run large swaps, extracting $500+ per trade.</p>
+    <p><strong>Solution:</strong> Wrap tokens to confidential (C-SPL), execute private swap with hidden amount. Result: Zero MEV extraction.</p>
+
+    <h3>12.2 Proof of Wealth Without Disclosure</h3>
+    <p><strong>Problem:</strong> Proving creditworthiness exposes entire portfolio.</p>
+    <p><strong>Solution:</strong> Generate ZK proof that balance > $10K without revealing actual amount.</p>
+
+    <h3>12.3 Encrypted Agent Messaging</h3>
+    <p><strong>Problem:</strong> Agent communications are public, strategies leaked.</p>
+    <p><strong>Solution:</strong> FHE-encrypted messages that only the recipient can decrypt.</p>
+
+    <h3>12.4 Atomic Multi-Step Workflows</h3>
+    <p><strong>Problem:</strong> 5 separate API calls, any can fail, no rollback.</p>
+    <p><strong>Solution:</strong> Intent graphs with atomic execution and single receipt.</p>
+
+    <h2 id="market">13. Market Opportunity</h2>
+    <h3>13.1 Total Addressable Market</h3>
+    <table>
+      <tr><th>Segment</th><th>2024</th><th>2026 (Projected)</th><th>CAGR</th></tr>
+      <tr><td>AI Agent Platforms</td><td>$2.1B</td><td>$8.4B</td><td>100%+</td></tr>
+      <tr><td>DeFi Infrastructure</td><td>$47B TVL</td><td>$150B TVL</td><td>78%</td></tr>
+      <tr><td>Privacy Tech (ZK/MPC)</td><td>$890M</td><td>$4.2B</td><td>117%</td></tr>
+      <tr><td><strong>Combined TAM</strong></td><td><strong>$50B</strong></td><td><strong>$162B</strong></td><td><strong>80%</strong></td></tr>
+    </table>
+
+    <h3>13.2 Competitive Landscape</h3>
+    <table>
+      <tr><th>Competitor</th><th>Approach</th><th>CAP-402 Advantage</th></tr>
+      <tr><td>Direct API calls</td><td>Hard-coded endpoints</td><td>Semantic discovery, composability</td></tr>
+      <tr><td>Generic oracles</td><td>Public data only</td><td>Full privacy stack (Noir + Arcium + Inco)</td></tr>
+      <tr><td>Single-chain solutions</td><td>One ecosystem</td><td>Multi-chain roadmap</td></tr>
+      <tr><td>Privacy-only protocols</td><td>No agent focus</td><td>Agent-first with economic coordination</td></tr>
+    </table>
+
+    <h2 id="implementation">11. Implementation</h2>
     <table>
       <tr><th>Metric</th><th>Value</th></tr>
       <tr><td>TypeScript files</td><td>60+</td></tr>
@@ -360,7 +627,7 @@ console.log(result.route, result.savings_vs_dex);
 const signals = await findAlpha(['SOL', 'ETH', 'BTC']);
 signals.forEach(s => console.log(s.token, s.direction));</pre>
     
-    <h2>8. Roadmap</h2>
+    <h2 id="roadmap">14. Roadmap</h2>
     <h3>Phase 1: Foundation ✅ Complete</h3>
     <ul>
       <li>Protocol specification (OpenAPI 3.1, JSON Schema, TypeScript types)</li>
@@ -384,7 +651,7 @@ signals.forEach(s => console.log(s.token, s.direction));</pre>
       <li>Cross-chain support (EVM, Cosmos)</li>
     </ul>
     
-    <h2>9. Conclusion</h2>
+    <h2 id="conclusion">15. Conclusion</h2>
     <p>CAP-402 represents a fundamental shift in how autonomous agents interact. By introducing semantic capabilities, privacy gradients, and economic coordination, we enable a new paradigm where agents can:</p>
     <ul>
       <li><strong>Discover</strong> capabilities by intent, not implementation</li>
@@ -422,12 +689,28 @@ signals.forEach(s => console.log(s.token, s.direction));</pre>
     </pre>
     
     <blockquote>CAP-402 is not just a protocol—it's the infrastructure layer for the agent economy.<br><br><strong>"Agents don't call APIs. Agents call capabilities."</strong></blockquote>
+
+    <h2 id="references">References</h2>
+    <ol>
+      <li>Arcium Network Documentation — <a href="https://docs.arcium.com">docs.arcium.com</a></li>
+      <li>Solana Documentation — <a href="https://docs.solana.com">docs.solana.com</a></li>
+      <li>Noir Language — <a href="https://noir-lang.org">noir-lang.org</a></li>
+      <li>Inco Network Documentation — <a href="https://docs.inco.org">docs.inco.org</a></li>
+      <li>X.402 Payment Protocol — <a href="https://x402.org">x402.org</a></li>
+      <li>JSON Schema Specification — <a href="https://json-schema.org">json-schema.org</a></li>
+    </ol>
+
+    <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 3rem 0;">
     
-    <p style="text-align: center; margin-top: 2rem; color: var(--text-muted);">
+    <p style="text-align: center; color: var(--text-muted);">
+      <strong>CAP-402 | Agent Infrastructure Standard | v1.0.0</strong>
+    </p>
+    <p style="text-align: center; margin-top: 1rem;">
       <a href="https://github.com/TheQuantumChronicle/CAP402">GitHub</a> · 
       <a href="https://cap402.com">Website</a> · 
       <a href="mailto:cap402@proton.me">Contact</a>
     </p>
+  </div>
   </div>
 </body>
 </html>
