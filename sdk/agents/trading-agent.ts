@@ -138,6 +138,24 @@ export interface ConditionalOrder {
 }
 
 /**
+ * Limit order - buy/sell at specific price
+ */
+export interface LimitOrder {
+  order_id: string;
+  side: 'buy' | 'sell';
+  token: string;
+  target_token: string;
+  amount: number;
+  limit_price: number;
+  status: 'open' | 'filled' | 'cancelled' | 'expired';
+  created_at: number;
+  expires_at?: number;
+  filled_at?: number;
+  filled_price?: number;
+  filled_amount?: number;
+}
+
+/**
  * DCA (Dollar Cost Averaging) schedule
  */
 export interface DCASchedule {
@@ -500,6 +518,7 @@ export class TradingAgent extends EventEmitter {
   private conditionalOrders: Map<string, ConditionalOrder> = new Map();
   private dcaSchedules: Map<string, DCASchedule> = new Map();
   private dcaTimers: Map<string, NodeJS.Timeout> = new Map();
+  private limitOrders: Map<string, LimitOrder> = new Map();
   private dailyTradeCount = 0;
   private lastDayReset = Date.now();
   private priceCheckTimer?: NodeJS.Timeout;
@@ -3445,6 +3464,146 @@ export class TradingAgent extends EventEmitter {
    */
   getDCASchedule(scheduleId: string): DCASchedule | undefined {
     return this.dcaSchedules.get(scheduleId);
+  }
+
+  // ============================================
+  // LIMIT ORDERS
+  // ============================================
+
+  /**
+   * Place a limit buy order - executes when price drops to limit
+   * 
+   * @example
+   * // Buy 10 SOL when price drops to $140
+   * agent.limitBuy('SOL', 'USDC', 10, 140);
+   */
+  limitBuy(
+    token: string,
+    payWith: string,
+    amount: number,
+    limitPrice: number,
+    expiresInHours?: number
+  ): LimitOrder {
+    const order: LimitOrder = {
+      order_id: `lb_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      side: 'buy',
+      token,
+      target_token: payWith,
+      amount,
+      limit_price: limitPrice,
+      status: 'open',
+      created_at: Date.now(),
+      expires_at: expiresInHours ? Date.now() + expiresInHours * 3600000 : undefined
+    };
+
+    this.limitOrders.set(order.order_id, order);
+    this.emit('limit_order_created', order);
+    console.log(`📋 Limit buy: ${amount} ${token} @ $${limitPrice}`);
+
+    return order;
+  }
+
+  /**
+   * Place a limit sell order - executes when price rises to limit
+   * 
+   * @example
+   * // Sell 10 SOL when price rises to $200
+   * agent.limitSell('SOL', 'USDC', 10, 200);
+   */
+  limitSell(
+    token: string,
+    receiveToken: string,
+    amount: number,
+    limitPrice: number,
+    expiresInHours?: number
+  ): LimitOrder {
+    const order: LimitOrder = {
+      order_id: `ls_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      side: 'sell',
+      token,
+      target_token: receiveToken,
+      amount,
+      limit_price: limitPrice,
+      status: 'open',
+      created_at: Date.now(),
+      expires_at: expiresInHours ? Date.now() + expiresInHours * 3600000 : undefined
+    };
+
+    this.limitOrders.set(order.order_id, order);
+    this.emit('limit_order_created', order);
+    console.log(`📋 Limit sell: ${amount} ${token} @ $${limitPrice}`);
+
+    return order;
+  }
+
+  /**
+   * Cancel a limit order
+   */
+  cancelLimitOrder(orderId: string): boolean {
+    const order = this.limitOrders.get(orderId);
+    if (order && order.status === 'open') {
+      order.status = 'cancelled';
+      this.emit('limit_order_cancelled', order);
+      console.log(`❌ Limit order ${orderId} cancelled`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get all open limit orders
+   */
+  getOpenLimitOrders(): LimitOrder[] {
+    return Array.from(this.limitOrders.values()).filter(o => o.status === 'open');
+  }
+
+  /**
+   * Check and execute limit orders (called on price updates)
+   */
+  private async checkLimitOrders(): Promise<void> {
+    for (const order of this.limitOrders.values()) {
+      if (order.status !== 'open') continue;
+
+      // Check expiry
+      if (order.expires_at && Date.now() > order.expires_at) {
+        order.status = 'expired';
+        this.emit('limit_order_expired', order);
+        continue;
+      }
+
+      const currentPrice = this.prices.get(order.token)?.price;
+      if (!currentPrice) continue;
+
+      let shouldFill = false;
+
+      if (order.side === 'buy') {
+        // Buy limit: execute when price drops to or below limit
+        shouldFill = currentPrice <= order.limit_price;
+      } else {
+        // Sell limit: execute when price rises to or above limit
+        shouldFill = currentPrice >= order.limit_price;
+      }
+
+      if (shouldFill) {
+        try {
+          const result = order.side === 'buy'
+            ? await this.instantSwap(order.target_token, order.token, order.amount * order.limit_price)
+            : await this.instantSwap(order.token, order.target_token, order.amount);
+
+          if (result.status === 'executed') {
+            order.status = 'filled';
+            order.filled_at = Date.now();
+            order.filled_price = result.execution_price;
+            order.filled_amount = result.amount_out;
+            
+            this.emit('limit_order_filled', order);
+            console.log(`✅ Limit ${order.side} filled: ${order.amount} ${order.token} @ $${currentPrice}`);
+          }
+        } catch (error) {
+          console.error(`Failed to fill limit order: ${error}`);
+        }
+      }
+    }
   }
 
   /**
