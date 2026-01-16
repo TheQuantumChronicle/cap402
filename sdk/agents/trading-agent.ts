@@ -120,6 +120,23 @@ export interface TradeExecution {
   tx_hash?: string;
 }
 
+/**
+ * Conditional order (stop-loss or take-profit)
+ */
+export interface ConditionalOrder {
+  order_id: string;
+  type: 'stop_loss' | 'take_profit' | 'trailing_stop';
+  token: string;
+  trigger_price: number;
+  amount: number;
+  target_token: string;
+  status: 'active' | 'triggered' | 'cancelled' | 'expired';
+  created_at: number;
+  expires_at?: number;
+  trailing_percent?: number;
+  highest_price?: number;
+}
+
 export interface PreparedTransaction {
   instruction_id: string;
   type: 'swap' | 'transfer' | 'stake';
@@ -460,9 +477,11 @@ export class TradingAgent extends EventEmitter {
   private priceHistory: Map<string, PriceData[]> = new Map();
   private positions: Map<string, Position> = new Map();
   private trades: TradeExecution[] = [];
+  private conditionalOrders: Map<string, ConditionalOrder> = new Map();
   private dailyTradeCount = 0;
   private lastDayReset = Date.now();
   private priceCheckTimer?: NodeJS.Timeout;
+  private orderCheckTimer?: NodeJS.Timeout;
   private isRunning = false;
 
   constructor(config: TradingConfig) {
@@ -3101,6 +3120,180 @@ export class TradingAgent extends EventEmitter {
 
   getTradeHistory(): TradeExecution[] {
     return [...this.trades];
+  }
+
+  // ============================================
+  // CONDITIONAL ORDERS (Stop-Loss / Take-Profit)
+  // ============================================
+
+  /**
+   * Set a stop-loss order - automatically sells when price drops below trigger
+   * 
+   * @example
+   * // Sell all SOL if price drops below $140
+   * agent.setStopLoss('SOL', 140, 10, 'USDC');
+   */
+  setStopLoss(
+    token: string,
+    triggerPrice: number,
+    amount: number,
+    targetToken: string = 'USDC',
+    expiresInHours?: number
+  ): ConditionalOrder {
+    const order: ConditionalOrder = {
+      order_id: `sl_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'stop_loss',
+      token,
+      trigger_price: triggerPrice,
+      amount,
+      target_token: targetToken,
+      status: 'active',
+      created_at: Date.now(),
+      expires_at: expiresInHours ? Date.now() + expiresInHours * 3600000 : undefined
+    };
+
+    this.conditionalOrders.set(order.order_id, order);
+    this.emit('order_created', order);
+    console.log(`🛑 Stop-loss set: Sell ${amount} ${token} if price < $${triggerPrice}`);
+
+    return order;
+  }
+
+  /**
+   * Set a take-profit order - automatically sells when price rises above trigger
+   * 
+   * @example
+   * // Sell all SOL if price rises above $200
+   * agent.setTakeProfit('SOL', 200, 10, 'USDC');
+   */
+  setTakeProfit(
+    token: string,
+    triggerPrice: number,
+    amount: number,
+    targetToken: string = 'USDC',
+    expiresInHours?: number
+  ): ConditionalOrder {
+    const order: ConditionalOrder = {
+      order_id: `tp_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'take_profit',
+      token,
+      trigger_price: triggerPrice,
+      amount,
+      target_token: targetToken,
+      status: 'active',
+      created_at: Date.now(),
+      expires_at: expiresInHours ? Date.now() + expiresInHours * 3600000 : undefined
+    };
+
+    this.conditionalOrders.set(order.order_id, order);
+    this.emit('order_created', order);
+    console.log(`🎯 Take-profit set: Sell ${amount} ${token} if price > $${triggerPrice}`);
+
+    return order;
+  }
+
+  /**
+   * Set a trailing stop - follows price up, triggers when price drops by percent
+   * 
+   * @example
+   * // Trailing stop at 5% - if SOL drops 5% from its high, sell
+   * agent.setTrailingStop('SOL', 5, 10, 'USDC');
+   */
+  setTrailingStop(
+    token: string,
+    trailingPercent: number,
+    amount: number,
+    targetToken: string = 'USDC'
+  ): ConditionalOrder {
+    const currentPrice = this.prices.get(token)?.price || 0;
+    const triggerPrice = currentPrice * (1 - trailingPercent / 100);
+
+    const order: ConditionalOrder = {
+      order_id: `ts_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'trailing_stop',
+      token,
+      trigger_price: triggerPrice,
+      amount,
+      target_token: targetToken,
+      status: 'active',
+      created_at: Date.now(),
+      trailing_percent: trailingPercent,
+      highest_price: currentPrice
+    };
+
+    this.conditionalOrders.set(order.order_id, order);
+    this.emit('order_created', order);
+    console.log(`📉 Trailing stop set: ${trailingPercent}% below high (currently $${triggerPrice.toFixed(2)})`);
+
+    return order;
+  }
+
+  /**
+   * Cancel a conditional order
+   */
+  cancelOrder(orderId: string): boolean {
+    const order = this.conditionalOrders.get(orderId);
+    if (order && order.status === 'active') {
+      order.status = 'cancelled';
+      this.emit('order_cancelled', order);
+      console.log(`❌ Order ${orderId} cancelled`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get all active conditional orders
+   */
+  getActiveOrders(): ConditionalOrder[] {
+    return Array.from(this.conditionalOrders.values()).filter(o => o.status === 'active');
+  }
+
+  /**
+   * Check and execute triggered orders (called on price updates)
+   */
+  private async checkConditionalOrders(): Promise<void> {
+    for (const order of this.conditionalOrders.values()) {
+      if (order.status !== 'active') continue;
+
+      // Check expiry
+      if (order.expires_at && Date.now() > order.expires_at) {
+        order.status = 'expired';
+        this.emit('order_expired', order);
+        continue;
+      }
+
+      const currentPrice = this.prices.get(order.token)?.price;
+      if (!currentPrice) continue;
+
+      let shouldTrigger = false;
+
+      if (order.type === 'stop_loss') {
+        shouldTrigger = currentPrice <= order.trigger_price;
+      } else if (order.type === 'take_profit') {
+        shouldTrigger = currentPrice >= order.trigger_price;
+      } else if (order.type === 'trailing_stop') {
+        // Update highest price
+        if (currentPrice > (order.highest_price || 0)) {
+          order.highest_price = currentPrice;
+          order.trigger_price = currentPrice * (1 - (order.trailing_percent || 5) / 100);
+        }
+        shouldTrigger = currentPrice <= order.trigger_price;
+      }
+
+      if (shouldTrigger) {
+        order.status = 'triggered';
+        this.emit('order_triggered', order);
+        console.log(`⚡ Order ${order.order_id} triggered at $${currentPrice}`);
+
+        // Execute the trade
+        try {
+          await this.smartTrade(order.token, order.target_token, order.amount);
+        } catch (error) {
+          console.error(`Failed to execute triggered order: ${error}`);
+        }
+      }
+    }
   }
 
   // ============================================
