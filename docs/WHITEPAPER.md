@@ -202,17 +202,150 @@ Chaining multiple capabilities into a single workflow with:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 Component Overview
+### 4.2 Detailed Request Flow
 
-| Component | Purpose |
-|-----------|---------|
-| **Registry** | Stores capability definitions |
-| **Router** | Routes invocations to executors |
-| **Public Executor** | Standard API/RPC execution |
-| **Confidential Executor** | Privacy-preserving via Arcium MPC |
-| **Receipt Manager** | Generates and verifies receipts |
-| **Token Manager** | Issues and validates capability tokens |
-| **Trust Network** | Manages agent reputation |
+```
+                                    CAP-402 INVOCATION FLOW
+                                    ═══════════════════════
+
+    ┌──────────┐                                                    ┌──────────────┐
+    │  Agent   │                                                    │   Provider   │
+    │          │                                                    │   (DEX/API)  │
+    └────┬─────┘                                                    └──────┬───────┘
+         │                                                                 │
+         │ 1. POST /invoke                                                 │
+         │    {capability_id, inputs, preferences}                         │
+         ▼                                                                 │
+    ┌─────────────────────────────────────────────────────────────────────┐│
+    │                         CAP-402 ROUTER                              ││
+    │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐ ││
+    │  │   Schema    │  │   Route     │  │  Security   │  │  Economic  │ ││
+    │  │ Validation  │─▶│  Selection  │─▶│   Check     │─▶│   Hints    │ ││
+    │  └─────────────┘  └─────────────┘  └─────────────┘  └────────────┘ ││
+    │         │                │                │                │        ││
+    │         ▼                ▼                ▼                ▼        ││
+    │  ┌──────────────────────────────────────────────────────────────┐  ││
+    │  │                    EXECUTOR SELECTION                         │  ││
+    │  │  ┌─────────────────┐              ┌─────────────────────┐    │  ││
+    │  │  │ PUBLIC EXECUTOR │              │ CONFIDENTIAL EXECUTOR│    │  ││
+    │  │  │                 │              │                     │    │  ││
+    │  │  │ • Direct API    │              │ • Arcium MPC        │    │  ││
+    │  │  │ • Helius DAS    │              │ • Noir ZK Proofs    │    │  ││
+    │  │  │ • Price Feeds   │              │ • Inco FHE          │    │  ││
+    │  │  └────────┬────────┘              └──────────┬──────────┘    │  ││
+    │  └───────────┼──────────────────────────────────┼───────────────┘  ││
+    │              │                                  │                   ││
+    └──────────────┼──────────────────────────────────┼───────────────────┘│
+                   │                                  │                    │
+                   │ 2a. Public                       │ 2b. Confidential   │
+                   │     Execution                    │     Execution      │
+                   ▼                                  ▼                    │
+         ┌─────────────────┐              ┌─────────────────────┐         │
+         │   API/RPC Call  │              │   PRIVACY STACK     │         │
+         │                 │              │  ┌───────────────┐  │         │
+         │  Helius, CMC,   │              │  │     Noir      │  │         │
+         │  Jupiter, etc.  │              │  │  (ZK Proofs)  │  │         │
+         └────────┬────────┘              │  └───────┬───────┘  │         │
+                  │                       │          ▼          │         │
+                  │                       │  ┌───────────────┐  │         │
+                  │                       │  │    Arcium     │  │         │
+                  │                       │  │ (MPC Compute) │  │         │
+                  │                       │  └───────┬───────┘  │         │
+                  │                       │          ▼          │         │
+                  │                       │  ┌───────────────┐  │         │
+                  │                       │  │     Inco      │  │         │
+                  │                       │  │ (FHE State)   │  │         │
+                  │                       │  └───────┬───────┘  │         │
+                  │                       └──────────┼──────────┘         │
+                  │                                  │                    │
+                  │◀─────────────────────────────────┘                    │
+                  │                                                       │
+                  │ 3. Generate Receipt                                   │
+                  ▼                                                       │
+         ┌─────────────────┐                                              │
+         │ RECEIPT MANAGER │                                              │
+         │                 │                                              │
+         │ • Commitment    │                                              │
+         │ • Proof         │                                              │
+         │ • Chain Signal  │                                              │
+         └────────┬────────┘                                              │
+                  │                                                       │
+                  │ 4. Response                                           │
+                  ▼                                                       │
+    ┌──────────┐                                                          │
+    │  Agent   │◀─────────────────────────────────────────────────────────┘
+    │          │  {success, outputs, receipt, economic_hints}
+    └──────────┘
+```
+
+### 4.3 Component Overview
+
+| Component | Purpose | Implementation |
+|-----------|---------|----------------|
+| **Registry** | Stores capability definitions | In-memory + future on-chain |
+| **Router** | Routes invocations to executors | Express.js middleware chain |
+| **Public Executor** | Standard API/RPC execution | Axios HTTP client |
+| **Confidential Executor** | Privacy-preserving via Arcium MPC | Arcium SDK |
+| **Receipt Manager** | Generates and verifies receipts | HMAC-SHA256 signatures |
+| **Token Manager** | Issues and validates capability tokens | JWT-like tokens |
+| **Trust Network** | Manages agent reputation | Graph-based scoring |
+| **Rate Limiter** | Prevents abuse | Token bucket algorithm |
+| **Circuit Breaker** | Handles failures gracefully | State machine pattern |
+
+### 4.4 Data Flow Diagram
+
+```
+                              DATA FLOW ARCHITECTURE
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐        │
+    │   │ Agent 1 │    │ Agent 2 │    │ Agent 3 │    │ Agent N │        │
+    │   └────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘        │
+    │        │              │              │              │              │
+    │        └──────────────┴──────────────┴──────────────┘              │
+    │                              │                                      │
+    │                              ▼                                      │
+    │                    ┌─────────────────┐                             │
+    │                    │   LOAD BALANCER │                             │
+    │                    │   (Future: DNS) │                             │
+    │                    └────────┬────────┘                             │
+    │                             │                                       │
+    │              ┌──────────────┼──────────────┐                       │
+    │              ▼              ▼              ▼                       │
+    │      ┌───────────┐  ┌───────────┐  ┌───────────┐                  │
+    │      │  Router 1 │  │  Router 2 │  │  Router N │                  │
+    │      │  (Primary)│  │ (Replica) │  │ (Replica) │                  │
+    │      └─────┬─────┘  └─────┬─────┘  └─────┬─────┘                  │
+    │            │              │              │                         │
+    │            └──────────────┴──────────────┘                         │
+    │                           │                                        │
+    │         ┌─────────────────┼─────────────────┐                     │
+    │         ▼                 ▼                 ▼                     │
+    │  ┌────────────┐   ┌────────────┐   ┌────────────┐                │
+    │  │   CACHE    │   │  REGISTRY  │   │   QUEUE    │                │
+    │  │  (Redis)   │   │ (Postgres) │   │  (Redis)   │                │
+    │  │            │   │            │   │            │                │
+    │  │ • Prices   │   │ • Caps     │   │ • Pending  │                │
+    │  │ • Sessions │   │ • Agents   │   │ • Retries  │                │
+    │  │ • Tokens   │   │ • Trust    │   │ • Batches  │                │
+    │  └────────────┘   └────────────┘   └────────────┘                │
+    │                                                                   │
+    │         ┌─────────────────────────────────────┐                  │
+    │         │          EXECUTOR POOL              │                  │
+    │         │  ┌─────────┐ ┌─────────┐ ┌───────┐ │                  │
+    │         │  │ Public  │ │ Arcium  │ │ Inco  │ │                  │
+    │         │  │Executor │ │Executor │ │Executor│ │                  │
+    │         │  └────┬────┘ └────┬────┘ └───┬───┘ │                  │
+    │         └───────┼───────────┼──────────┼─────┘                  │
+    │                 │           │          │                         │
+    │                 ▼           ▼          ▼                         │
+    │         ┌───────────────────────────────────┐                   │
+    │         │        EXTERNAL PROVIDERS         │                   │
+    │         │  Helius │ CMC │ Jupiter │ Arcium  │                   │
+    │         └───────────────────────────────────┘                   │
+    │                                                                  │
+    └──────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -667,7 +800,106 @@ Decentralized reputation system:
 
 ## 10. Advanced Features
 
-### 10.1 Capability Receipts
+### 10.1 Agent-to-Agent (A2A) Protocol
+
+CAP-402 implements a comprehensive agent-to-agent communication protocol enabling direct trading, auctions, and swarm coordination.
+
+#### 10.1.1 A2A Architecture
+
+```
+                           A2A PROTOCOL ARCHITECTURE
+    ═══════════════════════════════════════════════════════════════════
+
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                      A2A COMMUNICATION MODES                     │
+    ├─────────────────────────────────────────────────────────────────┤
+    │                                                                 │
+    │   ┌─────────────┐    DIRECT INVOKE    ┌─────────────┐          │
+    │   │   Agent A   │ ──────────────────▶ │   Agent B   │          │
+    │   └─────────────┘                     └─────────────┘          │
+    │         │                                    │                  │
+    │         │              AUCTION               │                  │
+    │         │    ┌───────────────────────┐      │                  │
+    │         └───▶│   AUCTION MANAGER     │◀─────┘                  │
+    │              │                       │                          │
+    │              │  • Bid collection     │                          │
+    │              │  • Winner selection   │                          │
+    │              │  • Escrow handling    │                          │
+    │              └───────────────────────┘                          │
+    │                         │                                       │
+    │                         ▼                                       │
+    │              ┌───────────────────────┐                          │
+    │              │    SWARM COORDINATOR  │                          │
+    │              │                       │                          │
+    │              │  • Task distribution  │                          │
+    │              │  • Result aggregation │                          │
+    │              │  • Consensus voting   │                          │
+    │              └───────────────────────┘                          │
+    │                         │                                       │
+    │         ┌───────────────┼───────────────┐                      │
+    │         ▼               ▼               ▼                      │
+    │   ┌──────────┐   ┌──────────┐   ┌──────────┐                  │
+    │   │ Agent 1  │   │ Agent 2  │   │ Agent N  │                  │
+    │   └──────────┘   └──────────┘   └──────────┘                  │
+    │                                                                 │
+    └─────────────────────────────────────────────────────────────────┘
+```
+
+#### 10.1.2 A2A Message Types
+
+| Message Type | Purpose | Privacy Level |
+|--------------|---------|---------------|
+| `a2a.invoke` | Direct capability invocation | Configurable |
+| `a2a.quote_request` | Request trading quote | Encrypted |
+| `a2a.quote_response` | Respond with quote | Encrypted |
+| `a2a.trade_execute` | Execute agreed trade | Maximum |
+| `a2a.auction_bid` | Submit auction bid | Sealed |
+| `a2a.swarm_task` | Distribute swarm task | Configurable |
+| `a2a.heartbeat` | Agent liveness check | Public |
+
+#### 10.1.3 Trading Flow
+
+```
+                        A2A TRADING SEQUENCE
+    ════════════════════════════════════════════════════════
+
+    Agent A                    Router                    Agent B
+       │                         │                          │
+       │  1. findTradingPartners │                          │
+       │ ───────────────────────▶│                          │
+       │                         │  2. broadcast quote_req  │
+       │                         │ ────────────────────────▶│
+       │                         │                          │
+       │                         │  3. quote_response       │
+       │                         │ ◀────────────────────────│
+       │  4. partners list       │                          │
+       │ ◀───────────────────────│                          │
+       │                         │                          │
+       │  5. select best quote   │                          │
+       │ ───────────────────────▶│                          │
+       │                         │  6. trade_execute        │
+       │                         │ ────────────────────────▶│
+       │                         │                          │
+       │                         │  7. confirmation         │
+       │                         │ ◀────────────────────────│
+       │  8. trade receipt       │                          │
+       │ ◀───────────────────────│                          │
+       │                         │                          │
+    ═══╧═════════════════════════╧══════════════════════════╧═══
+```
+
+#### 10.1.4 Privacy Levels
+
+```typescript
+enum A2APrivacyLevel {
+  PUBLIC = 0,        // Message visible to all
+  CONFIDENTIAL = 1,  // Encrypted, router can read
+  PRIVATE = 2,       // End-to-end encrypted
+  MAXIMUM = 3        // E2E + metadata obfuscation
+}
+```
+
+### 10.2 Capability Receipts
 
 Every invocation produces a verifiable receipt:
 
@@ -691,9 +923,93 @@ interface CapabilityReceipt {
 }
 ```
 
-### 10.2 Intent Graphs
+#### Receipt Verification Flow
+
+```
+                         RECEIPT VERIFICATION
+    ═══════════════════════════════════════════════════════════
+
+    ┌────────────────┐                      ┌────────────────┐
+    │    RECEIPT     │                      │   VERIFIER     │
+    │                │                      │                │
+    │ receipt_id     │                      │ 1. Parse       │
+    │ capability_id  │─────────────────────▶│    receipt     │
+    │ input_commit   │                      │                │
+    │ output_commit  │                      │ 2. Check       │
+    │ proof          │                      │    signature   │
+    │ signature      │                      │                │
+    └────────────────┘                      │ 3. Verify      │
+                                            │    proof       │
+                                            │                │
+                                            │ 4. Validate    │
+                                            │    commitments │
+                                            │                │
+                                            │ 5. Check       │
+                                            │    chain signal│
+                                            └───────┬────────┘
+                                                    │
+                                                    ▼
+                                            ┌────────────────┐
+                                            │    RESULT      │
+                                            │                │
+                                            │ ✓ Valid        │
+                                            │ ✗ Invalid      │
+                                            │ ? Pending      │
+                                            └────────────────┘
+```
+
+### 10.3 Intent Graphs
 
 Complex workflows as directed graphs:
+
+```
+                           INTENT GRAPH EXECUTION
+    ═══════════════════════════════════════════════════════════════════
+
+    Example: "Swap SOL→USDC only if price > $140 and MEV risk < HIGH"
+
+                    ┌─────────────────────────────────────────┐
+                    │              INTENT GRAPH               │
+                    └─────────────────────────────────────────┘
+                                       │
+                                       ▼
+                    ┌─────────────────────────────────────────┐
+                    │           NODE: price_check             │
+                    │   cap.price.lookup.v1                   │
+                    │   inputs: {base_token: "SOL"}           │
+                    └──────────────────┬──────────────────────┘
+                                       │
+                          outputs.price > 140?
+                         ╱                    ╲
+                       YES                     NO
+                        │                       │
+                        ▼                       ▼
+    ┌─────────────────────────────┐    ┌─────────────────────┐
+    │      NODE: mev_check        │    │    ABORT INTENT     │
+    │   /mev/analyze              │    │   reason: "price    │
+    │   inputs: {token: "SOL"...} │    │    below threshold" │
+    └──────────────┬──────────────┘    └─────────────────────┘
+                   │
+          risk != "HIGH"?
+         ╱                ╲
+       YES                 NO
+        │                   │
+        ▼                   ▼
+    ┌─────────────────────────────┐    ┌─────────────────────┐
+    │      NODE: execute_swap     │    │    ABORT INTENT     │
+    │   cap.confidential.swap.v1  │    │   reason: "MEV      │
+    │   inputs: {amount: 100...}  │    │    risk too high"   │
+    └──────────────┬──────────────┘    └─────────────────────┘
+                   │
+                   ▼
+    ┌─────────────────────────────┐
+    │      INTENT COMPLETE        │
+    │   Single atomic receipt     │
+    │   All-or-nothing execution  │
+    └─────────────────────────────┘
+```
+
+**Intent Graph Schema:**
 
 ```json
 {
@@ -726,7 +1042,111 @@ Router: "Options available:
   Recommendation: Option 1 (meets requirements, lowest cost)"
 ```
 
-### 10.4 Usage Metadata
+### 10.4 MEV Protection System
+
+CAP-402 provides comprehensive MEV protection for trading operations:
+
+```
+                         MEV PROTECTION ARCHITECTURE
+    ═══════════════════════════════════════════════════════════════════
+
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    TRADE SUBMISSION                              │
+    │                                                                 │
+    │   Agent submits: swap(SOL → USDC, amount: 10,000)               │
+    └──────────────────────────────┬──────────────────────────────────┘
+                                   │
+                                   ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    MEV RISK ANALYSIS                             │
+    │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+    │  │ Sandwich Risk   │  │ Front-run Risk  │  │ Back-run Risk   │ │
+    │  │                 │  │                 │  │                 │ │
+    │  │ Probability: 75%│  │ Probability: 60%│  │ Probability: 40%│ │
+    │  │ Est. Loss: $150 │  │ Est. Loss: $80  │  │ Est. Loss: $30  │ │
+    │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+    │                                                                 │
+    │  Overall Risk: HIGH | Potential Loss: $260 | Savings: $234     │
+    └──────────────────────────────┬──────────────────────────────────┘
+                                   │
+                    ┌──────────────┴──────────────┐
+                    ▼                             ▼
+    ┌───────────────────────────┐   ┌───────────────────────────────┐
+    │   STANDARD EXECUTION      │   │   PROTECTED EXECUTION         │
+    │                           │   │                               │
+    │   • Public mempool        │   │   • Private mempool (Jito)    │
+    │   • Visible to MEV bots   │   │   • Confidential amounts      │
+    │   • ~$260 expected loss   │   │   • Arcium C-SPL wrapping     │
+    │                           │   │   • ~$26 expected loss        │
+    └───────────────────────────┘   └───────────────────────────────┘
+```
+
+#### Protection Levels
+
+| Level | Method | Protection | Cost |
+|-------|--------|------------|------|
+| **None** | Public mempool | 0% | Free |
+| **Basic** | Private RPC | 40% | +0.1% |
+| **Standard** | Jito bundles | 70% | +0.2% |
+| **Maximum** | Arcium C-SPL | 95% | +0.5% |
+
+### 10.5 Alpha Detection Engine
+
+The SDK includes sophisticated alpha detection for trading signals:
+
+```
+                         ALPHA DETECTION PIPELINE
+    ═══════════════════════════════════════════════════════════════════
+
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    PRICE HISTORY BUFFER                          │
+    │                                                                 │
+    │   SOL: [142.50, 143.20, 144.80, 146.10, 147.50, 149.20, ...]   │
+    │   ETH: [3420, 3435, 3450, 3480, 3510, 3525, ...]               │
+    │   BTC: [67500, 67800, 68200, 68900, 69500, ...]                │
+    └──────────────────────────────┬──────────────────────────────────┘
+                                   │
+                                   ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    SIGNAL DETECTION                              │
+    │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+    │  │    MOMENTUM     │  │    REVERSAL     │  │    BREAKOUT     │ │
+    │  │                 │  │                 │  │                 │ │
+    │  │ Short-term avg  │  │ Oversold/bought │  │ Support/resist  │ │
+    │  │ vs current      │  │ detection       │  │ breakthrough    │ │
+    │  │                 │  │                 │  │                 │ │
+    │  │ Threshold: ±2%  │  │ Threshold: ±5%  │  │ Threshold: ±8%  │ │
+    │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+    └──────────────────────────────┬──────────────────────────────────┘
+                                   │
+                                   ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    ALPHA SIGNAL OUTPUT                           │
+    │                                                                 │
+    │   {                                                             │
+    │     type: "momentum",                                           │
+    │     token: "SOL",                                               │
+    │     direction: "bullish",                                       │
+    │     strength: "strong",                                         │
+    │     confidence: 85,                                             │
+    │     entry_price: 149.20,                                        │
+    │     target_price: 156.66,  // +5%                               │
+    │     stop_loss: 144.72,     // -3%                               │
+    │     valid_until: 1705420800000                                  │
+    │   }                                                             │
+    └─────────────────────────────────────────────────────────────────┘
+```
+
+#### Signal Types
+
+| Type | Trigger | Direction | Typical Confidence |
+|------|---------|-----------|-------------------|
+| **Momentum** | >2% short-term move | Bullish/Bearish | 50-85% |
+| **Reversal** | >5% deviation from avg | Counter-trend | 40-80% |
+| **Breakout** | >8% with volume spike | Trend continuation | 60-90% |
+| **Volume Spike** | 3x normal volume | Neutral (alert) | 70-95% |
+
+### 10.6 Usage Metadata
 
 Emergent reputation from usage patterns:
 
