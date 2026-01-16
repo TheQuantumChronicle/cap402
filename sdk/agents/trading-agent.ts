@@ -1657,6 +1657,10 @@ export class TradingAgent extends EventEmitter {
   private routeCache: Map<string, { route: any; timestamp: number; ttl: number }> = new Map();
   private connectionPool: Map<string, any> = new Map();
   private priceCache: Map<string, { price: number; timestamp: number }> = new Map();
+  
+  // Latency tracking for performance monitoring
+  private latencyHistory: number[] = [];
+  private readonly MAX_LATENCY_SAMPLES = 100;
 
   /**
    * Execute an instant trade with minimal latency
@@ -1773,6 +1777,9 @@ export class TradingAgent extends EventEmitter {
         console.warn(`⚠️ Instant swap latency ${result.latency_ms}ms exceeded threshold ${maxLatency}ms`);
         result.latency_warning = true;
       }
+
+      // Track latency for stats
+      this.trackLatency(result.latency_ms);
 
       this.emit('instant_swap_completed', result);
       
@@ -1946,8 +1953,47 @@ export class TradingAgent extends EventEmitter {
     return {
       cached_routes: this.routeCache.size,
       cached_prices: this.priceCache.size,
-      avg_latency_ms: 0, // Would track this over time
+      avg_latency_ms: this.getAvgLatency(),
       background_refresh_active: this.refreshInterval !== null
+    };
+  }
+
+  private trackLatency(latencyMs: number): void {
+    this.latencyHistory.push(latencyMs);
+    if (this.latencyHistory.length > this.MAX_LATENCY_SAMPLES) {
+      this.latencyHistory.shift();
+    }
+  }
+
+  private getAvgLatency(): number {
+    if (this.latencyHistory.length === 0) return 0;
+    const sum = this.latencyHistory.reduce((a, b) => a + b, 0);
+    return Math.round(sum / this.latencyHistory.length);
+  }
+
+  /**
+   * Get detailed latency statistics
+   */
+  getLatencyStats(): {
+    avg_ms: number;
+    min_ms: number;
+    max_ms: number;
+    p95_ms: number;
+    samples: number;
+  } {
+    if (this.latencyHistory.length === 0) {
+      return { avg_ms: 0, min_ms: 0, max_ms: 0, p95_ms: 0, samples: 0 };
+    }
+    
+    const sorted = [...this.latencyHistory].sort((a, b) => a - b);
+    const p95Index = Math.floor(sorted.length * 0.95);
+    
+    return {
+      avg_ms: this.getAvgLatency(),
+      min_ms: sorted[0],
+      max_ms: sorted[sorted.length - 1],
+      p95_ms: sorted[p95Index] || sorted[sorted.length - 1],
+      samples: this.latencyHistory.length
     };
   }
 
