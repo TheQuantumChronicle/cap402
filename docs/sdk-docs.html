@@ -472,6 +472,46 @@ console.log(\`By strategy:\`, summary.by_strategy);
 const csv = trader.exportTradesCSV();
 fs.writeFileSync('trades.csv', csv);</pre>
 
+    <h2>🔔 Price Alerts</h2>
+    <p>Get notified when prices cross thresholds:</p>
+    <pre class="code-block">// Alert when SOL goes above $200
+trader.setPriceAlert('SOL', 'above', 200, 'SOL broke $200!');
+
+// Alert when price drops below threshold
+trader.setPriceAlert('ETH', 'below', 3000);
+
+// With webhook notification
+trader.setPriceAlert('SOL', 'above', 200, 'Alert!', 'https://webhook.com');
+
+// Manage alerts
+trader.getActivePriceAlerts();
+trader.cancelPriceAlert(alert.alert_id);</pre>
+
+    <h2>📊 Volatility & Market Analysis</h2>
+    <p>Monitor market conditions and volatility:</p>
+    <pre class="code-block">// Get volatility metrics
+const vol = trader.getVolatility('SOL', 60);
+console.log(vol.volatility_level); // 'low' | 'medium' | 'high' | 'extreme'
+
+// Market overview
+const overview = trader.getMarketOverview();
+console.log(overview.market_sentiment); // 'bullish' | 'bearish' | 'neutral'
+
+// Check if conditions are favorable
+const check = trader.isTradingFavorable('SOL');
+console.log(check.score, check.reasons);</pre>
+
+    <h2>📐 Position Sizing</h2>
+    <p>Calculate optimal position sizes based on risk:</p>
+    <pre class="code-block">// Risk 2% of portfolio with 5% stop-loss
+const size = trader.calculatePositionSize('SOL', 2, 5);
+console.log(size.recommended_amount);
+
+// Get risk/reward ratio
+const rr = trader.getRiskReward('SOL', 150, 140, 180);
+console.log(rr.risk_reward_ratio); // 3:1
+console.log(rr.recommendation); // 'good'</pre>
+
     <h2>📈 Performance Analytics</h2>
     <p>Detailed trading metrics and statistics:</p>
     <pre class="code-block">// Get performance analytics
