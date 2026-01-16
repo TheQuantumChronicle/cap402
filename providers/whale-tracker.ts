@@ -109,8 +109,9 @@ class WhaleTrackerService {
     token?: string;
     minValueUsd?: number;
     limit?: number;
+    enrichWithNansen?: boolean;
   } = {}): Promise<WhaleTrackerResult> {
-    const { token, minValueUsd = 100000, limit = 20 } = options;
+    const { token, minValueUsd = 100000, limit = 20, enrichWithNansen = true } = options;
     const cacheKey = `whale_${token || 'all'}_${minValueUsd}`;
     
     // Check cache
@@ -134,6 +135,11 @@ class WhaleTrackerService {
 
       // Sort by value
       movements.sort((a, b) => b.value_usd - a.value_usd);
+
+      // Enrich with Nansen labels if enabled (conserves API credits)
+      if (enrichWithNansen && this.nansenApiKeys.length > 0) {
+        await this.enrichWithNansenLabels(movements);
+      }
 
       // Calculate summary
       const buyVolume = movements
@@ -162,7 +168,9 @@ class WhaleTrackerService {
             message: `${m.wallet.slice(0, 4)}...${m.wallet.slice(-4)} ${m.action} ${m.amount.toLocaleString()} ${m.token} ($${(m.value_usd / 1000000).toFixed(2)}M)`,
             significance: m.significance
           })),
-        data_source: 'helius_enhanced_transactions',
+        data_source: enrichWithNansen && this.nansenApiKeys.length > 0 
+          ? 'helius_enhanced_transactions + nansen_labels' 
+          : 'helius_enhanced_transactions',
         tracking_period: 'last_1_hour'
       };
 
@@ -338,31 +346,74 @@ class WhaleTrackerService {
 
   /**
    * Get whale label from Nansen (uses API credits sparingly)
+   * Uses the correct Nansen API v1 beta endpoint with POST
    */
-  async getWalletLabel(wallet: string): Promise<string | null> {
+  async getWalletLabel(wallet: string): Promise<{ label: string; category: string; fullname: string } | null> {
     const nansenKey = this.getNansenApiKey();
     if (!nansenKey) return null;
 
     try {
-      const response = await axios.get(
-        `https://api.nansen.ai/v1/wallet/${wallet}/labels`,
+      const response = await axios.post(
+        'https://api.nansen.ai/api/beta/profiler/address/labels',
+        {
+          parameters: {
+            chain: 'solana',
+            address: wallet
+          },
+          pagination: {
+            page: 1,
+            recordsPerPage: 10
+          }
+        },
         {
           headers: {
-            'Authorization': `Bearer ${nansenKey}`,
+            'apiKey': nansenKey,
             'Content-Type': 'application/json'
           },
           timeout: 5000
         }
       );
 
-      if (response.data?.labels?.length > 0) {
-        return response.data.labels[0].name;
+      // Response is an array of label objects
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        const bestLabel = response.data.find((l: any) => l.category === 'smart_money') || response.data[0];
+        return {
+          label: bestLabel.label,
+          category: bestLabel.category,
+          fullname: bestLabel.fullname || bestLabel.label
+        };
       }
-    } catch (error) {
-      // Nansen API might not be available or rate limited
+    } catch (error: any) {
+      // Handle Nansen API errors gracefully
+      const errorMsg = error?.response?.data?.error || error?.message || 'unknown';
+      if (errorMsg.includes('Insufficient credits')) {
+        console.log('Nansen API: Out of credits - skipping label enrichment');
+      } else {
+        console.log('Nansen API error:', errorMsg);
+      }
     }
 
     return null;
+  }
+
+  /**
+   * Enrich whale movements with Nansen labels
+   * Only calls Nansen for significant movements to conserve API credits
+   */
+  async enrichWithNansenLabels(movements: WhaleMovement[]): Promise<WhaleMovement[]> {
+    // Only enrich top 3 movements to conserve API credits
+    const toEnrich = movements.slice(0, 3);
+    
+    for (const movement of toEnrich) {
+      if (movement.value_usd > 500000) { // Only for large movements
+        const labelInfo = await this.getWalletLabel(movement.wallet);
+        if (labelInfo) {
+          movement.wallet_label = `${labelInfo.fullname} (${labelInfo.category})`;
+        }
+      }
+    }
+    
+    return movements;
   }
 }
 
