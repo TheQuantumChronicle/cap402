@@ -3555,9 +3555,11 @@ app.get('/a2a/leaderboard', async (req: Request, res: Response) => {
 // ============================================
 
 // MEV Protection Analysis - Detect sandwich attacks, frontrunning risks
+// Legacy endpoint - redirects to new trading module
 app.post('/mev/analyze', async (req: Request, res: Response) => {
   try {
-    const { transaction, token_in, token_out, amount, slippage } = req.body;
+    const { mevProtection } = await import('./trading/mev-protection');
+    const { token_in, token_out, amount, slippage } = req.body;
 
     if (!token_in || !token_out || !amount) {
       return res.status(400).json({
@@ -3566,61 +3568,45 @@ app.post('/mev/analyze', async (req: Request, res: Response) => {
       });
     }
 
-    // Analyze MEV risk factors
     const amountNum = Number(amount);
     const slippageNum = Number(slippage) || 0.5;
     
-    // Risk scoring based on trade characteristics
-    const sizeRisk = amountNum > 10000 ? 'high' : amountNum > 1000 ? 'medium' : 'low';
-    const slippageRisk = slippageNum > 1 ? 'high' : slippageNum > 0.5 ? 'medium' : 'low';
-    
-    // Simulated mempool analysis
-    const pendingTxCount = Math.floor(Math.random() * 50) + 10;
-    const similarTrades = Math.floor(Math.random() * 5);
-    const mevBotActivity = Math.random() > 0.7 ? 'detected' : 'none';
-    
-    // Calculate sandwich attack probability
-    const sandwichRisk = (amountNum > 5000 && slippageNum > 0.5) ? 0.75 : 
-                         (amountNum > 1000) ? 0.35 : 0.1;
-    
-    // Recommended protections
-    const recommendations: string[] = [];
-    if (sandwichRisk > 0.5) {
-      recommendations.push('Use private mempool (Jito bundles)');
-      recommendations.push('Split into smaller trades');
-      recommendations.push('Use limit orders instead');
-    }
-    if (slippageNum > 1) {
-      recommendations.push('Reduce slippage tolerance');
-    }
-    if (mevBotActivity === 'detected') {
-      recommendations.push('Delay execution by 2-3 blocks');
-      recommendations.push('Use flashbots-style protection');
-    }
+    // Use the new comprehensive MEV protection module
+    const analysis = mevProtection.analyzeRisk(
+      token_in,
+      token_out,
+      amountNum,
+      amountNum * 100, // Estimate USD value
+      amountNum,
+      slippageNum
+    );
 
-    // Calculate potential savings
-    const potentialMEVLoss = amountNum * sandwichRisk * 0.02; // ~2% extraction
-    const savingsWithProtection = potentialMEVLoss * 0.85; // 85% protection
-
+    // Return in legacy format for backward compatibility
     res.json({
       success: true,
       mev_analysis: {
         trade: { token_in, token_out, amount: amountNum, slippage: slippageNum },
         risk_assessment: {
-          overall_risk: sandwichRisk > 0.5 ? 'HIGH' : sandwichRisk > 0.2 ? 'MEDIUM' : 'LOW',
-          sandwich_probability: (sandwichRisk * 100).toFixed(1) + '%',
-          size_risk: sizeRisk,
-          slippage_risk: slippageRisk
+          overall_risk: analysis.risk.level.toUpperCase(),
+          sandwich_probability: analysis.risk.sandwich_risk.probability + '%',
+          size_risk: analysis.risk.level,
+          slippage_risk: slippageNum > 1 ? 'high' : slippageNum > 0.5 ? 'medium' : 'low'
         },
         mempool_status: {
-          pending_transactions: pendingTxCount,
-          similar_trades_detected: similarTrades,
-          mev_bot_activity: mevBotActivity
+          pending_transactions: analysis.risk.frontrun_risk.pending_similar_trades * 10,
+          similar_trades_detected: analysis.risk.frontrun_risk.pending_similar_trades,
+          mev_bot_activity: analysis.risk.sandwich_risk.detected_bots > 0 ? 'detected' : 'none'
         },
-        potential_loss_usd: potentialMEVLoss.toFixed(2),
-        savings_with_protection_usd: savingsWithProtection.toFixed(2),
-        recommendations,
-        protected_execution_available: true
+        potential_loss_usd: (
+          analysis.risk.sandwich_risk.estimated_loss_usd +
+          analysis.risk.frontrun_risk.estimated_loss_usd +
+          analysis.risk.backrun_risk.estimated_loss_usd
+        ).toFixed(2),
+        savings_with_protection_usd: analysis.recommendation.estimated_savings_usd.toFixed(2),
+        recommendations: [analysis.recommendation.reasoning],
+        protected_execution_available: true,
+        // New: include full analysis for clients that want it
+        full_analysis: analysis
       }
     });
   } catch (error) {
@@ -3632,8 +3618,10 @@ app.post('/mev/analyze', async (req: Request, res: Response) => {
 });
 
 // Protected Swap Execution - MEV-resistant swap via private mempool
+// Legacy endpoint - uses new trading module for analysis, then executes swap
 app.post('/mev/protected-swap', async (req: Request, res: Response) => {
   try {
+    const { mevProtection } = await import('./trading/mev-protection');
     const { token_in, token_out, amount, wallet_address, max_slippage, protection_level } = req.body;
 
     if (!token_in || !token_out || !amount || !wallet_address) {
@@ -3643,19 +3631,33 @@ app.post('/mev/protected-swap', async (req: Request, res: Response) => {
       });
     }
 
-    const protectionLvl = protection_level || 'standard';
+    const amountNum = Number(amount);
     const startTime = Date.now();
 
-    // Simulate protected execution
-    const executionMethods = {
-      standard: { method: 'Private RPC', fee: 0.001, protection: '70%' },
-      enhanced: { method: 'Jito Bundle', fee: 0.002, protection: '90%' },
-      maximum: { method: 'Flashbots + Split', fee: 0.005, protection: '99%' }
+    // First, analyze MEV risk using the new module
+    const analysis = mevProtection.analyzeRisk(
+      token_in,
+      token_out,
+      amountNum,
+      amountNum * 100,
+      amountNum,
+      max_slippage || 0.5
+    );
+
+    // Map protection level to option
+    const protectionLvl = protection_level || 'standard';
+    const optionMap: Record<string, string> = {
+      'basic': 'opt_private_rpc',
+      'standard': 'opt_jito',
+      'enhanced': 'opt_jito',
+      'maximum': 'opt_confidential'
     };
+    const optionId = optionMap[protectionLvl] || 'opt_jito';
 
-    const execution = executionMethods[protectionLvl as keyof typeof executionMethods] || executionMethods.standard;
+    // Execute with protection
+    const protectedExec = await mevProtection.executeProtected(analysis.analysis_id, optionId);
 
-    // Execute the underlying swap
+    // Also execute the underlying swap
     const swapResult = await router.invoke({
       capability_id: 'cap.swap.execute.v1',
       inputs: { 
@@ -3668,20 +3670,24 @@ app.post('/mev/protected-swap', async (req: Request, res: Response) => {
     });
 
     const execTime = Date.now() - startTime;
+    const selectedOption = analysis.execution_options.find(o => o.option_id === optionId);
 
     res.json({
       success: swapResult.success,
       protected_swap: {
         protection_level: protectionLvl,
-        execution_method: execution.method,
-        protection_rate: execution.protection,
-        protection_fee: execution.fee,
+        execution_method: selectedOption?.method || 'jito_bundle',
+        protection_rate: (selectedOption?.mev_protection_percent || 70) + '%',
+        protection_fee: selectedOption?.protection_fee_usd || 0.05,
         mev_extracted: '$0.00',
-        savings_vs_unprotected: `$${(Number(amount) * 0.015).toFixed(2)}`
+        savings_vs_unprotected: `$${protectedExec.savings.net_savings_usd.toFixed(2)}`
       },
       swap_result: swapResult.outputs,
       execution_time_ms: execTime,
-      metadata: swapResult.metadata
+      metadata: swapResult.metadata,
+      // Include new detailed analysis
+      mev_analysis: analysis,
+      protected_execution: protectedExec
     });
   } catch (error) {
     res.status(500).json({

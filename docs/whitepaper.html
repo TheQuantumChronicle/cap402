@@ -516,6 +516,40 @@
       <tr><td>Standard</td><td>Jito bundles</td><td>70%</td><td>+0.2%</td></tr>
       <tr><td>Maximum</td><td>Arcium C-SPL</td><td>95%</td><td>+0.5%</td></tr>
     </table>
+
+    <h3>10.3 Real-Time Trading Signals</h3>
+    <p>CAP-402 provides SSE-based real-time signal streaming for trading agents:</p>
+    <table>
+      <tr><th>Signal Type</th><th>Description</th><th>Use Case</th></tr>
+      <tr><td><code>price_movement</code></td><td>Significant price changes</td><td>Entry/exit triggers</td></tr>
+      <tr><td><code>whale_activity</code></td><td>Large wallet movements</td><td>Follow smart money</td></tr>
+      <tr><td><code>mev_risk</code></td><td>MEV bot detection</td><td>Protection alerts</td></tr>
+      <tr><td><code>arbitrage_opportunity</code></td><td>Cross-DEX spreads</td><td>Instant profit</td></tr>
+      <tr><td><code>a2a_quote_available</code></td><td>Agent-to-agent offers</td><td>Better prices</td></tr>
+    </table>
+    <p>Signals include actionable recommendations with confidence scores and urgency timers.</p>
+
+    <h3>10.4 Sealed-Bid A2A Auctions</h3>
+    <p>Private OTC trading between agents using commit-reveal auctions:</p>
+    <pre class="code-block">
+    SEALED-BID AUCTION FLOW
+    ═══════════════════════════════════════════════════════════════════
+    
+    Phase 1: OPEN (5 min)          Phase 2: REVEAL (1 min)
+    ┌─────────────────────┐        ┌─────────────────────┐
+    │ Agents submit       │        │ Agents reveal       │
+    │ sealed bids         │   →    │ bid + nonce         │
+    │ (hash commitment)   │        │ (verify commitment) │
+    └─────────────────────┘        └─────────────────────┘
+                                              │
+                                              ▼
+                                   ┌─────────────────────┐
+                                   │ Winner determined   │
+                                   │ (2nd price auction) │
+                                   │ Trade executed      │
+                                   └─────────────────────┘
+    </pre>
+    <p><strong>Benefits:</strong> No front-running, fair price discovery, MEV-resistant execution.</p>
     
     <h2 id="security">9. Security Framework</h2>
     <ul>
