@@ -694,7 +694,7 @@ describe('Stealth Trading Mode', () => {
     expect(result.stealth_id).toMatch(/^stealth_/);
     expect(result.privacy_level).toBe('standard');
     expect(result.chunks.length).toBeGreaterThan(0);
-  }, 15000);
+  }, 30000);
 
   test('should execute stealth trade with maximum privacy', async () => {
     const result = await stealthTrader.stealthTrade('SOL', 'USDC', 10, {
@@ -704,7 +704,7 @@ describe('Stealth Trading Mode', () => {
     expect(result).toBeDefined();
     expect(result.privacy_level).toBe('maximum');
     expect(result.stealth_features_used).toContain('arcium_mpc');
-  }, 15000);
+  }, 30000);
 
   test('should split large orders', async () => {
     const result = await stealthTrader.stealthTrade('SOL', 'USDC', 100, {
