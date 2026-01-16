@@ -90,8 +90,42 @@
   
   <div class="container">
     <h1>Agent SDK Reference</h1>
-    <p>Build fully autonomous agents that monitor markets, analyze risk, and prepare ready-to-sign transactions. You retain full control—just sign in your wallet.</p>
-    
+    <p>Build autonomous agents that monitor markets, analyze risk, and prepare ready-to-sign transactions. You sign—agents do the rest.</p>
+
+    <h2>Why Use Agents?</h2>
+    <table>
+      <tr><th>Use Case</th><th>Without Agent</th><th>With Agent</th></tr>
+      <tr><td>Price Alerts</td><td>Manually check prices</td><td>Agent monitors 24/7, alerts you</td></tr>
+      <tr><td>Trading</td><td>Research → Calculate → Execute</td><td>One line: <code>trader.smartSwap('SOL', 'USDC', 100)</code></td></tr>
+      <tr><td>MEV Protection</td><td>Hope you don't get front-run</td><td>Built-in risk analysis + protection</td></tr>
+      <tr><td>Best Execution</td><td>Compare DEXs manually</td><td>Agent finds best route (DEX or A2A)</td></tr>
+      <tr><td>Portfolio</td><td>Spreadsheets</td><td>Real-time tracking + P&L</td></tr>
+    </table>
+
+    <h2>When to Use What</h2>
+    <pre class="code-block">// QUICK OPERATIONS - No setup needed
+import { cap402, prepareSwap, findAlpha } from '@cap402/sdk';
+
+await cap402.price('SOL');              // Get price
+await prepareSwap('SOL', 'USDC', 10);   // Prepare swap tx
+await findAlpha(['SOL', 'ETH']);        // Detect signals
+
+// TRADING AGENT - Continuous monitoring + trading
+import { createTradingAgent } from '@cap402/sdk';
+const trader = createTradingAgent({ ... });
+trader.on('signal', ...);  // React to signals
+await trader.start();      // Runs 24/7
+
+// MONITORING AGENT - Watch wallets/protocols
+import { createMonitoringAgent } from '@cap402/sdk';
+const monitor = createMonitoringAgent({ ... });
+monitor.on('alert', ...);  // Get notified
+
+// ANALYTICS AGENT - Collect data + generate reports
+import { createAnalyticsAgent } from '@cap402/sdk';
+const analytics = createAnalyticsAgent({ ... });
+analytics.on('report_generated', ...);</pre>
+
     <h2>Quick Start</h2>
     <pre class="code-block">import { cap402 } from '@cap402/sdk';
 

@@ -231,6 +231,20 @@
   <div class="container">
     <h2>API Reference</h2>
       <p>Base URL: <code>https://cap402.com</code> | Authentication: <code>X-API-Key</code> header (optional)</p>
+
+      <!-- Quick Examples -->
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Common Use Cases</div>
+        <table class="params-table">
+          <tr><th>I want to...</th><th>Endpoint</th><th>Example</th></tr>
+          <tr><td>Get token price</td><td><code>POST /invoke</code></td><td><code>{"capability_id": "cap.price.lookup.v1", "inputs": {"base_token": "SOL"}}</code></td></tr>
+          <tr><td>Swap tokens</td><td><code>POST /invoke</code></td><td><code>{"capability_id": "cap.swap.execute.v1", "inputs": {"token_in": "SOL", "token_out": "USDC", "amount_in": 10}}</code></td></tr>
+          <tr><td>Check MEV risk</td><td><code>POST /mev/analyze</code></td><td><code>{"token_in": "SOL", "amount": 1000}</code></td></tr>
+          <tr><td>Find arbitrage</td><td><code>GET /alpha/arbitrage</code></td><td>Returns live opportunities</td></tr>
+          <tr><td>Track whales</td><td><code>GET /alpha/whale-tracker</code></td><td>Returns recent large txs</td></tr>
+          <tr><td>List capabilities</td><td><code>GET /capabilities</code></td><td>Returns all 13 capabilities</td></tr>
+        </table>
+      </div>
       
       <!-- Global Errors -->
       <div class="endpoint-group">
