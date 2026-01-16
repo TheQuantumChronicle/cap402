@@ -66,16 +66,26 @@ export const cap402 = {
   async price(token: string, quote: string = 'USD'): Promise<number> {
     ensureInitialized();
     
-    const response = await axios.post(`${routerUrl}/invoke`, {
-      capability_id: 'cap.price.lookup.v1',
-      inputs: { base_token: token, quote_token: quote }
-    });
-    
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Price lookup failed');
+    try {
+      const response = await axios.post(`${routerUrl}/invoke`, {
+        capability_id: 'cap.price.lookup.v1',
+        inputs: { base_token: token, quote_token: quote }
+      }, { timeout: 10000 });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.error || `Could not get price for ${token}`);
+      }
+      
+      return response.data.outputs.price;
+    } catch (error: any) {
+      if (error.code === 'ECONNREFUSED') {
+        throw new Error(`Cannot connect to CAP-402 router at ${routerUrl}`);
+      }
+      if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
+        throw new Error(`Request timed out - router may be slow or unavailable`);
+      }
+      throw new Error(`Price lookup failed for ${token}: ${error.message}`);
     }
-    
-    return response.data.outputs.price;
   },
 
   /**
@@ -113,16 +123,28 @@ export const cap402 = {
   }> {
     ensureInitialized();
     
-    const response = await axios.post(`${routerUrl}/invoke`, {
-      capability_id: 'cap.wallet.snapshot.v1',
-      inputs: { address, network: 'solana-mainnet' }
-    });
-    
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Wallet lookup failed');
+    // Validate address format
+    if (!address || address.length < 32) {
+      throw new Error(`Invalid wallet address: ${address}`);
     }
     
-    return response.data.outputs;
+    try {
+      const response = await axios.post(`${routerUrl}/invoke`, {
+        capability_id: 'cap.wallet.snapshot.v1',
+        inputs: { address, network: 'solana-mainnet' }
+      }, { timeout: 15000 });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.error || `Could not get wallet data for ${address.slice(0, 8)}...`);
+      }
+      
+      return response.data.outputs;
+    } catch (error: any) {
+      if (error.code === 'ECONNREFUSED') {
+        throw new Error(`Cannot connect to CAP-402 router at ${routerUrl}`);
+      }
+      throw new Error(`Wallet lookup failed: ${error.message}`);
+    }
   },
 
   /**
@@ -142,6 +164,17 @@ export const cap402 = {
     dry_run?: boolean;
   }> {
     ensureInitialized();
+    
+    // Input validation
+    if (!tokenIn || !tokenOut) {
+      throw new Error('Both tokenIn and tokenOut are required');
+    }
+    if (tokenIn === tokenOut) {
+      throw new Error('Cannot swap a token for itself');
+    }
+    if (amount <= 0) {
+      throw new Error('Amount must be greater than 0');
+    }
     
     const slippage = options.slippage ?? 0.5;
     const mevProtection = options.mevProtection ?? true;
