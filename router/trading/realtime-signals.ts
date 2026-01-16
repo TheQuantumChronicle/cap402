@@ -22,9 +22,23 @@ export type SignalType =
   | 'mev_risk'            // MEV bot activity detected
   | 'arbitrage_opportunity' // Cross-DEX price difference
   | 'a2a_quote_available' // Another agent offering a trade
-  | 'market_sentiment';   // Aggregate sentiment shift
+  | 'market_sentiment'    // Aggregate sentiment shift
+  | 'volume_spike'        // Unusual volume detected
+  | 'support_resistance'  // Price at key level
+  | 'divergence'          // Price/indicator divergence
+  | 'liquidation_cascade' // Large liquidations incoming
+  | 'smart_money_flow';   // Institutional movement detected
 
 export type SignalPriority = 'low' | 'medium' | 'high' | 'critical';
+
+// Technical indicator thresholds
+const INDICATOR_THRESHOLDS = {
+  RSI_OVERSOLD: 30,
+  RSI_OVERBOUGHT: 70,
+  VOLUME_SPIKE_MULTIPLIER: 3,
+  WHALE_THRESHOLD_USD: 50000,
+  LIQUIDATION_CASCADE_USD: 1000000,
+} as const;
 
 export interface TradingSignal {
   signal_id: string;
@@ -76,6 +90,36 @@ export interface TradingSignal {
     offering_agent?: string;
     quote_id?: string;
     expires_at?: number;
+    
+    // Technical indicators
+    rsi?: number;
+    macd?: { value: number; signal: number; histogram: number };
+    bollinger?: { upper: number; middle: number; lower: number; width: number };
+    
+    // Volume analysis
+    volume_ratio?: number; // Current vs average
+    buy_volume_percent?: number;
+    sell_volume_percent?: number;
+    
+    // Support/Resistance
+    support_levels?: number[];
+    resistance_levels?: number[];
+    distance_to_support_percent?: number;
+    distance_to_resistance_percent?: number;
+    
+    // Divergence
+    divergence_type?: 'bullish' | 'bearish';
+    indicator_diverging?: string;
+    
+    // Liquidation
+    liquidation_price?: number;
+    liquidation_amount_usd?: number;
+    cascade_risk?: 'low' | 'medium' | 'high';
+    
+    // Smart money
+    institutional_flow?: 'inflow' | 'outflow' | 'neutral';
+    flow_amount_usd?: number;
+    known_wallet_type?: 'whale' | 'fund' | 'exchange' | 'unknown';
   };
   
   // Actionable recommendation
@@ -392,6 +436,228 @@ class RealTimeSignalService extends EventEmitter {
         confidence: 70 + priceImprovement * 10,
         reasoning: `Agent ${offeringAgent} offering ${priceImprovement.toFixed(2)}% better than DEX`,
         urgency_seconds: expiresInSeconds
+      }
+    });
+  }
+
+  /**
+   * Generate a volume spike signal
+   */
+  emitVolumeSpike(
+    symbol: string,
+    currentVolume: number,
+    averageVolume: number,
+    buyVolumePercent: number
+  ): TradingSignal {
+    const volumeRatio = currentVolume / averageVolume;
+    let priority: SignalPriority = 'low';
+    if (volumeRatio >= 5) priority = 'critical';
+    else if (volumeRatio >= 3) priority = 'high';
+    else if (volumeRatio >= 2) priority = 'medium';
+    
+    const trend = buyVolumePercent > 60 ? 'bullish' : buyVolumePercent < 40 ? 'bearish' : 'neutral';
+    
+    return this.emitSignal({
+      type: 'volume_spike',
+      priority,
+      asset: { symbol },
+      data: {
+        volume_ratio: Math.round(volumeRatio * 100) / 100,
+        buy_volume_percent: buyVolumePercent,
+        sell_volume_percent: 100 - buyVolumePercent,
+        trend_direction: trend,
+        volume_24h: currentVolume
+      },
+      recommendation: {
+        action: trend === 'bullish' ? 'buy' : trend === 'bearish' ? 'sell' : 'hold',
+        confidence: Math.min(85, 50 + volumeRatio * 10),
+        reasoning: `Volume ${volumeRatio.toFixed(1)}x average, ${buyVolumePercent}% buy pressure`,
+        urgency_seconds: 300
+      }
+    });
+  }
+
+  /**
+   * Generate a support/resistance signal
+   */
+  emitSupportResistance(
+    symbol: string,
+    currentPrice: number,
+    supportLevels: number[],
+    resistanceLevels: number[]
+  ): TradingSignal {
+    const nearestSupport = supportLevels.reduce((a, b) => 
+      Math.abs(b - currentPrice) < Math.abs(a - currentPrice) && b < currentPrice ? b : a, supportLevels[0]);
+    const nearestResistance = resistanceLevels.reduce((a, b) => 
+      Math.abs(b - currentPrice) < Math.abs(a - currentPrice) && b > currentPrice ? b : a, resistanceLevels[0]);
+    
+    const distanceToSupport = ((currentPrice - nearestSupport) / currentPrice) * 100;
+    const distanceToResistance = ((nearestResistance - currentPrice) / currentPrice) * 100;
+    
+    const nearSupport = distanceToSupport < 2;
+    const nearResistance = distanceToResistance < 2;
+    
+    let priority: SignalPriority = 'low';
+    if (nearSupport || nearResistance) priority = 'high';
+    if (distanceToSupport < 1 || distanceToResistance < 1) priority = 'critical';
+    
+    return this.emitSignal({
+      type: 'support_resistance',
+      priority,
+      asset: { symbol },
+      data: {
+        current_price: currentPrice,
+        support_levels: supportLevels,
+        resistance_levels: resistanceLevels,
+        distance_to_support_percent: Math.round(distanceToSupport * 100) / 100,
+        distance_to_resistance_percent: Math.round(distanceToResistance * 100) / 100,
+        trend_direction: nearSupport ? 'bullish' : nearResistance ? 'bearish' : 'neutral'
+      },
+      recommendation: nearSupport ? {
+        action: 'buy',
+        confidence: 70,
+        reasoning: `Price at support level $${nearestSupport.toFixed(2)}`,
+        urgency_seconds: 60
+      } : nearResistance ? {
+        action: 'sell',
+        confidence: 70,
+        reasoning: `Price at resistance level $${nearestResistance.toFixed(2)}`,
+        urgency_seconds: 60
+      } : undefined
+    });
+  }
+
+  /**
+   * Generate a divergence signal (price vs indicator)
+   */
+  emitDivergence(
+    symbol: string,
+    divergenceType: 'bullish' | 'bearish',
+    indicator: string,
+    currentPrice: number,
+    rsi?: number
+  ): TradingSignal {
+    return this.emitSignal({
+      type: 'divergence',
+      priority: 'high',
+      asset: { symbol },
+      data: {
+        divergence_type: divergenceType,
+        indicator_diverging: indicator,
+        current_price: currentPrice,
+        rsi,
+        trend_direction: divergenceType === 'bullish' ? 'bullish' : 'bearish'
+      },
+      recommendation: {
+        action: divergenceType === 'bullish' ? 'buy' : 'sell',
+        confidence: 75,
+        reasoning: `${divergenceType} divergence on ${indicator} - potential reversal`,
+        urgency_seconds: 600
+      }
+    });
+  }
+
+  /**
+   * Generate a liquidation cascade signal
+   */
+  emitLiquidationCascade(
+    symbol: string,
+    liquidationPrice: number,
+    liquidationAmountUsd: number,
+    cascadeRisk: 'low' | 'medium' | 'high'
+  ): TradingSignal {
+    let priority: SignalPriority = 'medium';
+    if (cascadeRisk === 'high') priority = 'critical';
+    else if (cascadeRisk === 'medium') priority = 'high';
+    
+    return this.emitSignal({
+      type: 'liquidation_cascade',
+      priority,
+      asset: { symbol },
+      data: {
+        liquidation_price: liquidationPrice,
+        liquidation_amount_usd: liquidationAmountUsd,
+        cascade_risk: cascadeRisk,
+        trend_direction: 'bearish'
+      },
+      recommendation: {
+        action: 'protect',
+        confidence: cascadeRisk === 'high' ? 90 : 70,
+        reasoning: `$${(liquidationAmountUsd / 1000000).toFixed(1)}M in liquidations at $${liquidationPrice.toFixed(2)}`,
+        urgency_seconds: cascadeRisk === 'high' ? 30 : 120
+      }
+    });
+  }
+
+  /**
+   * Generate a smart money flow signal
+   */
+  emitSmartMoneyFlow(
+    symbol: string,
+    flowDirection: 'inflow' | 'outflow' | 'neutral',
+    flowAmountUsd: number,
+    walletType: 'whale' | 'fund' | 'exchange' | 'unknown'
+  ): TradingSignal {
+    let priority: SignalPriority = 'medium';
+    if (flowAmountUsd >= 5000000) priority = 'critical';
+    else if (flowAmountUsd >= 1000000) priority = 'high';
+    
+    const trend = flowDirection === 'inflow' ? 'bullish' : 
+                  flowDirection === 'outflow' ? 'bearish' : 'neutral';
+    
+    return this.emitSignal({
+      type: 'smart_money_flow',
+      priority,
+      asset: { symbol },
+      data: {
+        institutional_flow: flowDirection,
+        flow_amount_usd: flowAmountUsd,
+        known_wallet_type: walletType,
+        trend_direction: trend
+      },
+      recommendation: flowDirection !== 'neutral' ? {
+        action: flowDirection === 'inflow' ? 'buy' : 'sell',
+        confidence: Math.min(85, 60 + (flowAmountUsd / 500000)),
+        reasoning: `${walletType} ${flowDirection} of $${(flowAmountUsd / 1000000).toFixed(1)}M detected`,
+        urgency_seconds: 300
+      } : undefined
+    });
+  }
+
+  /**
+   * Generate a momentum shift signal with technical indicators
+   */
+  emitMomentumWithIndicators(
+    symbol: string,
+    trend: 'bullish' | 'bearish' | 'neutral',
+    strength: number,
+    rsi: number,
+    macd: { value: number; signal: number; histogram: number }
+  ): TradingSignal {
+    let priority: SignalPriority = 'low';
+    if (strength >= 80) priority = 'critical';
+    else if (strength >= 60) priority = 'high';
+    else if (strength >= 40) priority = 'medium';
+    
+    const oversold = rsi < INDICATOR_THRESHOLDS.RSI_OVERSOLD;
+    const overbought = rsi > INDICATOR_THRESHOLDS.RSI_OVERBOUGHT;
+    
+    return this.emitSignal({
+      type: 'momentum_shift',
+      priority,
+      asset: { symbol },
+      data: {
+        trend_direction: trend,
+        strength,
+        rsi,
+        macd,
+        timeframe: '1h'
+      },
+      recommendation: {
+        action: oversold ? 'buy' : overbought ? 'sell' : trend === 'bullish' ? 'buy' : 'sell',
+        confidence: Math.min(90, strength + (oversold || overbought ? 15 : 0)),
+        reasoning: `${trend} momentum (${strength}%), RSI: ${rsi.toFixed(0)}${oversold ? ' OVERSOLD' : overbought ? ' OVERBOUGHT' : ''}`,
+        urgency_seconds: strength >= 70 ? 60 : 300
       }
     });
   }
