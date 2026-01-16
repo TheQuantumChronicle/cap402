@@ -63,19 +63,36 @@ const TOKEN_MINTS: Record<string, string> = {
 };
 
 class WhaleTrackerService {
-  private heliusApiKey: string;
+  private heliusApiKeys: string[];
+  private currentHeliusKeyIndex: number = 0;
   private nansenApiKeys: string[];
   private currentNansenKeyIndex: number = 0;
   private cache: Map<string, { data: any; timestamp: number }> = new Map();
   private cacheTTL = 60000; // 1 minute cache
 
   constructor() {
-    this.heliusApiKey = process.env.HELIUS_API_KEY || '';
+    // Load all Helius API keys for rotation
+    this.heliusApiKeys = [
+      process.env.HELIUS_API_KEY || '',
+      process.env.HELIUS_API_KEY_2 || '',
+      process.env.HELIUS_API_KEY_3 || '',
+    ].filter(k => k.length > 0);
+    
+    // Load all Nansen API keys for rotation
     this.nansenApiKeys = [
       process.env.NANSEN_API_KEY || '',
       process.env.NANSEN_API_KEY_2 || '',
       process.env.NANSEN_API_KEY_3 || '',
     ].filter(k => k.length > 0);
+    
+    console.log(`🐋 Whale Tracker initialized with ${this.heliusApiKeys.length} Helius keys, ${this.nansenApiKeys.length} Nansen keys`);
+  }
+
+  private getHeliusApiKey(): string {
+    if (this.heliusApiKeys.length === 0) return '';
+    const key = this.heliusApiKeys[this.currentHeliusKeyIndex];
+    this.currentHeliusKeyIndex = (this.currentHeliusKeyIndex + 1) % this.heliusApiKeys.length;
+    return key;
   }
 
   private getNansenApiKey(): string | null {
@@ -177,7 +194,8 @@ class WhaleTrackerService {
    * Fetch large transactions from Helius
    */
   private async fetchLargeTransactions(minValueUsd: number, limit: number): Promise<any[]> {
-    if (!this.heliusApiKey) {
+    const heliusKey = this.getHeliusApiKey();
+    if (!heliusKey) {
       console.warn('No Helius API key configured');
       return [];
     }
@@ -191,7 +209,7 @@ class WhaleTrackerService {
           `https://api.helius.xyz/v0/addresses/${wallet}/transactions`,
           {
             params: {
-              'api-key': this.heliusApiKey,
+              'api-key': heliusKey,
               limit: 10,
               type: 'SWAP'
             },
@@ -210,7 +228,7 @@ class WhaleTrackerService {
     // Also get recent parsed transactions
     try {
       const response = await axios.post(
-        `https://api.helius.xyz/v0/transactions?api-key=${this.heliusApiKey}`,
+        `https://api.helius.xyz/v0/transactions?api-key=${heliusKey}`,
         {
           transactions: transactions.slice(0, 20).map(t => t.signature).filter(Boolean)
         },
