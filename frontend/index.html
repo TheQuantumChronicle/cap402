@@ -1017,70 +1017,71 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
       </div>
     </div>
     
-    <!-- New Features Grid -->
-    <div style="max-width: 900px; margin: 2rem auto 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-      <div style="background: linear-gradient(135deg, rgba(108,68,252,0.1) 0%, rgba(108,68,252,0.05) 100%); border: 1px solid rgba(108,68,252,0.3); border-radius: 8px; padding: 1.25rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span class="cap-icon icon-glow icon-pulse"><i data-lucide="users"></i></span>
-          <span style="font-weight: 600; color: var(--text-primary);">Agent-to-Agent Trading</span>
-          <span style="font-size: 0.6rem; padding: 0.15rem 0.4rem; background: var(--arcium-purple); color: white; border-radius: 4px;">NEW</span>
+    <!-- Compact Features + Agents Row -->
+    <div style="max-width: 900px; margin: 2rem auto 0;">
+      <!-- Collapsible Features -->
+      <details class="features-accordion" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; margin-bottom: 1rem;">
+        <summary style="padding: 1rem 1.25rem; cursor: pointer; display: flex; align-items: center; gap: 1rem; list-style: none;">
+          <i data-lucide="sparkles" style="width: 18px; height: 18px; color: var(--arcium-purple);"></i>
+          <span style="font-weight: 600; color: var(--text-primary); flex: 1;">SDK Features</span>
+          <span style="display: flex; gap: 0.5rem; align-items: center;">
+            <span style="font-size: 0.6rem; padding: 0.15rem 0.4rem; background: var(--arcium-purple); color: white; border-radius: 4px;">A2A</span>
+            <span style="font-size: 0.6rem; padding: 0.15rem 0.4rem; background: #22c55e; color: white; border-radius: 4px;">Alpha</span>
+            <span style="font-size: 0.6rem; padding: 0.15rem 0.4rem; background: var(--border-subtle); color: var(--text-secondary); border-radius: 4px;">+4 more</span>
+          </span>
+          <i data-lucide="chevron-down" class="accordion-chevron" style="width: 16px; height: 16px; color: var(--text-muted); transition: transform 0.2s;"></i>
+        </summary>
+        <div style="padding: 0 1.25rem 1.25rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: rgba(108,68,252,0.1); border-radius: 6px;">
+            <i data-lucide="users" style="width: 14px; height: 14px; color: var(--arcium-purple);"></i>
+            <span style="font-size: 0.75rem; color: var(--text-primary);">A2A Trading</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: rgba(34,197,94,0.1); border-radius: 6px;">
+            <i data-lucide="crosshair" style="width: 14px; height: 14px; color: #22c55e;"></i>
+            <span style="font-size: 0.75rem; color: var(--text-primary);">Alpha Detection</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--bg-elevated); border-radius: 6px;">
+            <i data-lucide="lock" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+            <span style="font-size: 0.75rem; color: var(--text-primary);">Encrypted Comms</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--bg-elevated); border-radius: 6px;">
+            <i data-lucide="globe" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+            <span style="font-size: 0.75rem; color: var(--text-primary);">Cross-Protocol</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--bg-elevated); border-radius: 6px;">
+            <i data-lucide="zap" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+            <span style="font-size: 0.75rem; color: var(--text-primary);">Fault Tolerance</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--bg-elevated); border-radius: 6px;">
+            <i data-lucide="file-text" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+            <span style="font-size: 0.75rem; color: var(--text-primary);">Human Summaries</span>
+          </div>
         </div>
-        <span style="font-size: 0.8rem; color: var(--text-secondary);">Trade directly with other agents. Auctions, swarms, and encrypted negotiations.</span>
-      </div>
-      <div style="background: linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(34,197,94,0.05) 100%); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 1.25rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span class="cap-icon icon-green icon-glow icon-pulse"><i data-lucide="crosshair"></i></span>
-          <span style="font-weight: 600; color: var(--text-primary);">Alpha Detection</span>
-          <span style="font-size: 0.6rem; padding: 0.15rem 0.4rem; background: #22c55e; color: white; border-radius: 4px;">NEW</span>
+      </details>
+      
+      <!-- Agent Templates - Compact Horizontal -->
+      <div style="display: flex; gap: 0.75rem; justify-content: center;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+          <i data-lucide="trending-up" style="width: 18px; height: 18px; color: var(--arcium-purple);"></i>
+          <div>
+            <span style="font-weight: 500; color: var(--text-primary); font-size: 0.85rem; display: block;">Trading</span>
+            <span style="font-size: 0.65rem; color: var(--text-muted);">Signals • MEV • A2A</span>
+          </div>
         </div>
-        <span style="font-size: 0.8rem; color: var(--text-secondary);">Momentum, reversals, breakouts with entry/target/stop-loss prices.</span>
-      </div>
-      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span class="cap-icon icon-glow"><i data-lucide="lock"></i></span>
-          <span style="font-weight: 600; color: var(--text-primary);">Secure Communication</span>
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+          <i data-lucide="eye" style="width: 18px; height: 18px; color: var(--arcium-purple);"></i>
+          <div>
+            <span style="font-weight: 500; color: var(--text-primary); font-size: 0.85rem; display: block;">Monitoring</span>
+            <span style="font-size: 0.65rem; color: var(--text-muted);">Wallets • Alerts</span>
+          </div>
         </div>
-        <span style="font-size: 0.8rem; color: var(--text-secondary);">Encrypted A2A messaging with privacy levels: public, confidential, private, maximum.</span>
-      </div>
-      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span class="cap-icon icon-glow"><i data-lucide="globe"></i></span>
-          <span style="font-weight: 600; color: var(--text-primary);">Cross-Protocol</span>
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+          <i data-lucide="bar-chart-3" style="width: 18px; height: 18px; color: var(--arcium-purple);"></i>
+          <div>
+            <span style="font-weight: 500; color: var(--text-primary); font-size: 0.85rem; display: block;">Analytics</span>
+            <span style="font-size: 0.65rem; color: var(--text-muted);">Reports • Data</span>
+          </div>
         </div>
-        <span style="font-size: 0.8rem; color: var(--text-secondary);">Interop with Google A2A, MCP, and custom protocols.</span>
-      </div>
-      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span class="cap-icon icon-glow"><i data-lucide="zap"></i></span>
-          <span style="font-weight: 600; color: var(--text-primary);">Fault Tolerance</span>
-        </div>
-        <span style="font-size: 0.8rem; color: var(--text-secondary);">Retries, circuit breakers, fallback agents, exponential backoff.</span>
-      </div>
-      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-          <span class="cap-icon icon-glow"><i data-lucide="file-text"></i></span>
-          <span style="font-weight: 600; color: var(--text-primary);">Human-Readable Summaries</span>
-        </div>
-        <span style="font-size: 0.8rem; color: var(--text-secondary);">Every transaction includes headline, details, warnings, and confidence score.</span>
-      </div>
-    </div>
-    
-    <!-- Agent Templates -->
-    <div style="max-width: 900px; margin: 2rem auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; text-align: center;">
-        <span class="cap-icon icon-lg icon-glow" style="margin: 0 auto 0.75rem;"><i data-lucide="trending-up"></i></span>
-        <span style="font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Trading Agent</span>
-        <span style="font-size: 0.75rem; color: var(--text-secondary);">Price monitoring, signals, MEV protection, A2A trading</span>
-      </div>
-      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; text-align: center;">
-        <span class="cap-icon icon-lg icon-glow" style="margin: 0 auto 0.75rem;"><i data-lucide="eye"></i></span>
-        <span style="font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Monitoring Agent</span>
-        <span style="font-size: 0.75rem; color: var(--text-secondary);">Wallet tracking, alerts, protocol health</span>
-      </div>
-      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; text-align: center;">
-        <span class="cap-icon icon-lg icon-glow" style="margin: 0 auto 0.75rem;"><i data-lucide="bar-chart-3"></i></span>
-        <span style="font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Analytics Agent</span>
-        <span style="font-size: 0.75rem; color: var(--text-secondary);">Data collection, reports, correlations</span>
       </div>
     </div>
     
@@ -1169,6 +1170,11 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
       border-color: var(--arcium-purple);
       color: var(--text-primary);
     }
+    
+    /* Accordion styles */
+    .features-accordion summary::-webkit-details-marker { display: none; }
+    .features-accordion[open] .accordion-chevron { transform: rotate(180deg); }
+    .features-accordion summary:hover { background: var(--bg-elevated); }
     .playground-btn.active {
       background: rgba(108,68,252,0.15);
       border-color: var(--arcium-purple);

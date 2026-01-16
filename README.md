@@ -978,44 +978,27 @@ CAP-402 | Agent Infrastructure Standard | v0.1.0
 
 ## 📋 Recent Updates
 
-### Latest (Jan 15, 2026) — Comprehensive Observability & Provider Stats 📊
+### Latest (Jan 16, 2026) — SDK Cleanup & Documentation
 
-**🔍 New Observability Endpoints:**
+**SDK Improvements:**
+- Consolidated constants into `sdk/constants.ts` (router URL, timeouts, rate limits)
+- Replaced `any` types with proper TypeScript types
+- Added one-liner verification tests (8 tests)
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /health/providers` | Status of all 6 providers (swap, inco_fhe, arcium_cspl, price, helius_das, noir_circuits) |
-| `GET /router/stats` | Router internal stats (circuit breakers, queues, memory pressure) |
-| `GET /activity/stats` | Activity feed statistics with event breakdowns |
-| `GET /chain/usage-stats` | Usage signal statistics with top capabilities |
-| `GET /diagnostics` | Complete system diagnostics in one call |
-| `POST /capabilities/batch` | Batch lookup of multiple capabilities |
-| `GET /system/overview` | Comprehensive system status |
+**Documentation:**
+- Added "Common Use Cases" quick reference to API docs
+- Added "Why Use Agents?" and "When to Use What" sections to SDK docs
+- Replaced all emojis with Lucide icons in frontend
 
-**📈 Provider Stats Tracking:**
-- ✅ **Swap Provider**: Quote/swap counts, cache size, error tracking
-- ✅ **Price Provider**: Cache hit rate, request counts, fallback usage
-- ✅ **Inco FHE Provider**: Operation count, mode (live/simulation)
-- ✅ **Arcium CSPL Provider**: Transfer/wrap/swap counts, cache stats
-- ✅ **Helius DAS Provider**: Query counts by type (asset, owner, creator)
-- ✅ **Noir Circuits Provider**: Proof generation/verification counts
-
-**🧪 Test Coverage:**
+**Test Coverage:**
 ```
-Test Suites: 16 passed, 16 total
-Tests:       306 passed, 306 total
+Test Suites: 18 passed, 18 total
+Tests:       365 passed, 365 total
 ```
-
-**🔧 Core Module Stats:**
-- Router: Circuit breakers, active requests, queue length, memory pressure
-- Activity Feed: Events by type, hourly/daily breakdowns
-- Usage Signal: Success rates, costs, top capabilities
-- Cache: Hit rate, evictions, size tracking
-- Rate Limiter: Rejection rate, load factor
 
 ---
 
-### Previous (Jan 14, 2026) — Infrastructure & Performance Upgrades 🚀
+### Previous (Jan 15, 2026) — Observability & Provider Stats
 
 **⚡ Performance Optimizations:**
 - ✅ **Request Coalescing**: Duplicate in-flight requests share the same promise (2+ requests → 1 API call)
