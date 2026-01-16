@@ -53,6 +53,112 @@ export function quickTrader(
 }
 
 /**
+ * Ultra-simple trading agent - just pass tokens
+ * Starts automatically and emits events
+ * 
+ * @example
+ * const agent = await autoTrader(['SOL', 'ETH']);
+ * agent.on('signal', console.log);
+ * agent.on('alpha', console.log);
+ */
+export async function autoTrader(
+  tokens: string[],
+  options?: { onSignal?: (signal: any) => void; onAlpha?: (alpha: any) => void }
+): Promise<import('./trading-agent').TradingAgent> {
+  const trader = quickTrader(tokens);
+  
+  if (options?.onSignal) {
+    trader.on('signal', options.onSignal);
+  }
+  if (options?.onAlpha) {
+    trader.on('alpha', options.onAlpha);
+  }
+  
+  await trader.start();
+  return trader;
+}
+
+/**
+ * One-liner to prepare a swap transaction
+ * No agent setup required
+ * 
+ * @example
+ * const tx = await prepareSwap('SOL', 'USDC', 10);
+ * // tx.summary.headline = "Swap 10 SOL → ~1,433 USDC"
+ */
+export async function prepareSwap(
+  tokenIn: string,
+  tokenOut: string,
+  amount: number,
+  options?: { slippageBps?: number }
+): Promise<import('./trading-agent').PreparedTransaction> {
+  const trader = quickTrader([tokenIn, tokenOut]);
+  return trader.prepareSwap(tokenIn, tokenOut, amount, {
+    slippage_bps: options?.slippageBps ?? 50
+  });
+}
+
+/**
+ * One-liner to get best execution route
+ * Compares DEX vs A2A automatically
+ * 
+ * @example
+ * const result = await bestSwap('SOL', 'USDC', 100);
+ * console.log(result.route); // 'dex' or 'a2a'
+ */
+export async function bestSwap(
+  tokenIn: string,
+  tokenOut: string,
+  amount: number
+): Promise<{
+  route: 'dex' | 'a2a' | 'auction' | 'swarm';
+  result: any;
+  savings_vs_dex?: number;
+  execution_summary: string;
+}> {
+  const trader = quickTrader([tokenIn, tokenOut]);
+  return trader.smartSwap(tokenIn, tokenOut, amount);
+}
+
+/**
+ * One-liner to detect alpha signals
+ * 
+ * @example
+ * const signals = await findAlpha(['SOL', 'ETH', 'BTC']);
+ * signals.forEach(s => console.log(s.token, s.direction));
+ */
+export async function findAlpha(
+  tokens: string[]
+): Promise<import('./trading-agent').AlphaSignal[]> {
+  const trader = quickTrader(tokens);
+  await trader.start();
+  
+  // Wait for price data
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  const signals = await trader.detectAlpha();
+  await trader.stop();
+  
+  return signals;
+}
+
+/**
+ * One-liner to find A2A trading partners
+ * 
+ * @example
+ * const partners = await findPartners('SOL', 'USDC', 100);
+ * console.log(`Best offer: ${partners[0]?.quote.amount_out}`);
+ */
+export async function findPartners(
+  tokenIn: string,
+  tokenOut: string,
+  amount: number
+): Promise<import('./trading-agent').A2ATradingPartner[]> {
+  const trader = quickTrader([tokenIn, tokenOut]);
+  return trader.findTradingPartners(tokenIn, tokenOut, amount);
+}
+
+/**
  * Create a monitoring agent with minimal config
  * @example const monitor = quickMonitor(['wallet-address']);
  */
