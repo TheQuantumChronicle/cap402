@@ -37,6 +37,9 @@
   <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
   <link rel="shortcut icon" type="image/x-icon" href="/public/favicon.ico">
   
+  <!-- Preload critical images for faster loading -->
+  <link rel="preload" href="/public/CAP402logo.png" as="image" type="image/png">
+  
   <!-- Theme Color -->
   <meta name="theme-color" content="#050508">
   <meta name="msapplication-TileColor" content="#050508">
@@ -697,7 +700,7 @@
       </p>
       
       <div class="hero-actions">
-        <a href="#start" class="btn-primary">Build</a>
+        <a href="/docs" class="btn-primary">Build</a>
         <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" class="btn-secondary">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
           GitHub
@@ -1001,29 +1004,16 @@
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer style="padding: 4vh 6vw; border-top: 1px solid var(--border-subtle); text-align: center;">
-    <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem;">
-      <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" style="color: var(--text-muted); font-size: 0.85rem;">GitHub</a>
-      <a href="https://arcium.com" target="_blank" style="color: var(--text-muted); font-size: 0.85rem;">Arcium</a>
-      <a href="https://noir-lang.org" target="_blank" style="color: var(--text-muted); font-size: 0.85rem;">Noir</a>
-      <a href="https://inco.org" target="_blank" style="color: var(--text-muted); font-size: 0.85rem;">Inco</a>
-      <a href="https://helius.dev" target="_blank" style="color: var(--text-muted); font-size: 0.85rem;">Helius</a>
-    </div>
-    <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1rem;">
-      <span>Status: v1.0 — Production Ready</span>
-      <span>Tests: 306 passing</span>
-      <span>Endpoints: 75+</span>
-      <span>Network: Solana</span>
-      <span>License: MIT</span>
-    </div>
-    
-    <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; opacity: 0.5;">
-      <span style="font-size: 0.7rem; color: var(--text-muted);">Built by</span>
-      <a href="https://x.com/IntymLabs" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 0.3rem; text-decoration: none;">
-        <img src="/public/intymlogo.png" alt="Intym Labs" style="height: 14px; width: auto; opacity: 0.8;">
-        <span style="font-size: 0.7rem; color: var(--text-secondary);">Intym Labs</span>
-      </a>
+  <!-- Footer - Compact -->
+  <footer style="padding: 1.5rem 6vw; border-top: 1px solid var(--border-subtle); text-align: center;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 1.5rem; flex-wrap: wrap; font-size: 0.7rem; color: var(--text-muted);">
+      <span>CAP-402 v1.0</span>
+      <span>•</span>
+      <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" style="color: var(--text-muted);">GitHub</a>
+      <span>•</span>
+      <span>MIT License</span>
+      <span>•</span>
+      <a href="https://x.com/IntymLabs" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted);">Intym Labs</a>
     </div>
   </footer>
 
@@ -1185,7 +1175,8 @@
     
     /* Responsive nav */
     @media (max-width: 768px) {
-      .nav-links { display: none; }
+      .nav-links a:not([href="/docs"]) { display: none; }
+      .nav-links { gap: 0.5rem; }
       .stats-row { gap: 2rem; }
       
       .infrastructure-logos {
