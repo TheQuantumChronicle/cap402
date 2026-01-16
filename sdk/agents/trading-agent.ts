@@ -615,6 +615,54 @@ export class TradingAgent extends EventEmitter {
     if (amount > 1e15) {
       throw new Error(`${label} exceeds maximum allowed value`);
     }
+    if (!Number.isFinite(amount)) {
+      throw new Error(`${label} must be a finite number`);
+    }
+  }
+
+  /**
+   * Validate price to prevent manipulation attacks
+   */
+  private validatePrice(price: number, token: string): void {
+    if (typeof price !== 'number' || isNaN(price) || !Number.isFinite(price)) {
+      throw new Error(`Invalid price for ${token}`);
+    }
+    if (price <= 0) {
+      throw new Error(`Price for ${token} must be positive`);
+    }
+    if (price > 1e12) {
+      throw new Error(`Price for ${token} exceeds reasonable bounds`);
+    }
+  }
+
+  /**
+   * Check for suspicious price movements (potential manipulation)
+   */
+  private checkPriceManipulation(token: string, newPrice: number): boolean {
+    const oldPrice = this.prices.get(token)?.price;
+    if (!oldPrice) return false;
+
+    const changePercent = Math.abs((newPrice - oldPrice) / oldPrice) * 100;
+    
+    // Alert on >20% price change in single update (potential manipulation)
+    if (changePercent > 20) {
+      console.warn(`⚠️ SUSPICIOUS: ${token} price changed ${changePercent.toFixed(1)}% in single update`);
+      this.emit('price_manipulation_warning', { token, oldPrice, newPrice, changePercent });
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Validate slippage to prevent sandwich attacks
+   */
+  private validateSlippage(slippageBps: number): void {
+    if (slippageBps < 1) {
+      throw new Error('Slippage too low - trade may fail');
+    }
+    if (slippageBps > 1000) {
+      throw new Error('Slippage too high (>10%) - vulnerable to sandwich attacks');
+    }
   }
 
   private validateAgentId(agentId: string): void {
@@ -853,9 +901,40 @@ export class TradingAgent extends EventEmitter {
     console.log('\n🛑 Stopping Trading Agent...');
     this.isRunning = false;
 
+    // Clear all timers to prevent memory leaks
     if (this.priceCheckTimer) {
       clearInterval(this.priceCheckTimer);
+      this.priceCheckTimer = undefined;
     }
+
+    if (this.orderCheckTimer) {
+      clearInterval(this.orderCheckTimer);
+      this.orderCheckTimer = undefined;
+    }
+
+    // Stop background refresh
+    this.stopBackgroundRefresh();
+
+    // Stop all DCA timers
+    for (const [scheduleId, timer] of this.dcaTimers) {
+      clearInterval(timer);
+    }
+    this.dcaTimers.clear();
+
+    // Cancel all active DCA schedules
+    for (const schedule of this.dcaSchedules.values()) {
+      if (schedule.status === 'active') {
+        schedule.status = 'cancelled';
+      }
+    }
+
+    // Clear caches to free memory
+    this.routeCache.clear();
+    this.priceCache.clear();
+    this.connectionPool.clear();
+
+    // Remove all event listeners to prevent memory leaks
+    this.removeAllListeners();
 
     // Print final stats
     this.printStats();
