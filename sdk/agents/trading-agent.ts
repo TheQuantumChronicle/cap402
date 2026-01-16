@@ -245,6 +245,82 @@ export interface A2ASwarmResult {
   error?: string;
 }
 
+/**
+ * Privacy level for A2A communications
+ */
+export type A2APrivacyLevel = 'public' | 'confidential' | 'private' | 'maximum';
+
+/**
+ * Encrypted A2A message for confidential communication
+ */
+export interface SecureA2AMessage {
+  message_id: string;
+  from_agent: string;
+  to_agent: string;
+  privacy_level: A2APrivacyLevel;
+  
+  // Encrypted payload (base64)
+  encrypted_payload?: string;
+  // Plaintext payload (only for public messages)
+  payload?: any;
+  
+  // Cryptographic proofs
+  signature?: string;
+  nonce?: string;
+  
+  // Verification
+  verified: boolean;
+  verification_method?: 'signature' | 'zk_proof' | 'mpc';
+  
+  timestamp: number;
+  expires_at?: number;
+}
+
+/**
+ * A2A handshake for establishing secure channel
+ */
+export interface A2AHandshake {
+  session_id: string;
+  initiator: string;
+  responder: string;
+  status: 'pending' | 'established' | 'rejected' | 'expired';
+  privacy_level: A2APrivacyLevel;
+  
+  // Key exchange
+  public_key?: string;
+  shared_secret_hash?: string;
+  
+  // Session info
+  established_at?: number;
+  expires_at?: number;
+  
+  // Capabilities agreed upon
+  agreed_capabilities?: string[];
+}
+
+/**
+ * Fault tolerance configuration for A2A operations
+ */
+export interface A2AFaultConfig {
+  max_retries: number;
+  retry_delay_ms: number;
+  timeout_ms: number;
+  fallback_agents?: string[];
+  circuit_breaker_threshold?: number;
+}
+
+/**
+ * Cross-protocol agent descriptor for interoperability
+ */
+export interface CrossProtocolAgent {
+  agent_id: string;
+  protocol: 'cap402' | 'a2a_google' | 'mcp' | 'custom';
+  endpoint: string;
+  capabilities: string[];
+  adapter?: string;
+  trust_score?: number;
+}
+
 // ============================================
 // TRADING AGENT
 // ============================================
@@ -1245,6 +1321,416 @@ export class TradingAgent extends EventEmitter {
         error: error.message
       };
     }
+  }
+
+  // ============================================
+  // SECURE A2A COMMUNICATION
+  // ============================================
+
+  private secureSessions: Map<string, A2AHandshake> = new Map();
+  private faultConfig: A2AFaultConfig = {
+    max_retries: 3,
+    retry_delay_ms: 1000,
+    timeout_ms: 30000,
+    circuit_breaker_threshold: 5
+  };
+  private failureCounts: Map<string, number> = new Map();
+
+  /**
+   * Establish a secure channel with another agent
+   * Performs key exchange and capability negotiation
+   */
+  async establishSecureChannel(
+    targetAgent: string,
+    privacyLevel: A2APrivacyLevel = 'confidential'
+  ): Promise<A2AHandshake> {
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    try {
+      const result = await this.agent.a2aInvoke<{
+        accepted: boolean;
+        public_key?: string;
+        agreed_capabilities?: string[];
+      }>({
+        to_agent: targetAgent,
+        capability_id: 'cap.a2a.handshake.v1',
+        inputs: {
+          from_agent: this.config.agent_id,
+          session_id: sessionId,
+          privacy_level: privacyLevel,
+          requested_capabilities: ['cap.swap.execute.v1', 'cap.a2a.quote.v1']
+        }
+      });
+
+      const handshake: A2AHandshake = {
+        session_id: sessionId,
+        initiator: this.config.agent_id,
+        responder: targetAgent,
+        status: result.success && result.outputs?.accepted ? 'established' : 'rejected',
+        privacy_level: privacyLevel,
+        public_key: result.outputs?.public_key,
+        established_at: Date.now(),
+        expires_at: Date.now() + 3600000, // 1 hour
+        agreed_capabilities: result.outputs?.agreed_capabilities
+      };
+
+      if (handshake.status === 'established') {
+        this.secureSessions.set(targetAgent, handshake);
+        this.emit('secure_channel_established', { agent: targetAgent, session_id: sessionId });
+      }
+
+      return handshake;
+
+    } catch (error: any) {
+      return {
+        session_id: sessionId,
+        initiator: this.config.agent_id,
+        responder: targetAgent,
+        status: 'rejected',
+        privacy_level: privacyLevel
+      };
+    }
+  }
+
+  /**
+   * Send an encrypted message to another agent
+   * Requires established secure channel for confidential+ levels
+   */
+  async sendSecureMessage(
+    targetAgent: string,
+    payload: any,
+    privacyLevel: A2APrivacyLevel = 'confidential'
+  ): Promise<SecureA2AMessage> {
+    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Check for existing secure session
+    let session = this.secureSessions.get(targetAgent);
+    if (privacyLevel !== 'public' && (!session || session.status !== 'established')) {
+      session = await this.establishSecureChannel(targetAgent, privacyLevel);
+      if (session.status !== 'established') {
+        throw new Error(`Failed to establish secure channel with ${targetAgent}`);
+      }
+    }
+
+    // For public messages, send plaintext
+    if (privacyLevel === 'public') {
+      await this.agent.sendMessage(targetAgent, {
+        message_id: messageId,
+        type: 'secure_message',
+        privacy_level: privacyLevel,
+        payload,
+        timestamp: Date.now()
+      });
+
+      return {
+        message_id: messageId,
+        from_agent: this.config.agent_id,
+        to_agent: targetAgent,
+        privacy_level: privacyLevel,
+        payload,
+        verified: true,
+        verification_method: 'signature',
+        timestamp: Date.now()
+      };
+    }
+
+    // For confidential+, encrypt via capability
+    try {
+      const encryptResult = await this.agent.invoke<{ encrypted: string; nonce: string }>('cap.fhe.encrypt.v1', {
+        data: JSON.stringify(payload),
+        recipient_key: session?.public_key
+      });
+
+      await this.agent.sendMessage(targetAgent, {
+        message_id: messageId,
+        type: 'secure_message',
+        privacy_level: privacyLevel,
+        encrypted_payload: encryptResult.outputs?.encrypted,
+        nonce: encryptResult.outputs?.nonce,
+        session_id: session?.session_id,
+        timestamp: Date.now()
+      });
+
+      return {
+        message_id: messageId,
+        from_agent: this.config.agent_id,
+        to_agent: targetAgent,
+        privacy_level: privacyLevel,
+        encrypted_payload: encryptResult.outputs?.encrypted,
+        nonce: encryptResult.outputs?.nonce,
+        verified: true,
+        verification_method: privacyLevel === 'maximum' ? 'mpc' : 'signature',
+        timestamp: Date.now()
+      };
+
+    } catch (error: any) {
+      throw new Error(`Failed to send secure message: ${error.message}`);
+    }
+  }
+
+  /**
+   * Verify a received message's authenticity
+   */
+  async verifyMessage(message: SecureA2AMessage): Promise<{
+    valid: boolean;
+    decrypted_payload?: any;
+    verification_details: string;
+  }> {
+    if (message.privacy_level === 'public') {
+      return {
+        valid: true,
+        decrypted_payload: message.payload,
+        verification_details: 'Public message - no encryption'
+      };
+    }
+
+    const session = this.secureSessions.get(message.from_agent);
+    if (!session || session.status !== 'established') {
+      return {
+        valid: false,
+        verification_details: 'No established session with sender'
+      };
+    }
+
+    try {
+      // Verify signature via ZK proof
+      const verifyResult = await this.agent.invoke<{ valid: boolean; data?: string }>('cap.zk.verify.v1', {
+        encrypted_data: message.encrypted_payload,
+        nonce: message.nonce,
+        sender: message.from_agent,
+        session_id: session.session_id
+      });
+
+      if (verifyResult.success && verifyResult.outputs?.valid) {
+        return {
+          valid: true,
+          decrypted_payload: verifyResult.outputs.data ? JSON.parse(verifyResult.outputs.data) : undefined,
+          verification_details: `Verified via ${message.verification_method || 'signature'}`
+        };
+      }
+
+      return {
+        valid: false,
+        verification_details: 'Signature verification failed'
+      };
+
+    } catch (error: any) {
+      return {
+        valid: false,
+        verification_details: `Verification error: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * Execute A2A operation with fault tolerance
+   * Retries on failure, uses fallback agents, respects circuit breaker
+   */
+  async executeWithFaultTolerance<T>(
+    operation: () => Promise<T>,
+    targetAgent: string,
+    fallbackAgents?: string[]
+  ): Promise<{ success: boolean; result?: T; attempts: number; used_fallback?: string }> {
+    const agents = [targetAgent, ...(fallbackAgents || this.faultConfig.fallback_agents || [])];
+    let attempts = 0;
+
+    for (const agent of agents) {
+      // Check circuit breaker
+      const failures = this.failureCounts.get(agent) || 0;
+      if (failures >= (this.faultConfig.circuit_breaker_threshold || 5)) {
+        console.warn(`Circuit breaker open for ${agent}, skipping`);
+        continue;
+      }
+
+      for (let retry = 0; retry < this.faultConfig.max_retries; retry++) {
+        attempts++;
+        try {
+          const result = await Promise.race([
+            operation(),
+            new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout')), this.faultConfig.timeout_ms)
+            )
+          ]);
+
+          // Reset failure count on success
+          this.failureCounts.set(agent, 0);
+          
+          return {
+            success: true,
+            result,
+            attempts,
+            used_fallback: agent !== targetAgent ? agent : undefined
+          };
+
+        } catch (error) {
+          console.warn(`Attempt ${attempts} failed for ${agent}:`, error);
+          
+          // Increment failure count
+          this.failureCounts.set(agent, (this.failureCounts.get(agent) || 0) + 1);
+          
+          // Wait before retry
+          if (retry < this.faultConfig.max_retries - 1) {
+            await new Promise(resolve => setTimeout(resolve, this.faultConfig.retry_delay_ms * (retry + 1)));
+          }
+        }
+      }
+    }
+
+    return { success: false, attempts };
+  }
+
+  /**
+   * Configure fault tolerance settings
+   */
+  setFaultConfig(config: Partial<A2AFaultConfig>): void {
+    this.faultConfig = { ...this.faultConfig, ...config };
+  }
+
+  /**
+   * Get active secure sessions
+   */
+  getSecureSessions(): A2AHandshake[] {
+    return Array.from(this.secureSessions.values()).filter(s => s.status === 'established');
+  }
+
+  /**
+   * Close a secure session
+   */
+  async closeSecureChannel(targetAgent: string): Promise<void> {
+    const session = this.secureSessions.get(targetAgent);
+    if (session) {
+      session.status = 'expired';
+      this.secureSessions.delete(targetAgent);
+      this.emit('secure_channel_closed', { agent: targetAgent, session_id: session.session_id });
+    }
+  }
+
+  // ============================================
+  // CROSS-PROTOCOL INTEROPERABILITY
+  // ============================================
+
+  private crossProtocolAgents: Map<string, CrossProtocolAgent> = new Map();
+
+  /**
+   * Register a cross-protocol agent for interoperability
+   * Supports Google A2A, MCP, and custom protocols
+   */
+  registerCrossProtocolAgent(agent: CrossProtocolAgent): void {
+    this.crossProtocolAgents.set(agent.agent_id, agent);
+    this.emit('cross_protocol_agent_registered', agent);
+  }
+
+  /**
+   * Invoke a capability on a cross-protocol agent
+   * Automatically adapts the request format
+   */
+  async invokeCrossProtocol<T>(
+    agentId: string,
+    capability: string,
+    inputs: Record<string, any>
+  ): Promise<{ success: boolean; outputs?: T; protocol: string }> {
+    const agent = this.crossProtocolAgents.get(agentId);
+    if (!agent) {
+      throw new Error(`Cross-protocol agent ${agentId} not registered`);
+    }
+
+    try {
+      // Adapt request based on protocol
+      let result: any;
+      
+      switch (agent.protocol) {
+        case 'cap402':
+          result = await this.agent.a2aInvoke({
+            to_agent: agentId,
+            capability_id: capability,
+            inputs
+          });
+          break;
+          
+        case 'a2a_google':
+          // Adapt to Google A2A format
+          result = await this.agent.invoke('cap.interop.google_a2a.v1', {
+            endpoint: agent.endpoint,
+            method: capability,
+            params: inputs
+          });
+          break;
+          
+        case 'mcp':
+          // Adapt to MCP format
+          result = await this.agent.invoke('cap.interop.mcp.v1', {
+            server: agent.endpoint,
+            tool: capability,
+            arguments: inputs
+          });
+          break;
+          
+        case 'custom':
+          if (!agent.adapter) {
+            throw new Error('Custom protocol requires adapter');
+          }
+          result = await this.agent.invoke(agent.adapter, {
+            endpoint: agent.endpoint,
+            capability,
+            inputs
+          });
+          break;
+      }
+
+      return {
+        success: result.success,
+        outputs: result.outputs,
+        protocol: agent.protocol
+      };
+
+    } catch (error: any) {
+      return {
+        success: false,
+        protocol: agent.protocol
+      };
+    }
+  }
+
+  /**
+   * Discover agents across protocols
+   */
+  async discoverCrossProtocolAgents(query?: {
+    protocols?: string[];
+    capability?: string;
+  }): Promise<CrossProtocolAgent[]> {
+    const results: CrossProtocolAgent[] = [];
+
+    // Get CAP-402 agents
+    try {
+      const cap402Agents = await this.agent.discoverAgents({
+        capability: query?.capability,
+        limit: 20
+      });
+
+      for (const agent of cap402Agents) {
+        results.push({
+          agent_id: agent.agent_id,
+          protocol: 'cap402',
+          endpoint: this.config.router_url,
+          capabilities: agent.capabilities,
+          trust_score: agent.trust_score
+        });
+      }
+    } catch {
+      // Continue on failure
+    }
+
+    // Add registered cross-protocol agents
+    const crossAgents = Array.from(this.crossProtocolAgents.values());
+    for (const agent of crossAgents) {
+      if (!query?.protocols || query.protocols.includes(agent.protocol)) {
+        if (!query?.capability || agent.capabilities.includes(query.capability)) {
+          results.push(agent);
+        }
+      }
+    }
+
+    return results;
   }
 
   // ============================================

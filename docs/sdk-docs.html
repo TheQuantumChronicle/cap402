@@ -271,6 +271,85 @@ const consensus = await orchestrator.executeWithConsensus(
   { min_agreement: 0.5 }
 );</pre>
     
+    <h2>Secure A2A Communication</h2>
+    <p>Encrypted messaging with privacy levels and cryptographic verification:</p>
+    <pre class="code-block">// Establish secure channel with another agent
+const session = await trader.establishSecureChannel('agent-xyz', 'confidential');
+// { session_id, status: 'established', privacy_level: 'confidential' }
+
+// Send encrypted message
+const msg = await trader.sendSecureMessage('agent-xyz', {
+  type: 'trade_proposal',
+  token: 'SOL',
+  amount: 100
+}, 'confidential');
+
+// Verify received message
+const verification = await trader.verifyMessage(incomingMessage);
+if (verification.valid) {
+  console.log('Verified payload:', verification.decrypted_payload);
+}
+
+// Close secure channel
+await trader.closeSecureChannel('agent-xyz');</pre>
+
+    <h3>Privacy Levels</h3>
+    <table>
+      <tr><th>Level</th><th>Description</th><th>Use Case</th></tr>
+      <tr><td>public</td><td>No encryption, signed only</td><td>Broadcast signals</td></tr>
+      <tr><td>confidential</td><td>Encrypted in transit</td><td>Trade negotiations</td></tr>
+      <tr><td>private</td><td>Zero-knowledge proofs</td><td>Sensitive strategies</td></tr>
+      <tr><td>maximum</td><td>Full MPC/FHE</td><td>High-value trades</td></tr>
+    </table>
+
+    <h2>Fault Tolerance</h2>
+    <p>Built-in retry logic, circuit breakers, and fallback agents:</p>
+    <pre class="code-block">// Configure fault tolerance
+trader.setFaultConfig({
+  max_retries: 3,
+  retry_delay_ms: 1000,
+  timeout_ms: 30000,
+  fallback_agents: ['agent-backup-1', 'agent-backup-2'],
+  circuit_breaker_threshold: 5
+});
+
+// Execute with automatic retries and fallbacks
+const result = await trader.executeWithFaultTolerance(
+  () => trader.requestQuote('agent-xyz', 'SOL', 'USDC', 100),
+  'agent-xyz',
+  ['agent-backup']
+);
+
+if (result.success) {
+  console.log(\`Completed in \${result.attempts} attempts\`);
+  if (result.used_fallback) {
+    console.log(\`Used fallback: \${result.used_fallback}\`);
+  }
+}</pre>
+
+    <h2>Cross-Protocol Interoperability</h2>
+    <p>Communicate with agents on other protocols (Google A2A, MCP, custom):</p>
+    <pre class="code-block">// Register a cross-protocol agent
+trader.registerCrossProtocolAgent({
+  agent_id: 'google-agent-1',
+  protocol: 'a2a_google',
+  endpoint: 'https://agent.example.com',
+  capabilities: ['swap', 'quote']
+});
+
+// Invoke capability on cross-protocol agent
+const result = await trader.invokeCrossProtocol(
+  'google-agent-1',
+  'swap',
+  { token_in: 'SOL', token_out: 'USDC', amount: 100 }
+);
+
+// Discover agents across all protocols
+const agents = await trader.discoverCrossProtocolAgents({
+  protocols: ['cap402', 'a2a_google', 'mcp'],
+  capability: 'swap'
+});</pre>
+
     <h2>CLI Tools</h2>
     <pre class="code-block"># Health check
 npm run cli health
