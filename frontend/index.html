@@ -1502,8 +1502,14 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
 
     window.addEventListener('scroll', () => {
       const currentScrollY = window.scrollY;
+      const delta = Math.abs(currentScrollY - lastScrollY);
       scrollSpeed = currentScrollY - lastScrollY;
       lastScrollY = currentScrollY;
+      
+      // Update scroll glow for particle effect
+      if (typeof scrollGlow !== 'undefined') {
+        scrollGlow = Math.min(1, scrollGlow + delta * 0.015);
+      }
       
       const scrolled = window.scrollY;
       
@@ -1558,6 +1564,9 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
     window.addEventListener('resize', resize);
     resize();
 
+    // Scroll glow intensity (0-1) - uses existing lastScrollY from above
+    let scrollGlow = 0;
+
     class Particle {
       constructor() {
         this.reset();
@@ -1568,7 +1577,10 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
         this.vx = (Math.random() - 0.5) * 0.5;
         this.vy = (Math.random() - 0.5) * 0.5;
         this.size = Math.random() * 2;
-        this.alpha = Math.random() * 0.5;
+        this.baseAlpha = Math.random() * 0.5;
+        this.alpha = this.baseAlpha;
+        // Random color tint for glow effect
+        this.hue = Math.random() > 0.5 ? 270 : 320; // Purple or pink
       }
       update() {
         this.x += this.vx;
@@ -1576,8 +1588,28 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
         if (this.x < 0 || this.x > width) this.vx *= -1;
         if (this.y < 0) this.y = height;
         if (this.y > height) this.y = 0;
+        
+        // Boost alpha and size when scrolling
+        this.alpha = this.baseAlpha + (scrollGlow * 0.6);
+        this.glowSize = this.size + (scrollGlow * 3);
       }
       draw() {
+        // Draw glow layer when scrolling
+        if (scrollGlow > 0.05) {
+          const gradient = ctx.createRadialGradient(
+            this.x, this.y, 0,
+            this.x, this.y, this.glowSize * 4
+          );
+          gradient.addColorStop(0, `hsla(${this.hue}, 80%, 60%, ${scrollGlow * 0.4})`);
+          gradient.addColorStop(0.5, `hsla(${this.hue}, 80%, 50%, ${scrollGlow * 0.15})`);
+          gradient.addColorStop(1, 'transparent');
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.glowSize * 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        // Draw core particle
         ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -1592,6 +1624,8 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
       particles.forEach(p => { p.update(); p.draw(); });
       // Decay scroll speed effect
       scrollSpeed *= 0.9;
+      // Decay scroll glow smoothly
+      scrollGlow *= 0.96;
       requestAnimationFrame(animate);
     }
     animate();
