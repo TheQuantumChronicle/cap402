@@ -269,47 +269,6 @@
     └─────────────────────────────────────────────────────────────────────────┘
     </pre>
     
-    <h2>1. Introduction</h2>
-    <h3>1.1 The Agent Infrastructure Gap</h3>
-    <p>Current agent frameworks (AutoGPT, LangChain, CrewAI) focus on orchestration but lack standardized infrastructure for:</p>
-    <ul>
-      <li><strong>Capability Discovery</strong> — How does an agent find services that can fulfill its needs?</li>
-      <li><strong>Privacy Preservation</strong> — How can agents transact without exposing sensitive data?</li>
-      <li><strong>Economic Coordination</strong> — How do agents negotiate costs and verify execution?</li>
-      <li><strong>Trust Verification</strong> — How can agents verify the authenticity of other agents?</li>
-    </ul>
-    
-    <h3>1.2 CAP-402 Solution</h3>
-    <p>CAP-402 introduces a capability-centric protocol where:</p>
-    <ol>
-      <li>Agents describe <strong>what</strong> they need, not <strong>how</strong> to get it</li>
-      <li>Routers match requests to optimal providers</li>
-      <li>Privacy is configurable per-request (0-3 levels)</li>
-      <li>Execution produces cryptographic receipts</li>
-      <li>Economic hints enable cost optimization</li>
-    </ol>
-    
-    <h2>2. Core Concepts</h2>
-    <h3>2.1 Capabilities</h3>
-    <p>A capability is a semantic unit of functionality with a unique identifier:</p>
-    <pre class="code-block">{
-  "capability_id": "cap.price.lookup.v1",
-  "name": "Token Price Lookup",
-  "description": "Get current price for any token",
-  "inputs": { "base_token": "string", "quote_token": "string" },
-  "outputs": { "price": "number", "source": "string" },
-  "cost_hint": { "min": 0, "max": 0.001, "currency": "USD" }
-}</pre>
-    
-    <h3>2.2 Privacy Levels</h3>
-    <table>
-      <tr><th>Level</th><th>Name</th><th>Description</th></tr>
-      <tr><td>0</td><td>Public</td><td>No privacy, fastest execution</td></tr>
-      <tr><td>1</td><td>Confidential</td><td>Encrypted in transit</td></tr>
-      <tr><td>2</td><td>Private</td><td>Zero-knowledge proofs</td></tr>
-      <tr><td>3</td><td>Maximum</td><td>Full MPC/FHE computation</td></tr>
-    </table>
-    
     <h2 id="crypto">5. Cryptographic Foundation</h2>
     
     <!-- Privacy Stack Flow Diagram -->
@@ -366,7 +325,7 @@
     └─────────────────────────────────────────────────────────────────┘
     </pre>
     
-    <h3>3.1 Noir (Zero-Knowledge Proofs)</h3>
+    <h3>5.1 Noir (Zero-Knowledge Proofs)</h3>
     <p>Noir enables agents to prove statements without revealing underlying data:</p>
     <ul>
       <li>Balance proofs ("I have > $10K" without revealing exact amount)</li>
@@ -374,7 +333,7 @@
       <li>Trade execution proofs for audit trails</li>
     </ul>
     
-    <h3>3.2 Arcium (Confidential Computation)</h3>
+    <h3>5.2 Arcium (Confidential Computation)</h3>
     <p>Arcium provides MPC-based confidential computation:</p>
     <ul>
       <li>Confidential token swaps (cSPL tokens)</li>
@@ -382,7 +341,7 @@
       <li>Encrypted portfolio management</li>
     </ul>
     
-    <h3>3.3 Inco (Encrypted On-Chain State)</h3>
+    <h3>5.3 Inco (Encrypted On-Chain State)</h3>
     <p>Inco enables FHE-based encrypted state on-chain:</p>
     <ul>
       <li>Encrypted agent messaging</li>
@@ -390,7 +349,7 @@
       <li>Confidential smart contract execution</li>
     </ul>
     
-    <h3>3.4 Why All Three Are Required</h3>
+    <h3>5.4 Why All Three Are Required</h3>
     <table>
       <tr><th>Technology</th><th>What Happens If Removed</th></tr>
       <tr><td><strong>Noir</strong></td><td>Cannot generate portable proofs; users must expose data to prove conditions</td></tr>
@@ -499,7 +458,7 @@
        └──────────┘   └──────────┘   └──────────┘
     </pre>
     
-    <h3>4.1 Communication Modes</h3>
+    <h3>10.1.1 Communication Modes</h3>
     <ul>
       <li><strong>Discovery</strong> — Find agents by capability</li>
       <li><strong>Invocation</strong> — Request execution from another agent</li>
@@ -507,7 +466,7 @@
       <li><strong>Swarm</strong> — Coordinate multi-agent workflows</li>
     </ul>
     
-    <h3>4.2 A2A Message Types</h3>
+    <h3>10.1.2 A2A Message Types</h3>
     <table>
       <tr><th>Message Type</th><th>Purpose</th><th>Privacy</th></tr>
       <tr><td><code>a2a.invoke</code></td><td>Direct capability invocation</td><td>Configurable</td></tr>
@@ -549,7 +508,7 @@
     └───────────────────────────┘   └───────────────────────────────┘
     </pre>
     
-    <h3>5.1 Protection Levels</h3>
+    <h3>10.2.1 Protection Levels</h3>
     <table>
       <tr><th>Level</th><th>Method</th><th>Protection</th><th>Cost</th></tr>
       <tr><td>None</td><td>Public mempool</td><td>0%</td><td>Free</td></tr>
@@ -612,7 +571,7 @@
       <tr><td>Sponsor integrations</td><td>4 (Arcium, Noir, Helius, Inco)</td></tr>
     </table>
     
-    <h3>7.1 SDK One-Liners</h3>
+    <h3>11.1 SDK One-Liners</h3>
     <pre class="code-block">import { prepareSwap, bestSwap, findAlpha } from '@cap402/sdk';
 
 // Prepare swap - no setup required
