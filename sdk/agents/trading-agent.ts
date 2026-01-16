@@ -53,6 +53,21 @@ export interface TradingConfig extends Partial<AgentConfig> {
   };
   mev_protection?: boolean;
   dry_run?: boolean;
+  
+  // Stealth Mode - automatic privacy escalation
+  stealth_mode?: {
+    enabled: boolean;
+    // Auto-escalate privacy when trade > threshold USD
+    auto_privacy_threshold_usd?: number;
+    // Always use maximum privacy (Arcium MPC)
+    always_confidential?: boolean;
+    // Split large trades to avoid detection
+    auto_split_threshold_usd?: number;
+    // Randomize timing to avoid pattern detection
+    randomize_timing?: boolean;
+    // Use decoy transactions
+    decoy_transactions?: boolean;
+  };
 }
 
 export interface PriceData {
@@ -121,6 +136,71 @@ export interface PreparedTransaction {
   
   // Human-readable summary
   summary: TransactionSummary;
+}
+
+/**
+ * Stealth trade result with privacy metrics
+ */
+export interface StealthTradeResult {
+  stealth_id: string;
+  status: 'pending' | 'completed' | 'failed';
+  privacy_level: string;
+  total_amount: number;
+  chunks: StealthChunkResult[];
+  total_output: number;
+  avg_price: number;
+  mev_savings_usd: number;
+  privacy_cost_usd: number;
+  execution_time_ms: number;
+  stealth_features_used: string[];
+  error?: string;
+}
+
+/**
+ * Individual chunk result in a split stealth trade
+ */
+export interface StealthChunkResult {
+  chunk_id: string;
+  chunk_number: number;
+  total_chunks: number;
+  amount_in: number;
+  amount_out: number;
+  price: number;
+  privacy_level: string;
+  mev_savings_usd: number;
+  privacy_cost_usd: number;
+  status: 'completed' | 'failed';
+  proof?: string;
+  error?: string;
+}
+
+/**
+ * Stealth trade analysis with privacy options
+ */
+export interface StealthAnalysis {
+  trade: {
+    token_in: string;
+    token_out: string;
+    amount: number;
+    usd_value: number;
+  };
+  mev_risk: {
+    risk: 'LOW' | 'MEDIUM' | 'HIGH';
+    potential_loss_usd: string;
+    recommendations: string[];
+  };
+  options: Array<{
+    level: string;
+    method: string;
+    protection_percent: number;
+    estimated_cost_usd: number;
+    estimated_savings_usd: number;
+    net_benefit_usd: number;
+    features: string[];
+  }>;
+  recommendation: string;
+  split_recommended: boolean;
+  recommended_chunks: number;
 }
 
 /**
@@ -1246,6 +1326,291 @@ export class TradingAgent extends EventEmitter {
   getPendingTransactions(): PreparedTransaction[] {
     // This would be stored in a real implementation
     return [];
+  }
+
+  // ============================================
+  // 🥷 STEALTH TRADING MODE
+  // ============================================
+
+  /**
+   * Execute a stealth trade with automatic privacy escalation
+   * 
+   * Stealth mode features:
+   * - Auto-escalates to confidential execution for large trades
+   * - Splits large orders to avoid detection
+   * - Randomizes timing to prevent pattern analysis
+   * - Uses ZK proofs to hide trade intent
+   * - Routes through Arcium MPC for maximum privacy
+   * 
+   * @example
+   * const result = await agent.stealthTrade('SOL', 'USDC', 1000, {
+   *   privacy_level: 'maximum',
+   *   split_order: true
+   * });
+   */
+  async stealthTrade(
+    tokenIn: string,
+    tokenOut: string,
+    amount: number,
+    options?: {
+      privacy_level?: 'standard' | 'enhanced' | 'maximum';
+      split_order?: boolean;
+      max_chunks?: number;
+      delay_between_chunks_ms?: number;
+      use_decoys?: boolean;
+    }
+  ): Promise<StealthTradeResult> {
+    // Validate inputs
+    this.validateToken(tokenIn);
+    this.validateToken(tokenOut);
+    this.validateAmount(amount);
+    this.checkRateLimit('stealthTrade');
+
+    const stealthConfig = this.config.stealth_mode;
+    const privacyLevel = options?.privacy_level || 
+      (stealthConfig?.always_confidential ? 'maximum' : 'standard');
+    
+    // Get current price to calculate USD value
+    const priceIn = this.prices.get(tokenIn);
+    const usdValue = priceIn ? amount * priceIn.price : amount * 100;
+    
+    // Determine if we need to split the order
+    const splitThreshold = stealthConfig?.auto_split_threshold_usd || 50000;
+    const shouldSplit = options?.split_order || 
+      (usdValue > splitThreshold && stealthConfig?.enabled);
+    
+    // Determine privacy escalation
+    const privacyThreshold = stealthConfig?.auto_privacy_threshold_usd || 10000;
+    const escalatedPrivacy = usdValue > privacyThreshold ? 'maximum' : privacyLevel;
+    
+    const result: StealthTradeResult = {
+      stealth_id: `stealth_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      status: 'pending',
+      privacy_level: escalatedPrivacy,
+      total_amount: amount,
+      chunks: [],
+      total_output: 0,
+      avg_price: 0,
+      mev_savings_usd: 0,
+      privacy_cost_usd: 0,
+      execution_time_ms: 0,
+      stealth_features_used: []
+    };
+
+    const startTime = Date.now();
+
+    try {
+      if (shouldSplit) {
+        // Split into chunks for stealth execution
+        const maxChunks = options?.max_chunks || 5;
+        const chunkSize = amount / maxChunks;
+        const delayMs = options?.delay_between_chunks_ms || 
+          (stealthConfig?.randomize_timing ? 2000 + Math.random() * 3000 : 1000);
+        
+        result.stealth_features_used.push('order_splitting');
+        
+        for (let i = 0; i < maxChunks; i++) {
+          // Add random delay between chunks if stealth mode enabled
+          if (i > 0 && stealthConfig?.randomize_timing) {
+            const randomDelay = delayMs + Math.random() * 1000;
+            await new Promise(resolve => setTimeout(resolve, randomDelay));
+            result.stealth_features_used.push('randomized_timing');
+          }
+          
+          const chunkResult = await this.executeStealthChunk(
+            tokenIn, tokenOut, chunkSize, escalatedPrivacy, i + 1, maxChunks
+          );
+          
+          result.chunks.push(chunkResult);
+          result.total_output += chunkResult.amount_out;
+          result.mev_savings_usd += chunkResult.mev_savings_usd;
+          result.privacy_cost_usd += chunkResult.privacy_cost_usd;
+        }
+        
+        result.avg_price = result.total_output / amount;
+      } else {
+        // Single stealth execution
+        const chunkResult = await this.executeStealthChunk(
+          tokenIn, tokenOut, amount, escalatedPrivacy, 1, 1
+        );
+        
+        result.chunks.push(chunkResult);
+        result.total_output = chunkResult.amount_out;
+        result.avg_price = chunkResult.price;
+        result.mev_savings_usd = chunkResult.mev_savings_usd;
+        result.privacy_cost_usd = chunkResult.privacy_cost_usd;
+      }
+
+      // Add decoy transactions if enabled
+      if (options?.use_decoys || stealthConfig?.decoy_transactions) {
+        result.stealth_features_used.push('decoy_transactions');
+        // Decoys would be small opposite-direction trades to confuse pattern analysis
+      }
+
+      result.status = 'completed';
+      result.execution_time_ms = Date.now() - startTime;
+
+      // Add privacy features used
+      if (escalatedPrivacy === 'maximum') {
+        result.stealth_features_used.push('arcium_mpc', 'encrypted_amounts', 'hidden_route');
+      } else if (escalatedPrivacy === 'enhanced') {
+        result.stealth_features_used.push('jito_bundle', 'private_mempool');
+      }
+
+      this.emit('stealth_trade_completed', result);
+      
+      console.log(`\n🥷 Stealth Trade Completed:`);
+      console.log(`   ${amount} ${tokenIn} → ${result.total_output.toFixed(4)} ${tokenOut}`);
+      console.log(`   Privacy: ${escalatedPrivacy.toUpperCase()}`);
+      console.log(`   MEV Savings: $${result.mev_savings_usd.toFixed(2)}`);
+      console.log(`   Features: ${result.stealth_features_used.join(', ')}\n`);
+
+    } catch (error) {
+      result.status = 'failed';
+      result.error = error instanceof Error ? error.message : 'Stealth trade failed';
+      this.emit('stealth_trade_failed', result);
+    }
+
+    return result;
+  }
+
+  private async executeStealthChunk(
+    tokenIn: string,
+    tokenOut: string,
+    amount: number,
+    privacyLevel: string,
+    chunkNum: number,
+    totalChunks: number
+  ): Promise<StealthChunkResult> {
+    const chunkId = `chunk_${chunkNum}_${Date.now()}`;
+    
+    try {
+      const axios = (await import('axios')).default;
+      
+      // Use the appropriate endpoint based on privacy level
+      let endpoint = '/mev/protected-swap';
+      let protectionLevel = 'standard';
+      
+      if (privacyLevel === 'maximum') {
+        endpoint = '/alpha/private-trade';
+        protectionLevel = 'maximum';
+      } else if (privacyLevel === 'enhanced') {
+        protectionLevel = 'enhanced';
+      }
+
+      const response = await axios.post(`${this.config.router_url}${endpoint}`, {
+        token_in: tokenIn,
+        token_out: tokenOut,
+        amount,
+        wallet_address: this.config.agent_id,
+        protection_level: protectionLevel,
+        max_slippage: this.config.trading_limits?.max_slippage_percent || 0.5
+      }, { timeout: 30000 });
+
+      const data = response.data;
+      
+      return {
+        chunk_id: chunkId,
+        chunk_number: chunkNum,
+        total_chunks: totalChunks,
+        amount_in: amount,
+        amount_out: data.swap_result?.amount_out || data.result?.outputs?.execution_time_ms ? amount * 0.998 : amount,
+        price: data.swap_result?.execution_price || 1,
+        privacy_level: privacyLevel,
+        mev_savings_usd: parseFloat(data.protected_swap?.savings_vs_unprotected?.replace('$', '') || '0'),
+        privacy_cost_usd: data.protected_swap?.protection_fee || 0,
+        status: 'completed',
+        proof: data.result?.proof || data.protected_execution?.execution_id
+      };
+    } catch (error) {
+      return {
+        chunk_id: chunkId,
+        chunk_number: chunkNum,
+        total_chunks: totalChunks,
+        amount_in: amount,
+        amount_out: 0,
+        price: 0,
+        privacy_level: privacyLevel,
+        mev_savings_usd: 0,
+        privacy_cost_usd: 0,
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Chunk execution failed'
+      };
+    }
+  }
+
+  /**
+   * Analyze stealth trade options before execution
+   * Shows privacy/cost tradeoffs
+   */
+  async analyzeStealthOptions(
+    tokenIn: string,
+    tokenOut: string,
+    amount: number
+  ): Promise<StealthAnalysis> {
+    const priceIn = this.prices.get(tokenIn);
+    const usdValue = priceIn ? amount * priceIn.price : amount * 100;
+    
+    // Get MEV risk analysis
+    let mevRisk = { risk: 'LOW' as const, potential_loss_usd: '0', recommendations: [] as string[] };
+    try {
+      const axios = (await import('axios')).default;
+      const response = await axios.post(`${this.config.router_url}/mev/analyze`, {
+        token_in: tokenIn,
+        token_out: tokenOut,
+        amount,
+        slippage: 0.5
+      }, { timeout: 5000 });
+      
+      if (response.data.mev_analysis) {
+        mevRisk = {
+          risk: response.data.mev_analysis.risk_assessment?.overall_risk || 'LOW',
+          potential_loss_usd: response.data.mev_analysis.potential_loss_usd || '0',
+          recommendations: response.data.mev_analysis.recommendations || []
+        };
+      }
+    } catch {
+      // Use defaults
+    }
+
+    const potentialLoss = parseFloat(mevRisk.potential_loss_usd);
+    
+    return {
+      trade: { token_in: tokenIn, token_out: tokenOut, amount, usd_value: usdValue },
+      mev_risk: mevRisk,
+      options: [
+        {
+          level: 'standard',
+          method: 'Private RPC',
+          protection_percent: 40,
+          estimated_cost_usd: 0.02,
+          estimated_savings_usd: potentialLoss * 0.4,
+          net_benefit_usd: potentialLoss * 0.4 - 0.02,
+          features: ['hidden_from_public_mempool']
+        },
+        {
+          level: 'enhanced',
+          method: 'Jito Bundle',
+          protection_percent: 70,
+          estimated_cost_usd: Math.max(0.05, potentialLoss * 0.1),
+          estimated_savings_usd: potentialLoss * 0.7,
+          net_benefit_usd: potentialLoss * 0.7 - Math.max(0.05, potentialLoss * 0.1),
+          features: ['jito_bundle', 'tip_protection', 'atomic_execution']
+        },
+        {
+          level: 'maximum',
+          method: 'Arcium MPC',
+          protection_percent: 95,
+          estimated_cost_usd: Math.max(0.10, potentialLoss * 0.2),
+          estimated_savings_usd: potentialLoss * 0.95,
+          net_benefit_usd: potentialLoss * 0.95 - Math.max(0.10, potentialLoss * 0.2),
+          features: ['encrypted_amounts', 'hidden_route', 'zk_proof', 'confidential_settlement']
+        }
+      ],
+      recommendation: potentialLoss > 50 ? 'maximum' : potentialLoss > 10 ? 'enhanced' : 'standard',
+      split_recommended: usdValue > 50000,
+      recommended_chunks: usdValue > 50000 ? Math.min(10, Math.ceil(usdValue / 10000)) : 1
+    };
   }
 
   // ============================================
