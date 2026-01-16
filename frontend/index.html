@@ -1086,7 +1086,7 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
     
     <div style="text-align: center; margin-top: 2rem;">
       <a href="/docs/sdk-docs.html" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
-        <span class="cap-icon icon-sm"><i data-lucide="book-open"></i></span>
+        <i data-lucide="book-open" style="width: 16px; height: 16px; stroke: var(--arcium-purple);"></i>
         SDK Documentation
       </a>
     </div>
@@ -1101,14 +1101,14 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
     <div style="max-width: 900px; margin: 0 auto;">
       <!-- Endpoint Selector -->
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 1.5rem;">
-        <button class="playground-btn active" data-endpoint="price" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'>💰 Price</button>
-        <button class="playground-btn" data-endpoint="mev" data-method="POST" data-url="/mev/analyze" data-body='{"token_in":"SOL","token_out":"USDC","amount":10000,"slippage":0.5}'>🛡️ MEV</button>
-        <button class="playground-btn" data-endpoint="arbitrage" data-method="GET" data-url="/alpha/arbitrage?min_profit_bps=5" data-body="">📈 Arbitrage</button>
-        <button class="playground-btn" data-endpoint="whales" data-method="GET" data-url="/alpha/whale-tracker" data-body="">🐋 Whales</button>
-        <button class="playground-btn" data-endpoint="smartmoney" data-method="GET" data-url="/alpha/smart-money?token=SOL" data-body="">💎 Smart Money</button>
-        <button class="playground-btn" data-endpoint="liquidations" data-method="GET" data-url="/alpha/liquidations" data-body="">⚠️ Liquidations</button>
-        <button class="playground-btn" data-endpoint="capabilities" data-method="GET" data-url="/capabilities" data-body="">📋 Capabilities</button>
-        <button class="playground-btn" data-endpoint="health" data-method="GET" data-url="/sponsors/health" data-body="">💚 Health</button>
+        <button class="playground-btn active" data-endpoint="price" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'><i data-lucide="coins" style="width:14px;height:14px;"></i> Price</button>
+        <button class="playground-btn" data-endpoint="mev" data-method="POST" data-url="/mev/analyze" data-body='{"token_in":"SOL","token_out":"USDC","amount":10000,"slippage":0.5}'><i data-lucide="shield" style="width:14px;height:14px;"></i> MEV</button>
+        <button class="playground-btn" data-endpoint="arbitrage" data-method="GET" data-url="/alpha/arbitrage?min_profit_bps=5" data-body=""><i data-lucide="trending-up" style="width:14px;height:14px;"></i> Arbitrage</button>
+        <button class="playground-btn" data-endpoint="whales" data-method="GET" data-url="/alpha/whale-tracker" data-body=""><i data-lucide="fish" style="width:14px;height:14px;"></i> Whales</button>
+        <button class="playground-btn" data-endpoint="smartmoney" data-method="GET" data-url="/alpha/smart-money?token=SOL" data-body=""><i data-lucide="gem" style="width:14px;height:14px;"></i> Smart Money</button>
+        <button class="playground-btn" data-endpoint="liquidations" data-method="GET" data-url="/alpha/liquidations" data-body=""><i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Liquidations</button>
+        <button class="playground-btn" data-endpoint="capabilities" data-method="GET" data-url="/capabilities" data-body=""><i data-lucide="list" style="width:14px;height:14px;"></i> Capabilities</button>
+        <button class="playground-btn" data-endpoint="health" data-method="GET" data-url="/sponsors/health" data-body=""><i data-lucide="heart-pulse" style="width:14px;height:14px;"></i> Health</button>
       </div>
       
       <!-- Request/Response -->
@@ -1155,6 +1155,9 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
       padding: 0.5rem 1rem;
       border-radius: 6px;
       font-size: 0.8rem;
