@@ -118,6 +118,12 @@ export interface TradeExecution {
   timestamp: number;
   status: 'pending' | 'executed' | 'failed' | 'ready';
   tx_hash?: string;
+  // Trade journal fields
+  notes?: string;
+  tags?: string[];
+  strategy?: string;
+  entry_reason?: string;
+  exit_reason?: string;
 }
 
 /**
@@ -3240,6 +3246,100 @@ export class TradingAgent extends EventEmitter {
 
   getTradeHistory(): TradeExecution[] {
     return [...this.trades];
+  }
+
+  // ============================================
+  // TRADE JOURNAL
+  // ============================================
+
+  /**
+   * Add notes to a trade for journaling
+   */
+  addTradeNotes(tradeId: string, notes: string): boolean {
+    const trade = this.trades.find(t => t.trade_id === tradeId);
+    if (trade) {
+      trade.notes = notes;
+      this.emit('trade_notes_updated', { trade_id: tradeId, notes });
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Tag a trade for categorization
+   */
+  tagTrade(tradeId: string, tags: string[]): boolean {
+    const trade = this.trades.find(t => t.trade_id === tradeId);
+    if (trade) {
+      trade.tags = [...(trade.tags || []), ...tags];
+      this.emit('trade_tagged', { trade_id: tradeId, tags: trade.tags });
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Set strategy for a trade
+   */
+  setTradeStrategy(tradeId: string, strategy: string, entryReason?: string): boolean {
+    const trade = this.trades.find(t => t.trade_id === tradeId);
+    if (trade) {
+      trade.strategy = strategy;
+      if (entryReason) trade.entry_reason = entryReason;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get trades by tag
+   */
+  getTradesByTag(tag: string): TradeExecution[] {
+    return this.trades.filter(t => t.tags?.includes(tag));
+  }
+
+  /**
+   * Get trades by strategy
+   */
+  getTradesByStrategy(strategy: string): TradeExecution[] {
+    return this.trades.filter(t => t.strategy === strategy);
+  }
+
+  /**
+   * Get trade journal summary
+   */
+  getJournalSummary(): {
+    total_trades: number;
+    trades_with_notes: number;
+    strategies_used: string[];
+    tags_used: string[];
+    by_strategy: Record<string, { count: number; pnl: number }>;
+  } {
+    const strategies = new Set<string>();
+    const tags = new Set<string>();
+    const byStrategy: Record<string, { count: number; pnl: number }> = {};
+    let tradesWithNotes = 0;
+
+    for (const trade of this.trades) {
+      if (trade.notes) tradesWithNotes++;
+      if (trade.strategy) {
+        strategies.add(trade.strategy);
+        if (!byStrategy[trade.strategy]) {
+          byStrategy[trade.strategy] = { count: 0, pnl: 0 };
+        }
+        byStrategy[trade.strategy].count++;
+        byStrategy[trade.strategy].pnl += (trade.amount_out - trade.amount_in) * (trade.price || 1);
+      }
+      trade.tags?.forEach(tag => tags.add(tag));
+    }
+
+    return {
+      total_trades: this.trades.length,
+      trades_with_notes: tradesWithNotes,
+      strategies_used: Array.from(strategies),
+      tags_used: Array.from(tags),
+      by_strategy: byStrategy
+    };
   }
 
   // ============================================
