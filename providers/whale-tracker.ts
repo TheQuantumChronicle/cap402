@@ -345,20 +345,23 @@ class WhaleTrackerService {
   }
 
   /**
-   * Get whale label from Nansen (uses API credits sparingly)
-   * Uses the correct Nansen API v1 beta endpoint with POST
+   * Get wallet transactions from Nansen (FREE TIER - 1 credit per call)
+   * Uses /v1/profiler/address/transactions which is available on free plan
+   * Note: /profiler/address/labels is 500 credits (Pro only)
    */
-  async getWalletLabel(wallet: string): Promise<{ label: string; category: string; fullname: string } | null> {
+  async getWalletTransactions(wallet: string): Promise<{ txCount: number; totalVolumeUsd: number; recentActivity: string; walletLabel?: string } | null> {
     const nansenKey = this.getNansenApiKey();
     if (!nansenKey) return null;
 
     try {
       const response = await axios.post(
-        'https://api.nansen.ai/api/beta/profiler/address/labels',
+        'https://api.nansen.ai/api/v1/profiler/address/transactions',
         {
-          parameters: {
-            chain: 'solana',
-            address: wallet
+          address: wallet,
+          chain: 'solana',
+          date: {
+            from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            to: new Date().toISOString()
           },
           pagination: {
             page: 1,
@@ -374,20 +377,28 @@ class WhaleTrackerService {
         }
       );
 
-      // Response is an array of label objects
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        const bestLabel = response.data.find((l: any) => l.category === 'smart_money') || response.data[0];
+      // Parse transaction data - Nansen returns address labels in the response!
+      if (response.data?.data && Array.isArray(response.data.data)) {
+        const txs = response.data.data;
+        const totalVolume = txs.reduce((sum: number, tx: any) => sum + (tx.volume_usd || 0), 0);
+        // Extract wallet label from first transaction if available
+        const firstTx = txs[0];
+        const walletLabel = firstTx?.tokens_sent?.[0]?.from_address_label || 
+                           firstTx?.tokens_received?.[0]?.to_address_label || null;
         return {
-          label: bestLabel.label,
-          category: bestLabel.category,
-          fullname: bestLabel.fullname || bestLabel.label
+          txCount: txs.length,
+          totalVolumeUsd: totalVolume,
+          recentActivity: txs.length > 5 ? 'HIGH' : txs.length > 0 ? 'MODERATE' : 'LOW',
+          walletLabel
         };
       }
     } catch (error: any) {
       // Handle Nansen API errors gracefully
-      const errorMsg = error?.response?.data?.error || error?.message || 'unknown';
+      const errorMsg = error?.response?.data?.error || error?.response?.data?.detail || error?.message || 'unknown';
       if (errorMsg.includes('Insufficient credits')) {
-        console.log('Nansen API: Out of credits - skipping label enrichment');
+        console.log('Nansen API: Out of credits - skipping enrichment');
+      } else if (errorMsg.includes('Forbidden') || errorMsg.includes('403')) {
+        console.log('Nansen API: Endpoint not available on free tier');
       } else {
         console.log('Nansen API error:', errorMsg);
       }
@@ -397,8 +408,8 @@ class WhaleTrackerService {
   }
 
   /**
-   * Enrich whale movements with Nansen labels
-   * Only calls Nansen for significant movements to conserve API credits
+   * Enrich whale movements with Nansen transaction data (FREE TIER)
+   * Only calls Nansen for significant movements to conserve API credits (1 credit per call)
    */
   async enrichWithNansenLabels(movements: WhaleMovement[]): Promise<WhaleMovement[]> {
     // Only enrich top 3 movements to conserve API credits
@@ -406,9 +417,11 @@ class WhaleTrackerService {
     
     for (const movement of toEnrich) {
       if (movement.value_usd > 500000) { // Only for large movements
-        const labelInfo = await this.getWalletLabel(movement.wallet);
-        if (labelInfo) {
-          movement.wallet_label = `${labelInfo.fullname} (${labelInfo.category})`;
+        const txInfo = await this.getWalletTransactions(movement.wallet);
+        if (txInfo) {
+          // Use Nansen wallet label if available, otherwise show activity stats
+          movement.wallet_label = txInfo.walletLabel || 
+            `Activity: ${txInfo.recentActivity} (${txInfo.txCount} txs, $${(txInfo.totalVolumeUsd / 1000000).toFixed(1)}M vol)`;
         }
       }
     }
