@@ -438,6 +438,10 @@ export class TradingAgent extends EventEmitter {
     }
 
     this.trades.push(trade);
+    // Keep only last 1000 trades to prevent memory leak
+    if (this.trades.length > 1000) {
+      this.trades = this.trades.slice(-1000);
+    }
     this.dailyTradeCount++;
 
     if (trade.status === 'executed') {
