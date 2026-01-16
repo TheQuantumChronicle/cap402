@@ -3572,7 +3572,7 @@ app.post('/mev/analyze', async (req: Request, res: Response) => {
     const slippageNum = Number(slippage) || 0.5;
     
     // Use the new comprehensive MEV protection module
-    const analysis = mevProtection.analyzeRisk(
+    const analysis = await mevProtection.analyzeRisk(
       token_in,
       token_out,
       amountNum,
@@ -3635,7 +3635,7 @@ app.post('/mev/protected-swap', async (req: Request, res: Response) => {
     const startTime = Date.now();
 
     // First, analyze MEV risk using the new module
-    const analysis = mevProtection.analyzeRisk(
+    const analysis = await mevProtection.analyzeRisk(
       token_in,
       token_out,
       amountNum,
