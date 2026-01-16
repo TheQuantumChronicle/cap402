@@ -215,7 +215,7 @@ npm run build
 ## 📞 Contact & Links
 
 - **Website**: [cap402.com](https://cap402.com)
-- **Email**: cap402@proton.me
+- **Email**: hello@intym.xyz
 - **GitHub**: [github.com/cap402](https://github.com/cap402)
 - **Discord**: [Coming Soon]
 - **Twitter**: [Coming Soon]

@@ -957,7 +957,7 @@ MIT License - See LICENSE file for details
 - **GitHub**: [github.com/cap402](https://github.com/cap402)
 - **Discord**: [Coming Soon]
 - **Twitter**: [Coming Soon]
-- **Email**: cap402@proton.me
+- **Email**: hello@intym.xyz
 
 ---
 

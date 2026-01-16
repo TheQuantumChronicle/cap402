@@ -1491,7 +1491,7 @@ The protocol is designed for progressive decentralization, starting with a refer
 
 - **Website**: [cap402.com](https://cap402.com)
 - **GitHub**: [github.com/cap402](https://github.com/cap402)
-- **Email**: cap402@proton.me
+- **Email**: hello@intym.xyz
 
 ---
 

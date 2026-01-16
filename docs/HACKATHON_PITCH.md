@@ -288,7 +288,7 @@ CAP-402 makes Arcium a first-class execution mode, not an afterthought.
 
 - **GitHub**: [Coming Soon]
 - **Discord**: [Coming Soon]
-- **Email**: cap402@proton.me
+- **Email**: hello@intym.xyz
 
 ---
 
