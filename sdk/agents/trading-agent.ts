@@ -3266,6 +3266,181 @@ export class TradingAgent extends EventEmitter {
   }
 
   // ============================================
+  // VOLATILITY & MARKET ANALYSIS
+  // ============================================
+
+  /**
+   * Get volatility metrics for a token
+   */
+  getVolatility(token: string, periodMinutes: number = 60): {
+    token: string;
+    period_minutes: number;
+    price_change_percent: number;
+    high: number;
+    low: number;
+    range_percent: number;
+    std_deviation: number;
+    volatility_level: 'low' | 'medium' | 'high' | 'extreme';
+  } | null {
+    const history = this.priceHistory.get(token);
+    if (!history || history.length < 2) return null;
+
+    const cutoff = Date.now() - periodMinutes * 60000;
+    const recentPrices = history.filter(p => p.timestamp >= cutoff);
+    
+    if (recentPrices.length < 2) return null;
+
+    const prices = recentPrices.map(p => p.price);
+    const high = Math.max(...prices);
+    const low = Math.min(...prices);
+    const first = prices[0];
+    const last = prices[prices.length - 1];
+    const priceChange = ((last - first) / first) * 100;
+    const rangePercent = ((high - low) / low) * 100;
+
+    // Calculate standard deviation
+    const mean = prices.reduce((a, b) => a + b, 0) / prices.length;
+    const squaredDiffs = prices.map(p => Math.pow(p - mean, 2));
+    const avgSquaredDiff = squaredDiffs.reduce((a, b) => a + b, 0) / squaredDiffs.length;
+    const stdDev = Math.sqrt(avgSquaredDiff);
+
+    // Determine volatility level
+    let volatilityLevel: 'low' | 'medium' | 'high' | 'extreme';
+    if (rangePercent < 2) volatilityLevel = 'low';
+    else if (rangePercent < 5) volatilityLevel = 'medium';
+    else if (rangePercent < 10) volatilityLevel = 'high';
+    else volatilityLevel = 'extreme';
+
+    return {
+      token,
+      period_minutes: periodMinutes,
+      price_change_percent: priceChange,
+      high,
+      low,
+      range_percent: rangePercent,
+      std_deviation: stdDev,
+      volatility_level: volatilityLevel
+    };
+  }
+
+  /**
+   * Get market overview for all watched tokens
+   */
+  getMarketOverview(): {
+    timestamp: number;
+    tokens: Array<{
+      token: string;
+      price: number;
+      change_1h: number;
+      volatility: 'low' | 'medium' | 'high' | 'extreme';
+      trend: 'up' | 'down' | 'sideways';
+    }>;
+    market_sentiment: 'bullish' | 'bearish' | 'neutral';
+    avg_volatility: number;
+  } {
+    const tokens: Array<{
+      token: string;
+      price: number;
+      change_1h: number;
+      volatility: 'low' | 'medium' | 'high' | 'extreme';
+      trend: 'up' | 'down' | 'sideways';
+    }> = [];
+
+    let totalChange = 0;
+    let totalVolatility = 0;
+    let tokenCount = 0;
+
+    for (const token of this.config.watched_tokens) {
+      const priceData = this.prices.get(token);
+      const vol = this.getVolatility(token, 60);
+      
+      if (priceData) {
+        const change = vol?.price_change_percent || 0;
+        const volatility = vol?.volatility_level || 'low';
+        const trend: 'up' | 'down' | 'sideways' = 
+          change > 1 ? 'up' : change < -1 ? 'down' : 'sideways';
+
+        tokens.push({
+          token,
+          price: priceData.price,
+          change_1h: change,
+          volatility,
+          trend
+        });
+
+        totalChange += change;
+        totalVolatility += vol?.range_percent || 0;
+        tokenCount++;
+      }
+    }
+
+    const avgChange = tokenCount > 0 ? totalChange / tokenCount : 0;
+    const avgVolatility = tokenCount > 0 ? totalVolatility / tokenCount : 0;
+
+    const sentiment: 'bullish' | 'bearish' | 'neutral' = 
+      avgChange > 2 ? 'bullish' : avgChange < -2 ? 'bearish' : 'neutral';
+
+    return {
+      timestamp: Date.now(),
+      tokens,
+      market_sentiment: sentiment,
+      avg_volatility: avgVolatility
+    };
+  }
+
+  /**
+   * Check if market conditions are favorable for trading
+   */
+  isTradingFavorable(token: string): {
+    favorable: boolean;
+    reasons: string[];
+    score: number;
+  } {
+    const reasons: string[] = [];
+    let score = 50; // Start neutral
+
+    const vol = this.getVolatility(token, 60);
+    const priceData = this.prices.get(token);
+
+    if (!vol || !priceData) {
+      return { favorable: false, reasons: ['Insufficient data'], score: 0 };
+    }
+
+    // Check volatility
+    if (vol.volatility_level === 'extreme') {
+      reasons.push('Extreme volatility - high risk');
+      score -= 30;
+    } else if (vol.volatility_level === 'high') {
+      reasons.push('High volatility - moderate risk');
+      score -= 15;
+    } else if (vol.volatility_level === 'low') {
+      reasons.push('Low volatility - stable conditions');
+      score += 10;
+    }
+
+    // Check trend
+    if (vol.price_change_percent > 5) {
+      reasons.push('Strong uptrend');
+      score += 15;
+    } else if (vol.price_change_percent < -5) {
+      reasons.push('Strong downtrend');
+      score -= 10;
+    }
+
+    // Check spread (using range as proxy)
+    if (vol.range_percent < 1) {
+      reasons.push('Tight spread');
+      score += 10;
+    }
+
+    return {
+      favorable: score >= 50,
+      reasons,
+      score: Math.max(0, Math.min(100, score))
+    };
+  }
+
+  // ============================================
   // TRADE JOURNAL
   // ============================================
 
