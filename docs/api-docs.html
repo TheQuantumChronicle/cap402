@@ -739,41 +739,53 @@
           <div class="endpoint-header">
             <span class="method get">GET</span>
             <span class="endpoint-path">/alpha/whale-tracker</span>
-            <span class="endpoint-desc">Monitor large wallet movements</span>
+            <span class="endpoint-desc">Monitor large wallet movements (Live Helius Data)</span>
           </div>
           <div class="endpoint-body">
             <div class="endpoint-section">
               <div class="endpoint-section-title">Description</div>
-              <p>Track whale movements and derive market sentiment. Monitors wallets with >$1M in holdings.</p>
+              <p>Track real whale movements using <strong>Helius Enhanced Transactions API</strong>. Monitors known whale wallets (Jump Trading, large SOL holders, protocol treasuries) for swaps and transfers. Returns market sentiment derived from buy/sell volume analysis.</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Data Sources</div>
+              <p>• <strong>Helius</strong> - Real-time transaction data with 3 API keys for high availability<br>
+              • <strong>Jupiter</strong> - Current token prices for USD valuations</p>
             </div>
             <div class="endpoint-section">
               <div class="endpoint-section-title">Query Parameters</div>
               <table class="params-table">
                 <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">token</td><td class="param-type">string</td><td class="param-optional">optional</td><td>Filter by token symbol</td></tr>
-                <tr><td class="param-name">min_usd</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Minimum transaction size (default: 100000)</td></tr>
+                <tr><td class="param-name">token</td><td class="param-type">string</td><td class="param-optional">optional</td><td>Filter by token symbol (SOL, USDC, JUP, BONK)</td></tr>
+                <tr><td class="param-name">min_value</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Minimum USD value (default: 100000)</td></tr>
               </table>
             </div>
             <div class="endpoint-section">
               <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl "https://cap402.com/alpha/whale-tracker?token=SOL"</div>
+              <div class="code-block">curl "https://cap402.com/alpha/whale-tracker?token=SOL&min_value=500000"</div>
             </div>
             <div class="endpoint-section">
               <div class="endpoint-section-title">Response</div>
               <div class="response-block">{
-  <span class="key">"movements"</span>: [
-    {
-      <span class="key">"wallet"</span>: <span class="string">"ABC...XYZ"</span>,
-      <span class="key">"action"</span>: <span class="string">"buy"</span>,
-      <span class="key">"token"</span>: <span class="string">"SOL"</span>,
-      <span class="key">"amount_usd"</span>: <span class="number">2450000</span>,
-      <span class="key">"timestamp"</span>: <span class="number">1705347600000</span>
-    }
-  ],
-  <span class="key">"sentiment"</span>: {
-    <span class="key">"overall"</span>: <span class="string">"bullish"</span>,
-    <span class="key">"buy_volume_24h"</span>: <span class="number">45000000</span>,
-    <span class="key">"sell_volume_24h"</span>: <span class="number">12000000</span>
+  <span class="key">"whale_tracker"</span>: {
+    <span class="key">"movements"</span>: [
+      {
+        <span class="key">"wallet"</span>: <span class="string">"FWzn...ouN5"</span>,
+        <span class="key">"action"</span>: <span class="string">"buy"</span>,
+        <span class="key">"token"</span>: <span class="string">"SOL"</span>,
+        <span class="key">"amount"</span>: <span class="number">50000</span>,
+        <span class="key">"value_usd"</span>: <span class="number">7250000</span>,
+        <span class="key">"signature"</span>: <span class="string">"h8ui...fLiP"</span>,
+        <span class="key">"significance"</span>: <span class="string">"BULLISH - Large accumulation"</span>
+      }
+    ],
+    <span class="key">"summary"</span>: {
+      <span class="key">"total_movements"</span>: <span class="number">5</span>,
+      <span class="key">"buy_volume_usd"</span>: <span class="number">45000000</span>,
+      <span class="key">"sell_volume_usd"</span>: <span class="number">12000000</span>,
+      <span class="key">"net_flow_usd"</span>: <span class="number">33000000</span>,
+      <span class="key">"market_sentiment"</span>: <span class="string">"BULLISH"</span>
+    },
+    <span class="key">"data_source"</span>: <span class="string">"helius_enhanced_transactions"</span>
   }
 }</div>
             </div>
