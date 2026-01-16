@@ -635,6 +635,100 @@ describe('Trading Agent', () => {
 });
 
 // ============================================
+// STEALTH TRADING MODE TESTS
+// ============================================
+
+describe('Stealth Trading Mode', () => {
+  let stealthTrader: TradingAgent;
+
+  beforeEach(() => {
+    stealthTrader = createTradingAgent({
+      agent_id: 'stealth-trader',
+      name: 'Stealth Trading Bot',
+      watched_tokens: ['SOL', 'ETH'],
+      mev_protection: true,
+      router_url: 'http://localhost:3001',
+      stealth_mode: {
+        enabled: true,
+        auto_privacy_threshold_usd: 10000,
+        auto_split_threshold_usd: 50000,
+        randomize_timing: true,
+        decoy_transactions: false
+      }
+    });
+  });
+
+  afterEach(async () => {
+    try {
+      await stealthTrader.stop();
+    } catch {
+      // Ignore
+    }
+  });
+
+  test('should create stealth trader with stealth config', () => {
+    expect(stealthTrader).toBeDefined();
+    expect((stealthTrader as any).config.stealth_mode).toBeDefined();
+    expect((stealthTrader as any).config.stealth_mode.enabled).toBe(true);
+  });
+
+  test('should analyze stealth options', async () => {
+    const analysis = await stealthTrader.analyzeStealthOptions('SOL', 'USDC', 100);
+    
+    expect(analysis).toBeDefined();
+    expect(analysis.trade.token_in).toBe('SOL');
+    expect(analysis.trade.token_out).toBe('USDC');
+    expect(analysis.options).toHaveLength(3);
+    expect(analysis.options[0].level).toBe('standard');
+    expect(analysis.options[1].level).toBe('enhanced');
+    expect(analysis.options[2].level).toBe('maximum');
+    expect(analysis.recommendation).toBeDefined();
+  });
+
+  test('should execute stealth trade with standard privacy', async () => {
+    const result = await stealthTrader.stealthTrade('SOL', 'USDC', 10, {
+      privacy_level: 'standard'
+    });
+    
+    expect(result).toBeDefined();
+    expect(result.stealth_id).toMatch(/^stealth_/);
+    expect(result.privacy_level).toBe('standard');
+    expect(result.chunks.length).toBeGreaterThan(0);
+  }, 15000);
+
+  test('should execute stealth trade with maximum privacy', async () => {
+    const result = await stealthTrader.stealthTrade('SOL', 'USDC', 10, {
+      privacy_level: 'maximum'
+    });
+    
+    expect(result).toBeDefined();
+    expect(result.privacy_level).toBe('maximum');
+    expect(result.stealth_features_used).toContain('arcium_mpc');
+  }, 15000);
+
+  test('should split large orders', async () => {
+    const result = await stealthTrader.stealthTrade('SOL', 'USDC', 100, {
+      split_order: true,
+      max_chunks: 3
+    });
+    
+    expect(result).toBeDefined();
+    expect(result.chunks.length).toBe(3);
+    expect(result.stealth_features_used).toContain('order_splitting');
+  }, 30000);
+
+  test('should emit stealth_trade_completed event', (done) => {
+    stealthTrader.on('stealth_trade_completed', (result) => {
+      expect(result.stealth_id).toBeDefined();
+      expect(result.status).toBe('completed');
+      done();
+    });
+
+    stealthTrader.stealthTrade('SOL', 'USDC', 5, { privacy_level: 'standard' }).catch(() => {});
+  }, 15000);
+});
+
+// ============================================
 // QUICK FACTORY TESTS
 // ============================================
 
