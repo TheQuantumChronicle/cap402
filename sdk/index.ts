@@ -106,5 +106,53 @@ export {
   health
 } from './quick';
 
+// One-liner convenience functions
+export {
+  autoTrader,
+  prepareSwap,
+  bestSwap,
+  findAlpha,
+  findPartners
+} from './agents';
+
+// Error handling
+export {
+  CAP402Error,
+  NetworkError,
+  TimeoutError,
+  RateLimitError,
+  InsufficientBalanceError,
+  SlippageExceededError,
+  MEVRiskError,
+  TradeLimitError,
+  QuoteExpiredError,
+  A2AError,
+  AgentNotFoundError,
+  SecureChannelError,
+  MessageVerificationError,
+  ConfigurationError,
+  MissingConfigError,
+  CapabilityError,
+  CapabilityNotFoundError,
+  SafetyError,
+  SpendingLimitError,
+  EmergencyStopError,
+  wrapError,
+  isRetryable,
+  getRetryDelay
+} from './errors';
+
+// Logging
+export {
+  Logger,
+  CategoryLogger,
+  logger,
+  createLogger,
+  setLogLevel,
+  type LogLevel,
+  type LogEntry,
+  type LoggerConfig
+} from './logger';
+
 // Re-export capability types from spec
 export type { Capability } from '../spec/capabilities';
