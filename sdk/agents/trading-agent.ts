@@ -162,6 +162,22 @@ export interface LimitOrder {
 }
 
 /**
+ * Custom price alert
+ */
+export interface PriceAlert {
+  alert_id: string;
+  token: string;
+  condition: 'above' | 'below' | 'crosses';
+  target_price: number;
+  status: 'active' | 'triggered' | 'cancelled';
+  created_at: number;
+  triggered_at?: number;
+  triggered_price?: number;
+  message?: string;
+  webhook_url?: string;
+}
+
+/**
  * DCA (Dollar Cost Averaging) schedule
  */
 export interface DCASchedule {
@@ -525,6 +541,7 @@ export class TradingAgent extends EventEmitter {
   private dcaSchedules: Map<string, DCASchedule> = new Map();
   private dcaTimers: Map<string, NodeJS.Timeout> = new Map();
   private limitOrders: Map<string, LimitOrder> = new Map();
+  private priceAlerts: Map<string, PriceAlert> = new Map();
   private dailyTradeCount = 0;
   private lastDayReset = Date.now();
   private priceCheckTimer?: NodeJS.Timeout;
@@ -3340,6 +3357,138 @@ export class TradingAgent extends EventEmitter {
       tags_used: Array.from(tags),
       by_strategy: byStrategy
     };
+  }
+
+  // ============================================
+  // PRICE ALERTS
+  // ============================================
+
+  /**
+   * Set a price alert - get notified when price crosses threshold
+   * 
+   * @example
+   * // Alert when SOL goes above $200
+   * agent.setPriceAlert('SOL', 'above', 200, 'SOL broke $200!');
+   */
+  setPriceAlert(
+    token: string,
+    condition: 'above' | 'below' | 'crosses',
+    targetPrice: number,
+    message?: string,
+    webhookUrl?: string
+  ): PriceAlert {
+    const alert: PriceAlert = {
+      alert_id: `pa_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      token,
+      condition,
+      target_price: targetPrice,
+      status: 'active',
+      created_at: Date.now(),
+      message,
+      webhook_url: webhookUrl
+    };
+
+    this.priceAlerts.set(alert.alert_id, alert);
+    this.emit('price_alert_created', alert);
+    
+    const conditionText = condition === 'above' ? '>' : condition === 'below' ? '<' : '↔';
+    console.log(`🔔 Price alert set: ${token} ${conditionText} $${targetPrice}`);
+
+    return alert;
+  }
+
+  /**
+   * Cancel a price alert
+   */
+  cancelPriceAlert(alertId: string): boolean {
+    const alert = this.priceAlerts.get(alertId);
+    if (alert && alert.status === 'active') {
+      alert.status = 'cancelled';
+      this.emit('price_alert_cancelled', alert);
+      console.log(`❌ Price alert ${alertId} cancelled`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get all active price alerts
+   */
+  getActivePriceAlerts(): PriceAlert[] {
+    return Array.from(this.priceAlerts.values()).filter(a => a.status === 'active');
+  }
+
+  /**
+   * Check and trigger price alerts (called on price updates)
+   */
+  private checkPriceAlerts(): void {
+    for (const alert of this.priceAlerts.values()) {
+      if (alert.status !== 'active') continue;
+
+      const currentPrice = this.prices.get(alert.token)?.price;
+      if (!currentPrice) continue;
+
+      let shouldTrigger = false;
+
+      if (alert.condition === 'above') {
+        shouldTrigger = currentPrice >= alert.target_price;
+      } else if (alert.condition === 'below') {
+        shouldTrigger = currentPrice <= alert.target_price;
+      } else if (alert.condition === 'crosses') {
+        // Check if price crossed the target in either direction
+        const history = this.priceHistory.get(alert.token);
+        if (history && history.length >= 2) {
+          const prevPrice = history[history.length - 2]?.price;
+          if (prevPrice) {
+            const crossedUp = prevPrice < alert.target_price && currentPrice >= alert.target_price;
+            const crossedDown = prevPrice > alert.target_price && currentPrice <= alert.target_price;
+            shouldTrigger = crossedUp || crossedDown;
+          }
+        }
+      }
+
+      if (shouldTrigger) {
+        alert.status = 'triggered';
+        alert.triggered_at = Date.now();
+        alert.triggered_price = currentPrice;
+
+        const msg = alert.message || `${alert.token} ${alert.condition} $${alert.target_price}`;
+        console.log(`🔔 ALERT: ${msg} (current: $${currentPrice.toFixed(2)})`);
+
+        this.emit('price_alert_triggered', {
+          ...alert,
+          current_price: currentPrice,
+          message: msg
+        });
+
+        // Call webhook if configured
+        if (alert.webhook_url) {
+          this.callAlertWebhook(alert, currentPrice).catch(() => {});
+        }
+      }
+    }
+  }
+
+  /**
+   * Call webhook for triggered alert
+   */
+  private async callAlertWebhook(alert: PriceAlert, currentPrice: number): Promise<void> {
+    if (!alert.webhook_url) return;
+
+    try {
+      const axios = (await import('axios')).default;
+      await axios.post(alert.webhook_url, {
+        alert_id: alert.alert_id,
+        token: alert.token,
+        condition: alert.condition,
+        target_price: alert.target_price,
+        current_price: currentPrice,
+        triggered_at: alert.triggered_at,
+        message: alert.message
+      }, { timeout: 5000 });
+    } catch (error) {
+      console.error(`Failed to call alert webhook: ${error}`);
+    }
   }
 
   // ============================================
