@@ -1247,6 +1247,138 @@ export class TradingAgent extends EventEmitter {
     }
   }
 
+  // ============================================
+  // BEST EXECUTION - ONE-LINERS
+  // ============================================
+
+  /**
+   * Smart swap - automatically finds best execution route
+   * Compares DEX, A2A partners, and auctions to get best price
+   * 
+   * @example
+   * const result = await trader.smartSwap('SOL', 'USDC', 100);
+   * // Automatically picks best route (DEX vs A2A vs Auction)
+   */
+  async smartSwap(
+    tokenIn: string,
+    tokenOut: string,
+    amount: number,
+    options?: { maxSlippageBps?: number; preferA2A?: boolean }
+  ): Promise<{
+    route: 'dex' | 'a2a' | 'auction' | 'swarm';
+    result: PreparedTransaction | A2ATradeResult;
+    savings_vs_dex?: number;
+    execution_summary: string;
+  }> {
+    const maxSlippage = options?.maxSlippageBps ?? 50;
+    
+    // Get DEX quote first as baseline
+    const dexTx = await this.prepareSwap(tokenIn, tokenOut, amount, { slippage_bps: maxSlippage });
+    const dexOut = dexTx.expected_out;
+
+    // Try A2A if enabled
+    if (options?.preferA2A !== false) {
+      try {
+        const partners = await this.findTradingPartners(tokenIn, tokenOut, amount);
+        
+        if (partners.length > 0 && partners[0].quote.amount_out > dexOut * 1.001) {
+          // A2A is better by at least 0.1%
+          const a2aResult = await this.executeA2ATrade(partners[0].quote);
+          
+          if (a2aResult.status === 'executed') {
+            const savings = ((a2aResult.amount_received! - dexOut) / dexOut) * 100;
+            return {
+              route: 'a2a',
+              result: a2aResult,
+              savings_vs_dex: savings,
+              execution_summary: `A2A trade via ${partners[0].name}: ${amount} ${tokenIn} → ${a2aResult.amount_received} ${tokenOut} (${savings.toFixed(2)}% better than DEX)`
+            };
+          }
+        }
+      } catch {
+        // Fall back to DEX
+      }
+    }
+
+    // Return DEX as default
+    return {
+      route: 'dex',
+      result: dexTx,
+      execution_summary: `DEX swap via Jupiter: ${amount} ${tokenIn} → ~${dexOut.toFixed(4)} ${tokenOut}`
+    };
+  }
+
+  /**
+   * One-liner: Buy token with best execution
+   */
+  async buy(token: string, amountUsd: number): Promise<PreparedTransaction> {
+    const quoteToken = this.config.quote_currency === 'USD' ? 'USDC' : this.config.quote_currency;
+    return this.prepareSwap(quoteToken, token, amountUsd);
+  }
+
+  /**
+   * One-liner: Sell token with best execution
+   */
+  async sell(token: string, amount: number): Promise<PreparedTransaction> {
+    const quoteToken = this.config.quote_currency === 'USD' ? 'USDC' : this.config.quote_currency;
+    return this.prepareSwap(token, quoteToken, amount);
+  }
+
+  /**
+   * One-liner: Get current portfolio value
+   */
+  async getPortfolioValue(): Promise<{
+    total_usd: number;
+    positions: Array<{ token: string; amount: number; usd_value: number; pnl_percent: number }>;
+  }> {
+    const positions = this.getPositions();
+    const result: Array<{ token: string; amount: number; usd_value: number; pnl_percent: number }> = [];
+    let totalUsd = 0;
+
+    for (const pos of positions) {
+      const price = this.prices.get(pos.token)?.price || pos.current_price;
+      const usdValue = pos.amount * price;
+      totalUsd += usdValue;
+      
+      result.push({
+        token: pos.token,
+        amount: pos.amount,
+        usd_value: usdValue,
+        pnl_percent: pos.unrealized_pnl_percent
+      });
+    }
+
+    return { total_usd: totalUsd, positions: result };
+  }
+
+  /**
+   * One-liner: Check if a trade is profitable based on current prices
+   */
+  async isProfitable(tokenIn: string, tokenOut: string, amount: number): Promise<{
+    profitable: boolean;
+    expected_profit_percent: number;
+    recommendation: string;
+  }> {
+    const tx = await this.prepareSwap(tokenIn, tokenOut, amount);
+    const priceImpact = tx.price_impact_percent;
+    const mevRisk = tx.mev_risk;
+    
+    // Estimate fees (~0.3% DEX + ~0.01 network)
+    const estimatedFees = 0.3;
+    const netProfit = -priceImpact - estimatedFees;
+    
+    let recommendation = 'Proceed with trade';
+    if (mevRisk === 'HIGH') recommendation = 'Consider smaller trade size due to MEV risk';
+    if (priceImpact > 1) recommendation = 'High price impact - consider splitting order';
+    if (netProfit < -1) recommendation = 'Trade may not be profitable after fees';
+
+    return {
+      profitable: netProfit > -0.5,
+      expected_profit_percent: netProfit,
+      recommendation
+    };
+  }
+
   private updatePositions(trade: TradeExecution): void {
     // Reduce position in token_in
     const posIn = this.positions.get(trade.token_in);

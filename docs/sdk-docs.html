@@ -173,6 +173,83 @@ const custom = createSafetyGuardrails({
   blocked_tokens: ['SCAM_TOKEN']
 });</pre>
     
+    <h2>One-Liner Convenience Methods</h2>
+    <p>Simple methods for common operations:</p>
+    <pre class="code-block">// Buy token (prepares transaction for signing)
+const buyTx = await trader.buy('SOL', 100); // Buy $100 worth of SOL
+
+// Sell token
+const sellTx = await trader.sell('SOL', 10); // Sell 10 SOL
+
+// Smart swap - auto-selects best route (DEX vs A2A)
+const result = await trader.smartSwap('SOL', 'USDC', 100);
+console.log(result.execution_summary);
+// "A2A trade via agent-xyz: 100 SOL → 14,334 USDC (0.5% better than DEX)"
+
+// Check if trade is profitable
+const check = await trader.isProfitable('SOL', 'USDC', 1000);
+console.log(check.recommendation);
+
+// Get portfolio value
+const portfolio = await trader.getPortfolioValue();
+console.log(\`Total: $\${portfolio.total_usd}\`);</pre>
+
+    <h2>Agent-to-Agent (A2A) Trading</h2>
+    <p>Trade directly with other agents for better prices and liquidity:</p>
+    <pre class="code-block">// Find trading partners with quotes
+const partners = await trader.findTradingPartners('SOL', 'USDC', 100);
+console.log(\`Found \${partners.length} partners\`);
+console.log(\`Best offer: \${partners[0].quote.amount_out} USDC\`);
+
+// Execute A2A trade
+const result = await trader.executeA2ATrade(partners[0].quote);
+if (result.status === 'executed') {
+  console.log(\`Received: \${result.amount_received} USDC\`);
+}
+
+// Auction - agents compete for best price
+const auction = await trader.auctionTrade('SOL', 'USDC', 1000);
+console.log(\`Winner: \${auction.winner?.agent_id} at \${auction.best_price}\`);
+
+// Swarm trade - split large orders across agents
+const swarm = await trader.swarmTrade('SOL', 'USDC', 10000, { minAgents: 3 });
+console.log(\`Executed via \${swarm.participants.length} agents\`);
+console.log(\`Total received: \${swarm.total_amount_out} USDC\`);</pre>
+
+    <h3>Signal Sharing</h3>
+    <pre class="code-block">// Broadcast signals to other agents
+await trader.broadcastSignal(alphaSignal);
+
+// Receive signals from other agents
+trader.on('a2a_signal', ({ from, signal }) => {
+  console.log(\`Signal from \${from}: \${signal.type} \${signal.token}\`);
+});
+
+// Poll for signals
+const signals = await trader.pollA2ASignals();</pre>
+
+    <h2>Alpha Detection</h2>
+    <p>Detect trading opportunities with momentum and reversal signals:</p>
+    <pre class="code-block">// Detect alpha signals
+const alphaSignals = await trader.detectAlpha();
+
+for (const signal of alphaSignals) {
+  console.log(\`\${signal.type}: \${signal.token} \${signal.direction}\`);
+  console.log(\`  Action: \${signal.suggested_action}\`);
+  console.log(\`  Entry: $\${signal.entry_price}\`);
+  console.log(\`  Target: $\${signal.target_price}\`);
+  console.log(\`  Stop: $\${signal.stop_loss}\`);
+  console.log(\`  Confidence: \${signal.confidence}%\`);
+}
+
+// Listen for alpha events
+trader.on('alpha', (signal) => {
+  if (signal.confidence > 70) {
+    const tx = await trader.actOnSignal(signal);
+    // Ready-to-sign transaction
+  }
+});</pre>
+
     <h2>Multi-Agent Orchestration</h2>
     <pre class="code-block">import { createOrchestrator } from '@cap402/sdk';
 
