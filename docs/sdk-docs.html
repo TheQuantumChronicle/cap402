@@ -3,609 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAP-402 Agent SDK Documentation</title>
+  <title>CAP-402 SDK Reference</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
+      --arcium-purple: #6C44FC;
       --bg-dark: #0a0a0c;
-      --bg-card: rgba(255,255,255,0.02);
+      --bg-card: rgba(255,255,255,0.03);
       --border-subtle: rgba(255,255,255,0.08);
       --text-primary: #fafafa;
       --text-secondary: #888;
-      --text-muted: #555;
-      --arcium-purple: #6C44FC;
-      --success: #22c55e;
-      --warning: #eab308;
-      --error: #ef4444;
+      --green: #22c55e;
     }
-    
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-dark);
-      color: var(--text-primary);
-      line-height: 1.6;
-    }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-    
-    header {
-      border-bottom: 1px solid var(--border-subtle);
-      padding-bottom: 2rem;
-      margin-bottom: 2rem;
-    }
-    
-    h1 {
-      font-size: 2.5rem;
-      background: linear-gradient(135deg, #fff, var(--arcium-purple));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.5rem;
-    }
-    
-    h2 {
-      font-size: 1.5rem;
-      margin: 2rem 0 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-    
-    h3 {
-      font-size: 1.2rem;
-      margin: 1.5rem 0 0.75rem;
-      color: var(--arcium-purple);
-    }
-    
-    h4 {
-      font-size: 1rem;
-      margin: 1rem 0 0.5rem;
-    }
-    
-    p { margin-bottom: 1rem; color: var(--text-secondary); }
-    
-    code {
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      background: rgba(108, 68, 252, 0.1);
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
-      font-size: 0.9em;
-    }
-    
-    pre {
-      background: rgba(0,0,0,0.4);
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 1rem;
-      overflow-x: auto;
-      margin: 1rem 0;
-      font-size: 0.85rem;
-      line-height: 1.5;
-    }
-    
-    pre code {
-      background: none;
-      padding: 0;
-    }
-    
-    .warning-box {
-      background: rgba(234, 179, 8, 0.1);
-      border: 1px solid rgba(234, 179, 8, 0.3);
-      border-radius: 8px;
-      padding: 1rem;
-      margin: 1rem 0;
-    }
-    
-    .warning-box h4 {
-      color: var(--warning);
-      margin-top: 0;
-    }
-    
-    .danger-box {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 8px;
-      padding: 1rem;
-      margin: 1rem 0;
-    }
-    
-    .danger-box h4 {
-      color: var(--error);
-      margin-top: 0;
-    }
-    
-    .success-box {
-      background: rgba(34, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      border-radius: 8px;
-      padding: 1rem;
-      margin: 1rem 0;
-    }
-    
-    .success-box h4 {
-      color: var(--success);
-      margin-top: 0;
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1rem 0;
-    }
-    
-    th, td {
-      text-align: left;
-      padding: 0.75rem;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-    
-    th {
-      color: var(--text-primary);
-      font-weight: 600;
-    }
-    
-    td {
-      color: var(--text-secondary);
-    }
-    
-    .nav {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    
-    .nav a {
-      color: var(--text-secondary);
-      text-decoration: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-    
-    .nav a:hover {
-      background: var(--bg-card);
-      color: var(--text-primary);
-    }
-    
-    .nav a.active {
-      background: rgba(108, 68, 252, 0.2);
-      color: var(--arcium-purple);
-    }
-    
-    .toc {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    
-    .toc h3 {
-      margin-top: 0;
-      margin-bottom: 1rem;
-    }
-    
-    .toc ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    
-    .toc li {
-      margin: 0.5rem 0;
-    }
-    
-    .toc a {
-      color: var(--text-secondary);
-      text-decoration: none;
-    }
-    
-    .toc a:hover {
-      color: var(--arcium-purple);
-    }
-    
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-      margin: 1rem 0;
-    }
-    
-    .feature-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 1.25rem;
-    }
-    
-    .feature-card h4 {
-      margin-top: 0;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .badge {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-    
-    .badge-safe {
-      background: rgba(34, 197, 94, 0.2);
-      color: var(--success);
-    }
-    
-    .badge-caution {
-      background: rgba(234, 179, 8, 0.2);
-      color: var(--warning);
-    }
-    
-    .badge-danger {
-      background: rgba(239, 68, 68, 0.2);
-      color: var(--error);
-    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+    .topbar { background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%); padding: 1rem 2rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+    .topbar-left img { height: 28px; }
+    .topbar-left h1 { font-size: 1rem; color: var(--text-primary); }
+    .nav-links { display: flex; gap: 0.5rem; }
+    .nav-links a { padding: 0.4rem 0.8rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8rem; color: var(--text-secondary); text-decoration: none; transition: all 0.2s; }
+    .nav-links a:hover { background: rgba(108, 68, 252, 0.15); border-color: var(--arcium-purple); color: var(--text-primary); }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.25rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); color: var(--text-primary); }
+    h3 { font-size: 1rem; margin: 1.5rem 0 0.75rem; color: var(--arcium-purple); }
+    p { color: var(--text-secondary); margin-bottom: 1rem; }
+    .code-block { background: #111; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--green); overflow-x: auto; margin: 1rem 0; white-space: pre; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { border: 1px solid var(--border-subtle); padding: 0.5rem 1rem; text-align: left; }
+    th { background: var(--bg-card); color: var(--text-primary); }
+    td { color: var(--text-secondary); }
+    ul { margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary); }
+    li { margin-bottom: 0.5rem; }
+    strong { color: var(--text-primary); }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="nav">
-        <a href="/">Home</a>
-        <a href="/docs/api-docs.html">API Reference</a>
-        <a href="/docs/sdk-docs.html" class="active">SDK</a>
-        <a href="/docs/WHITEPAPER.md">Whitepaper</a>
-        <a href="https://github.com/TheQuantumChronicle/CAP402">GitHub</a>
-      </div>
-      <h1>CAP-402 Agent SDK</h1>
-      <p>Build production-ready autonomous agents with safety guardrails, lifecycle management, and multi-agent orchestration.</p>
-    </header>
-
-    <div class="toc">
-      <h3>Table of Contents</h3>
-      <ul>
-        <li><a href="#getting-started">Getting Started</a></li>
-        <li><a href="#safety">Safety Guardrails</a></li>
-        <li><a href="#core-agent">Core Agent Class</a></li>
-        <li><a href="#templates">Agent Templates</a></li>
-        <li><a href="#orchestration">Multi-Agent Orchestration</a></li>
-        <li><a href="#testing">Testing Utilities</a></li>
-        <li><a href="#cli">CLI Tools</a></li>
-        <li><a href="#best-practices">Best Practices</a></li>
-      </ul>
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="/"><img src="/public/CAP402logo.png" alt="CAP-402"></a>
+      <h1>SDK Reference</h1>
     </div>
+    <div class="nav-links">
+      <a href="/docs">Docs</a>
+      <a href="/">Home</a>
+      <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank">GitHub</a>
+    </div>
+  </div>
+  
+  <div class="container">
+    <h1>Agent SDK Reference</h1>
+    <p>Build fully autonomous agents that monitor markets, analyze risk, and prepare ready-to-sign transactions. You retain full control—just sign in your wallet.</p>
+    
+    <h2>Quick Start</h2>
+    <pre class="code-block">import { cap402 } from '@cap402/sdk';
 
-    <section id="getting-started">
-      <h2>Getting Started</h2>
-      
-      <h3>Installation</h3>
-      <pre><code>npm install
-# or
-yarn install</code></pre>
-
-      <h3>Quick Start</h3>
-      <pre><code>import { createAgent, createSafetyGuardrails, SAFETY_PRESETS } from './sdk';
-
-// Always start with safety guardrails
-const safety = createSafetyGuardrails(SAFETY_PRESETS.standard);
-
-const agent = createAgent({
-  agent_id: 'my-first-agent',
-  name: 'My First Agent',
-  router_url: 'https://cap402.com'
-});
-
-// Start the agent
-await agent.start();
-
-// Invoke a capability
-const result = await agent.invoke('cap.price.lookup.v1', {
-  base_token: 'SOL',
-  quote_token: 'USD'
-});
-
-console.log(`SOL Price: $${result.outputs.price}`);
-
-// Stop gracefully
-await agent.stop();</code></pre>
-
-      <div class="warning-box">
-        <h4>⚠️ Important: Always Use Safety Guardrails</h4>
-        <p>When building agents that handle real money or execute transactions, always configure safety guardrails to protect against runaway spending, rate limit violations, and unintended operations.</p>
-      </div>
-    </section>
-
-    <section id="safety">
-      <h2>Safety Guardrails</h2>
-      <p>The SDK includes comprehensive safety mechanisms to protect users from common agent risks.</p>
-
-      <h3>Safety Presets</h3>
-      <table>
-        <tr>
-          <th>Preset</th>
-          <th>Max/Transaction</th>
-          <th>Max/Hour</th>
-          <th>Max/Day</th>
-          <th>Trades/Hour</th>
-          <th>Use Case</th>
-        </tr>
-        <tr>
-          <td><code>conservative</code></td>
-          <td>$10</td>
-          <td>$50</td>
-          <td>$100</td>
-          <td>5</td>
-          <td>Testing, beginners</td>
-        </tr>
-        <tr>
-          <td><code>standard</code></td>
-          <td>$100</td>
-          <td>$500</td>
-          <td>$2,000</td>
-          <td>20</td>
-          <td>Normal operations</td>
-        </tr>
-        <tr>
-          <td><code>aggressive</code></td>
-          <td>$1,000</td>
-          <td>$5,000</td>
-          <td>$20,000</td>
-          <td>100</td>
-          <td>Experienced users</td>
-        </tr>
-      </table>
-
-      <h3>Using Safety Guardrails</h3>
-      <pre><code>import { createSafetyGuardrails, SAFETY_PRESETS } from './sdk';
-
-// Use a preset
-const safety = createSafetyGuardrails(SAFETY_PRESETS.conservative);
-
-// Or customize
-const customSafety = createSafetyGuardrails({
-  spending_limits: {
-    max_per_transaction: 50,
-    max_per_hour: 200,
-    max_per_day: 500,
-    max_per_session: 1000,
-    require_confirmation_above: 25
-  },
-  rate_limits: {
-    max_invocations_per_minute: 30,
-    max_invocations_per_hour: 500,
-    max_trades_per_hour: 10,
-    max_messages_per_minute: 20,
-    cooldown_after_error_ms: 5000
-  },
-  max_consecutive_failures: 5,
-  auto_pause_on_anomaly: true,
-  require_confirmation_for_new_tokens: true,
-  blocked_tokens: ['SCAM_TOKEN'],
-  emergency_stop_enabled: true
-});
-
-// Check before executing
-const check = await safety.checkBeforeInvoke('cap.swap.execute.v1', {
-  token_in: 'SOL',
-  token_out: 'USDC',
-  amount: 100
-});
-
-if (!check.allowed) {
-  console.error('Blocked:', check.reason);
-  return;
-}
-
-if (check.requiresConfirmation) {
-  // Prompt user for confirmation
-  const confirmed = await promptUser(check.confirmationPrompt);
-  if (!confirmed) return;
-}
-
-// Execute and record
-const result = await agent.invoke('cap.swap.execute.v1', inputs);
-safety.recordInvocation();
-safety.recordTrade();
-safety.recordSpending(100, 'cap.swap.execute.v1');
-
-// Handle failures
-if (!result.success) {
-  safety.recordFailure();
-} else {
-  safety.recordSuccess();
-}</code></pre>
-
-      <div class="feature-grid">
-        <div class="feature-card">
-          <h4><span class="badge badge-safe">Safe</span> Spending Limits</h4>
-          <p>Per-transaction, hourly, daily, and session spending caps with confirmation prompts.</p>
-        </div>
-        <div class="feature-card">
-          <h4><span class="badge badge-safe">Safe</span> Rate Limiting</h4>
-          <p>Prevent runaway agents with invocation and trade rate limits.</p>
-        </div>
-        <div class="feature-card">
-          <h4><span class="badge badge-safe">Safe</span> Token Allowlists</h4>
-          <p>Restrict trading to approved tokens only.</p>
-        </div>
-        <div class="feature-card">
-          <h4><span class="badge badge-safe">Safe</span> Emergency Stop</h4>
-          <p>Automatic pause on anomalies with manual emergency stop.</p>
-        </div>
-      </div>
-
-      <div class="danger-box">
-        <h4>🚨 Never Disable Safety in Production</h4>
-        <p>The safety guardrails exist to protect your funds. Disabling them or using aggressive presets without understanding the risks can lead to significant financial loss.</p>
-      </div>
-    </section>
-
-    <section id="core-agent">
-      <h2>Core Agent Class</h2>
-      
-      <h3>Configuration</h3>
-      <pre><code>interface AgentConfig {
-  agent_id: string;           // Unique identifier
-  name: string;               // Display name
-  router_url?: string;        // Default: https://cap402.com
-  description?: string;       // Agent description
-  capabilities_provided?: string[];  // Capabilities this agent offers
-  capabilities_required?: string[];  // Capabilities this agent needs
-  api_key?: string;           // Authentication key
-  timeout?: number;           // Request timeout (ms)
-  retry_attempts?: number;    // Retry count on failure
-  retry_delay_ms?: number;    // Delay between retries
-  health_check_interval_ms?: number;  // Health check frequency
-  auto_reconnect?: boolean;   // Auto-reconnect on disconnect
-  log_level?: 'debug' | 'info' | 'warn' | 'error';
-}</code></pre>
-
-      <h3>Lifecycle Methods</h3>
-      <table>
-        <tr>
-          <th>Method</th>
-          <th>Description</th>
-        </tr>
-        <tr>
-          <td><code>start()</code></td>
-          <td>Initialize agent, register with router, start health checks</td>
-        </tr>
-        <tr>
-          <td><code>stop(graceful?)</code></td>
-          <td>Deregister, wait for pending requests, cleanup</td>
-        </tr>
-        <tr>
-          <td><code>pause()</code></td>
-          <td>Temporarily pause operations</td>
-        </tr>
-        <tr>
-          <td><code>resume()</code></td>
-          <td>Resume after pause</td>
-        </tr>
-        <tr>
-          <td><code>getState()</code></td>
-          <td>Get current agent state</td>
-        </tr>
-      </table>
-
-      <h3>Capability Invocation</h3>
-      <pre><code>// Simple invoke
-const result = await agent.invoke('cap.price.lookup.v1', {
-  base_token: 'SOL'
-});
-
-// With options
-const result = await agent.invoke('cap.swap.execute.v1', {
-  token_in: 'SOL',
-  token_out: 'USDC',
-  amount: 10
-}, {
-  timeout_ms: 60000,
-  privacy_level: 2,
-  max_cost: 0.01
-});
-
-// Batch invoke
-const results = await agent.batchInvoke([
-  { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'SOL' } },
-  { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'ETH' } }
-]);
-
-// Smart invoke with recommendations
-const result = await agent.smartInvoke('cap.price.lookup.v1', {
-  base_token: 'SOL'
-}, { include_recommendations: true });</code></pre>
-
-      <h3>A2A Protocol</h3>
-      <pre><code>// Discover other agents
-const agents = await agent.discoverAgents({
-  capability: 'cap.swap.execute.v1',
-  min_trust_score: 70
-});
-
-// Invoke another agent directly
-const result = await agent.a2aInvoke({
-  to_agent: 'market-maker-001',
-  capability_id: 'cap.price.lookup.v1',
-  inputs: { base_token: 'SOL' }
-});
-
-// Start an auction
-const auction = await agent.startAuction({
-  capability_id: 'cap.swap.execute.v1',
-  max_price: 0.01,
-  timeout_ms: 30000
-});
-
-// Coordinate a swarm
-const swarm = await agent.coordinateSwarm({
-  capability_id: 'cap.price.lookup.v1',
-  inputs: { base_token: 'SOL' },
-  min_agents: 3,
-  strategy: 'consensus'
-});</code></pre>
-
-      <h3>Events</h3>
-      <pre><code>agent.on('ready', () => console.log('Agent ready'));
-agent.on('stopped', () => console.log('Agent stopped'));
-agent.on('error', (err) => console.error('Error:', err));
-agent.on('rate_limited', (info) => console.warn('Rate limited:', info));
-agent.on('circuit_open', (info) => console.warn('Circuit open:', info));
-agent.on('heartbeat', (info) => console.log('Heartbeat:', info));
-agent.on('disconnected', () => console.warn('Disconnected'));
-agent.on('reconnected', () => console.log('Reconnected'));</code></pre>
-    </section>
-
-    <section id="templates">
-      <h2>Agent Templates</h2>
-      <p>Pre-built agents for common use cases with built-in best practices.</p>
-
-      <h3>Trading Agent</h3>
-      <pre><code>import { createTradingAgent } from './sdk/agents';
+// One-liner operations
+const price = await cap402.price('SOL');           // $143.34
+const wallet = await cap402.wallet('address...');
+const swap = await cap402.swap('SOL', 'USDC', 10); // dry_run by default</pre>
+    
+    <h2>Agent Templates</h2>
+    <h3>Trading Agent</h3>
+    <p>Monitors prices, generates signals, and prepares ready-to-sign swap transactions.</p>
+    <pre class="code-block">import { createTradingAgent } from '@cap402/sdk';
 
 const trader = createTradingAgent({
   agent_id: 'sol-trader',
-  name: 'SOL Trading Bot',
   watched_tokens: ['SOL', 'ETH', 'BTC'],
   mev_protection: true
 });
 
-// Agent monitors markets autonomously
+// Agent prepares transactions autonomously
 trader.on('signal', async (signal) => {
-  console.log(`Signal: ${signal.type} ${signal.token}`);
-  
-  // Agent prepares ready-to-sign transaction
-  const prepared = await trader.actOnSignal(signal, 10);
-  if (prepared) {
-    console.log(`Ready to execute: ${prepared.instructions_for_user}`);
-    // Send to user's wallet for signing
-  }
+  const tx = await trader.actOnSignal(signal, 10);
+  // tx is ready for your wallet to sign
 });
 
-// Or prepare transactions directly
-trader.on('price_alert', async (alert) => {
-  if (alert.change_percent < -5) {
-    // Prepare a buy transaction
-    const tx = await trader.prepareSwap('USDC', alert.token, 100);
-    console.log(`Buy opportunity: ${tx.instructions_for_user}`);
-  }
-});
-
-await trader.start();</code></pre>
-
-      <div class="success-box">
-        <h4>✅ Autonomous but Safe</h4>
-        <p>Agents are <strong>fully autonomous</strong> in decision-making: they monitor markets, analyze MEV risk, and prepare transactions. But <strong>you retain control</strong>: agents return ready-to-sign transactions that you approve in your own wallet. We never hold your keys.</p>
-      </div>
-
-      <h4>Prepared Transactions</h4>
-      <pre><code>// Agent prepares everything, you just sign
-const prepared = await trader.prepareSwap('SOL', 'USDC', 10);
+await trader.start();</pre>
+    
+    <h3>Prepared Transactions</h3>
+    <p>Agents return ready-to-sign transactions with all details calculated:</p>
+    <pre class="code-block">const prepared = await trader.prepareSwap('SOL', 'USDC', 10);
 
 // Returns:
 {
@@ -615,96 +95,88 @@ const prepared = await trader.prepareSwap('SOL', 'USDC', 10);
   expires_at: 1705412460000,
   
   token_in: 'SOL',
-  token_out: 'USDC', 
+  token_out: 'USDC',
   amount_in: 10,
   expected_out: 1433.40,
   min_out: 1426.23,
+  slippage_bps: 50,
   
-  mev_risk: 'LOW',
   dex: 'jupiter',
+  mev_risk: 'LOW',
   
   user_action_required: 'sign_and_submit',
   instructions_for_user: 'Swap 10 SOL for ~1433.40 USDC. Sign in wallet.'
-}</code></pre>
-
-      <h3>Monitoring Agent</h3>
-      <pre><code>import { createMonitoringAgent } from './sdk/agents';
+}</pre>
+    
+    <h3>Monitoring Agent</h3>
+    <p>Tracks wallet balances and protocol health, triggers alerts.</p>
+    <pre class="code-block">import { createMonitoringAgent } from '@cap402/sdk';
 
 const monitor = createMonitoringAgent({
   agent_id: 'wallet-monitor',
-  name: 'Wallet Monitor',
   watched_wallets: ['YOUR_WALLET_ADDRESS'],
-  watched_protocols: ['jupiter', 'raydium'],
   check_interval_ms: 60000,
-  thresholds: {
-    balance_change_percent: 5,
-    gas_price_gwei: 100,
-    health_score_min: 70
-  },
-  alert_channels: [
-    { type: 'console', enabled: true },
-    { type: 'webhook', endpoint: 'https://your-webhook.com', enabled: true }
-  ]
+  alert_channels: [{ type: 'console', enabled: true }]
 });
 
 monitor.on('alert', (alert) => {
-  console.log(`Alert: ${alert.severity} - ${alert.title}`);
+  console.log(\`\${alert.severity}: \${alert.title}\`);
 });
 
-await monitor.start();</code></pre>
-
-      <h3>Analytics Agent</h3>
-      <pre><code>import { createAnalyticsAgent } from './sdk/agents';
+await monitor.start();</pre>
+    
+    <h3>Analytics Agent</h3>
+    <p>Collects time-series data, generates reports and insights.</p>
+    <pre class="code-block">import { createAnalyticsAgent } from '@cap402/sdk';
 
 const analytics = createAnalyticsAgent({
   agent_id: 'market-analytics',
-  name: 'Market Analytics',
-  data_sources: [
-    {
-      id: 'sol-price',
-      type: 'price',
-      capability_id: 'cap.price.lookup.v1',
-      inputs: { base_token: 'SOL' },
-      interval_ms: 60000,
-      enabled: true
-    }
-  ],
-  report_interval_ms: 300000,
-  aggregation_window_ms: 3600000,
-  max_data_points: 10000
+  data_sources: [{
+    id: 'sol-price',
+    type: 'price',
+    capability_id: 'cap.price.lookup.v1',
+    inputs: { base_token: 'SOL' },
+    interval_ms: 60000,
+    enabled: true
+  }]
 });
 
 analytics.on('report_generated', (report) => {
-  console.log('Report:', report.summaries);
+  console.log('Insights:', report.insights);
 });
 
-await analytics.start();</code></pre>
-    </section>
+await analytics.start();</pre>
+    
+    <h2>Safety Guardrails</h2>
+    <p>Built-in protection with sensible defaults:</p>
+    <table>
+      <tr><th>Limit</th><th>Default</th><th>Description</th></tr>
+      <tr><td>Per Transaction</td><td>$100</td><td>Maximum USD per single transaction</td></tr>
+      <tr><td>Per Hour</td><td>$500</td><td>Maximum USD spending per hour</td></tr>
+      <tr><td>Per Day</td><td>$2,000</td><td>Maximum USD spending per day</td></tr>
+      <tr><td>Trades/Hour</td><td>20</td><td>Maximum trades per hour</td></tr>
+      <tr><td>Invocations/Min</td><td>60</td><td>Rate limit per minute</td></tr>
+    </table>
+    <pre class="code-block">import { createSafetyGuardrails, SAFETY_PRESETS } from '@cap402/sdk';
 
-    <section id="orchestration">
-      <h2>Multi-Agent Orchestration</h2>
-      
-      <pre><code>import { createOrchestrator } from './sdk/orchestration';
+// Use presets: conservative, standard, aggressive
+const safety = createSafetyGuardrails(SAFETY_PRESETS.conservative);
+
+// Or customize
+const custom = createSafetyGuardrails({
+  spending_limits: {
+    max_per_transaction: 50,
+    max_per_hour: 200
+  },
+  blocked_tokens: ['SCAM_TOKEN']
+});</pre>
+    
+    <h2>Multi-Agent Orchestration</h2>
+    <pre class="code-block">import { createOrchestrator } from '@cap402/sdk';
 
 const orchestrator = createOrchestrator({
   orchestrator_id: 'trading-swarm',
-  name: 'Trading Swarm',
-  max_agents: 5,
-  task_timeout_ms: 30000,
-  retry_failed_tasks: true
-});
-
-await orchestrator.start();
-
-// Add agents
-await orchestrator.addAgent({
-  agent_id: 'pricer-1',
-  name: 'Price Agent 1'
-});
-
-await orchestrator.addAgent({
-  agent_id: 'pricer-2',
-  name: 'Price Agent 2'
+  max_agents: 5
 });
 
 // Parallel execution
@@ -713,65 +185,15 @@ const results = await orchestrator.executeParallel([
   { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'ETH' } }
 ]);
 
-// Consensus execution (majority agreement)
+// Consensus execution
 const consensus = await orchestrator.executeWithConsensus(
   'cap.price.lookup.v1',
   { base_token: 'SOL' },
   { min_agreement: 0.5 }
-);
-
-// Workflow execution
-const workflow = orchestrator.createWorkflow('Portfolio Analysis', [
-  { name: 'Get Wallet', capability_id: 'cap.wallet.snapshot.v1', inputs: { address: '...' } },
-  { name: 'Get Prices', capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'SOL' } }
-]);
-
-const result = await orchestrator.executeWorkflow(workflow.workflow_id);
-
-await orchestrator.stop();</code></pre>
-    </section>
-
-    <section id="testing">
-      <h2>Testing Utilities</h2>
-      
-      <pre><code>import { AgentTester, runQuickTest } from './sdk/testing';
-
-// Quick test
-await runQuickTest('https://cap402.com');
-
-// Custom test suite
-const tester = new AgentTester({
-  router_url: 'https://cap402.com'
-});
-
-await tester.connect();
-
-await tester.runSuite({
-  name: 'My Tests',
-  tests: [
-    {
-      name: 'Price Check',
-      capability_id: 'cap.price.lookup.v1',
-      inputs: { base_token: 'SOL' },
-      expected: {
-        success: true,
-        has_outputs: ['price'],
-        output_validators: {
-          price: (v) => typeof v === 'number' && v > 0
-        }
-      }
-    }
-  ]
-});
-
-tester.printSummary();
-await tester.disconnect();</code></pre>
-    </section>
-
-    <section id="cli">
-      <h2>CLI Tools</h2>
-      
-      <pre><code># Health check
+);</pre>
+    
+    <h2>CLI Tools</h2>
+    <pre class="code-block"># Health check
 npm run cli health
 
 # List capabilities
@@ -780,92 +202,18 @@ npm run cli capabilities
 # Invoke a capability
 npm run cli invoke cap.price.lookup.v1 '{"base_token":"SOL"}'
 
-# List agents
-npm run cli agents
-
-# Register an agent
-npm run cli register my-agent "My Agent" "cap.price.lookup.v1"
-
 # Run examples
 npm run example:trading
-npm run example:monitor
-npm run example:swarm
-
-# Run live tests
-npm run test:live</code></pre>
-    </section>
-
-    <section id="best-practices">
-      <h2>Best Practices</h2>
-
-      <div class="success-box">
-        <h4>✅ Do</h4>
-        <ul>
-          <li>Always use safety guardrails with appropriate limits</li>
-          <li>Start with <code>dry_run: true</code> for trading agents</li>
-          <li>Use conservative presets when testing</li>
-          <li>Implement proper error handling</li>
-          <li>Monitor agent metrics and violations</li>
-          <li>Use token allowlists for trading</li>
-          <li>Set up alerts for anomalies</li>
-          <li>Test thoroughly before production</li>
-        </ul>
-      </div>
-
-      <div class="danger-box">
-        <h4>❌ Don't</h4>
-        <ul>
-          <li>Never disable safety guardrails in production</li>
-          <li>Never hardcode API keys or secrets</li>
-          <li>Never use aggressive presets without understanding risks</li>
-          <li>Never ignore rate limit warnings</li>
-          <li>Never run untested agents with real funds</li>
-          <li>Never skip confirmation prompts for large transactions</li>
-        </ul>
-      </div>
-
-      <h3>Error Handling</h3>
-      <pre><code>try {
-  const result = await agent.invoke('cap.swap.execute.v1', inputs);
-  
-  if (!result.success) {
-    console.error('Invocation failed:', result.error);
-    safety.recordFailure();
-    return;
-  }
-  
-  safety.recordSuccess();
-  
-} catch (error) {
-  if (error.message.includes('Circuit breaker')) {
-    console.warn('Circuit breaker open - waiting...');
-    await sleep(30000);
-  } else if (error.message.includes('Rate limit')) {
-    console.warn('Rate limited - backing off...');
-    await sleep(60000);
-  } else {
-    console.error('Unexpected error:', error);
-    safety.recordFailure();
-  }
-}</code></pre>
-
-      <h3>Graceful Shutdown</h3>
-      <pre><code>process.on('SIGINT', async () => {
-  console.log('Shutting down...');
-  await agent.stop(true);  // graceful = true
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  console.log('Terminating...');
-  await agent.stop(true);
-  process.exit(0);
-});</code></pre>
-    </section>
-
-    <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-subtle); text-align: center; color: var(--text-muted);">
-      <p>CAP-402 Agent SDK v0.2.0 | <a href="https://cap402.com" style="color: var(--arcium-purple);">cap402.com</a></p>
-    </footer>
+npm run example:monitor</pre>
+    
+    <h2>Key Principles</h2>
+    <ul>
+      <li><strong>Autonomous Decision-Making</strong> — Agents monitor, analyze, and prepare transactions 24/7</li>
+      <li><strong>User Control</strong> — You sign transactions in your own wallet. We never hold keys.</li>
+      <li><strong>Safety First</strong> — Spending limits, rate controls, and emergency stop built-in</li>
+      <li><strong>MEV Protection</strong> — Risk analysis before every trade</li>
+      <li><strong>Zero Configuration</strong> — Sensible defaults, one-liner APIs</li>
+    </ul>
   </div>
 </body>
 </html>

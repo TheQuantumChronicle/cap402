@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAP-402 API Documentation</title>
+  <title>CAP-402 Documentation</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -33,22 +33,13 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
     }
     
-    .topbar-left h1 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      background: linear-gradient(135deg, #fff 0%, var(--arcium-purple) 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+    .topbar-left img { height: 28px; width: auto; }
+    .topbar-left h1 { font-size: 1rem; color: var(--text-primary); }
     
     .nav-links { display: flex; gap: 0.5rem; }
-    
     .nav-links a {
       padding: 0.4rem 0.8rem;
       background: var(--bg-card);
@@ -59,165 +50,101 @@
       text-decoration: none;
       transition: all 0.2s;
     }
-    
-    .nav-links a:hover, .nav-links a.active {
+    .nav-links a:hover {
       background: rgba(108, 68, 252, 0.15);
       border-color: var(--arcium-purple);
       color: var(--text-primary);
     }
     
-    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-    
-    .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem; }
-    .tab { padding: 0.5rem 1rem; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; border-radius: 6px; }
-    .tab:hover { color: var(--text-primary); }
-    .tab.active { background: var(--arcium-purple); color: white; }
-    
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    
-    h2 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-primary); }
-    h3 { font-size: 1.1rem; margin: 1.5rem 0 0.75rem; color: var(--arcium-purple); }
-    p { color: var(--text-secondary); margin-bottom: 1rem; }
-    
-    .endpoint-group { margin-bottom: 2rem; }
-    .endpoint-group-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle); }
-    
-    .endpoint {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      margin-bottom: 0.75rem;
-      overflow: hidden;
-    }
-    
-    .endpoint-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem 1rem;
-      cursor: pointer;
-    }
-    
-    .endpoint-header:hover { background: rgba(255,255,255,0.02); }
-    
-    .method {
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      min-width: 50px;
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
       text-align: center;
     }
-    .method.get { background: var(--green); color: white; }
-    .method.post { background: var(--arcium-purple); color: white; }
     
-    .endpoint-path { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-primary); }
-    .endpoint-desc { font-size: 0.8rem; color: var(--text-secondary); margin-left: auto; }
-    
-    .endpoint-body {
-      display: none;
-      padding: 1rem;
-      background: rgba(0,0,0,0.2);
-      border-top: 1px solid var(--border-subtle);
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #fff 0%, var(--arcium-purple) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     
-    .endpoint.open .endpoint-body { display: block; }
+    .hero-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 3rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 2rem 1.5rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    
+    .card:hover {
+      border-color: var(--arcium-purple);
+      transform: translateY(-2px);
+    }
+    
+    .card-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .card-title { font-size: 1.25rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .card-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+    
+    .quick-start {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: left;
+      margin-top: 2rem;
+    }
+    
+    .quick-start h3 {
+      font-size: 1rem;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
     
     .code-block {
-      background: #1a1a1a;
+      background: #111;
       border: 1px solid var(--border-subtle);
       border-radius: 6px;
       padding: 1rem;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.8rem;
-      overflow-x: auto;
       color: var(--green);
-      margin: 0.5rem 0;
+      overflow-x: auto;
     }
     
-    .whitepaper-content { max-width: 800px; }
-    .whitepaper-content h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    .whitepaper-content h2 { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); }
-    .whitepaper-content table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-    .whitepaper-content th, .whitepaper-content td { border: 1px solid var(--border-subtle); padding: 0.5rem 1rem; text-align: left; }
-    .whitepaper-content th { background: var(--bg-card); color: var(--text-primary); }
-    .whitepaper-content td { color: var(--text-secondary); }
-    .whitepaper-content code { background: rgba(108, 68, 252, 0.2); color: var(--arcium-purple); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
-    .whitepaper-content blockquote { border-left: 3px solid var(--arcium-purple); padding-left: 1rem; margin: 1rem 0; color: var(--text-secondary); font-style: italic; }
-    .whitepaper-content ul, .whitepaper-content ol { margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary); }
-    .whitepaper-content li { margin-bottom: 0.5rem; }
-    .whitepaper-content pre.code-block { background: #111; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; overflow-x: auto; color: var(--green); white-space: pre; margin: 1rem 0; }
-    .whitepaper-content h3 { font-size: 1rem; margin: 1.5rem 0 0.75rem; color: var(--arcium-purple); }
-    .whitepaper-content a { color: var(--arcium-purple); }
-    
-    /* API Reference detailed styles */
-    .endpoint-section { margin-bottom: 1.25rem; }
-    .endpoint-section:last-child { margin-bottom: 0; }
-    .endpoint-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 600; }
-    .params-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-    .params-table th, .params-table td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border-subtle); }
-    .params-table th { color: var(--text-secondary); font-weight: 500; font-size: 0.7rem; text-transform: uppercase; }
-    .params-table td { color: var(--text-primary); }
-    .params-table .param-name { font-family: 'JetBrains Mono', monospace; color: var(--arcium-purple); font-weight: 500; }
-    .params-table .param-type { font-family: 'JetBrains Mono', monospace; color: #eab308; font-size: 0.7rem; }
-    .params-table .param-required { color: #ef4444; font-size: 0.65rem; font-weight: 600; }
-    .params-table .param-optional { color: var(--text-secondary); font-size: 0.65rem; }
-    .response-block { background: #111; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; overflow-x: auto; white-space: pre; }
-    .response-block .key { color: var(--arcium-purple); }
-    .response-block .string { color: var(--green); }
-    .response-block .number { color: #eab308; }
-    .response-block .boolean { color: #f472b6; }
-    .error-list { list-style: none; padding: 0; margin: 0; }
-    .error-list li { display: flex; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border-subtle); font-size: 0.8rem; }
-    .error-list li:last-child { border-bottom: none; }
-    .error-code { font-family: 'JetBrains Mono', monospace; color: #ef4444; font-weight: 600; min-width: 40px; }
-    .error-desc { color: var(--text-secondary); }
-    
-    /* Mobile responsive */
     @media (max-width: 768px) {
-      .topbar { padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
-      .topbar-left h1 { font-size: 1rem; }
-      .nav-links a { padding: 0.3rem 0.6rem; font-size: 0.7rem; }
-      .container { padding: 1rem; }
-      .tabs { flex-wrap: wrap; }
-      .tab { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
-      h2 { font-size: 1.25rem; }
-      .endpoint-header { flex-wrap: wrap; gap: 0.5rem; padding: 0.6rem 0.75rem; }
-      .endpoint-desc { width: 100%; margin-left: 0; font-size: 0.7rem; opacity: 0.7; }
-      .endpoint-path { font-size: 0.8rem; }
-      .method { font-size: 0.6rem; padding: 0.2rem 0.4rem; min-width: 42px; }
-      .endpoint-body { padding: 0.75rem; }
-      .code-block { font-size: 0.7rem; padding: 0.75rem; }
-      .params-table { font-size: 0.7rem; display: block; overflow-x: auto; }
-      .params-table th, .params-table td { padding: 0.4rem 0.5rem; }
-      .response-block { font-size: 0.65rem; padding: 0.75rem; }
-      .whitepaper-content h1 { font-size: 1.5rem; }
-      .whitepaper-content h2 { font-size: 1.1rem; }
-      .whitepaper-content h3 { font-size: 0.9rem; }
-      .whitepaper-content p, .whitepaper-content li { font-size: 0.85rem; }
-      .whitepaper-content table { font-size: 0.75rem; display: block; overflow-x: auto; }
-      .whitepaper-content th, .whitepaper-content td { padding: 0.4rem 0.6rem; }
-      .whitepaper-content pre.code-block { font-size: 0.65rem; padding: 0.75rem; }
-    }
-    
-    @media (max-width: 480px) {
-      .topbar { padding: 0.5rem 0.75rem; }
-      .topbar-left h1 { font-size: 0.9rem; }
-      .container { padding: 0.75rem; }
-      .endpoint-path { font-size: 0.75rem; word-break: break-all; }
-      .code-block { font-size: 0.65rem; word-break: break-all; white-space: pre-wrap; }
+      .cards { grid-template-columns: 1fr; }
+      .hero-title { font-size: 1.75rem; }
+      .container { padding: 2rem 1rem; }
     }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <div class="topbar-left" style="display: flex; align-items: center; gap: 0.75rem;">
-      <a href="/" style="display: flex; align-items: center;">
-        <img src="/public/CAP402logo.png" alt="CAP-402" style="height: 28px; width: auto;">
-      </a>
-      <h1 style="font-size: 1rem;">Documentation</h1>
+    <div class="topbar-left">
+      <a href="/"><img src="/public/CAP402logo.png" alt="CAP-402"></a>
+      <h1>Documentation</h1>
     </div>
     <div class="nav-links">
       <a href="/">Home</a>
@@ -226,1353 +153,45 @@
   </div>
   
   <div class="container">
-    <div class="tabs">
-      <button class="tab active" id="tab-api">API Reference</button>
-      <button class="tab" id="tab-sdk">SDK Reference</button>
-      <button class="tab" id="tab-whitepaper">Whitepaper</button>
+    <h1 class="hero-title">CAP-402 Documentation</h1>
+    <p class="hero-subtitle">Everything you need to build autonomous agents with private compute capabilities.</p>
+    
+    <div class="cards">
+      <a href="/docs/api-docs.html" class="card">
+        <div class="card-icon">��</div>
+        <div class="card-title">API Reference</div>
+        <div class="card-desc">Complete REST API documentation. Endpoints, parameters, responses, and error codes.</div>
+      </a>
+      
+      <a href="/docs/sdk-docs.html" class="card">
+        <div class="card-icon">🛠️</div>
+        <div class="card-title">SDK Reference</div>
+        <div class="card-desc">Build autonomous agents with our TypeScript SDK. Trading, monitoring, and analytics templates.</div>
+      </a>
+      
+      <a href="/docs/whitepaper.html" class="card">
+        <div class="card-icon">📄</div>
+        <div class="card-title">Whitepaper</div>
+        <div class="card-desc">Protocol specification, architecture, privacy stack, and economic model.</div>
+      </a>
     </div>
     
-    <!-- API Reference Tab -->
-    <div id="api" class="tab-content active">
-      <h2>API Reference</h2>
-      <p>Base URL: <code>https://cap402.com</code> | Authentication: <code>X-API-Key</code> header (optional)</p>
-      
-      <!-- Global Errors -->
-      <div class="endpoint-group">
-        <div class="endpoint-group-title">Common Error Codes</div>
-        <ul class="error-list">
-          <li><span class="error-code">400</span><span class="error-desc">Bad Request — Invalid parameters or malformed JSON</span></li>
-          <li><span class="error-code">401</span><span class="error-desc">Unauthorized — Missing or invalid API key for protected endpoints</span></li>
-          <li><span class="error-code">404</span><span class="error-desc">Not Found — Capability or resource doesn't exist</span></li>
-          <li><span class="error-code">429</span><span class="error-desc">Rate Limited — Too many requests (10/min anonymous, 200/min trusted)</span></li>
-          <li><span class="error-code">500</span><span class="error-desc">Internal Error — Server-side failure, retry with exponential backoff</span></li>
-        </ul>
-      </div>
-      
-      <div class="endpoint-group">
-        <div class="endpoint-group-title">Core Capabilities</div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method post">POST</span>
-            <span class="endpoint-path">/invoke</span>
-            <span class="endpoint-desc">Execute any capability by ID</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>The primary endpoint for executing capabilities. Supports all 13 registered capabilities including price lookups, swaps, ZK proofs, FHE compute, and confidential operations.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Request Body</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">capability_id</td><td class="param-type">string</td><td class="param-required">required</td><td>Capability identifier (e.g., <code>cap.price.lookup.v1</code>)</td></tr>
-                <tr><td class="param-name">inputs</td><td class="param-type">object</td><td class="param-required">required</td><td>Capability-specific input parameters</td></tr>
-                <tr><td class="param-name">preferences</td><td class="param-type">object</td><td class="param-optional">optional</td><td>Execution preferences: <code>privacy_level</code> (0-3), <code>max_cost</code>, <code>timeout_ms</code></td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl -X POST https://cap402.com/invoke \
-  -H "Content-Type: application/json" \
-  -d '{
-    "capability_id": "cap.price.lookup.v1",
-    "inputs": { "base_token": "SOL", "quote_token": "USDC" }
-  }'</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"success"</span>: <span class="boolean">true</span>,
-  <span class="key">"capability_id"</span>: <span class="string">"cap.price.lookup.v1"</span>,
-  <span class="key">"outputs"</span>: {
-    <span class="key">"price"</span>: <span class="number">185.42</span>,
-    <span class="key">"source"</span>: <span class="string">"jupiter"</span>,
-    <span class="key">"timestamp"</span>: <span class="number">1705347600000</span>
-  },
-  <span class="key">"execution_time_ms"</span>: <span class="number">45</span>,
-  <span class="key">"receipt"</span>: {
-    <span class="key">"receipt_id"</span>: <span class="string">"rec_abc123"</span>,
-    <span class="key">"signature"</span>: <span class="string">"0x..."</span>
-  }
-}</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Errors</div>
-              <ul class="error-list">
-                <li><span class="error-code">400</span><span class="error-desc">Missing capability_id or inputs</span></li>
-                <li><span class="error-code">404</span><span class="error-desc">Capability not found</span></li>
-                <li><span class="error-code">422</span><span class="error-desc">Invalid inputs for capability schema</span></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method get">GET</span>
-            <span class="endpoint-path">/capabilities</span>
-            <span class="endpoint-desc">List all registered capabilities</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Returns all 13 registered capabilities with their full schemas, input/output definitions, and sponsor information.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Query Parameters</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">category</td><td class="param-type">string</td><td class="param-optional">optional</td><td>Filter by category: <code>price</code>, <code>wallet</code>, <code>swap</code>, <code>zk</code>, <code>fhe</code></td></tr>
-                <tr><td class="param-name">privacy_level</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Filter by minimum privacy level (0-3)</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl https://cap402.com/capabilities</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"capabilities"</span>: [
-    {
-      <span class="key">"id"</span>: <span class="string">"cap.price.lookup.v1"</span>,
-      <span class="key">"name"</span>: <span class="string">"Price Lookup"</span>,
-      <span class="key">"description"</span>: <span class="string">"Get real-time token prices"</span>,
-      <span class="key">"sponsor"</span>: <span class="string">"helius"</span>,
-      <span class="key">"execution"</span>: { <span class="key">"mode"</span>: <span class="string">"public"</span> },
-      <span class="key">"inputs"</span>: { <span class="key">"base_token"</span>: <span class="string">"string"</span> },
-      <span class="key">"outputs"</span>: { <span class="key">"price"</span>: <span class="string">"number"</span> }
-    }
-  ],
-  <span class="key">"total"</span>: <span class="number">13</span>
-}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="endpoint-group">
-        <div class="endpoint-group-title">A2A Protocol</div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method post">POST</span>
-            <span class="endpoint-path">/a2a/invoke</span>
-            <span class="endpoint-desc">Agent-to-agent capability invocation</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Enables one agent to invoke a capability through another agent. Tracks reputation for both agents and supports privacy levels.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Request Body</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">from_agent</td><td class="param-type">string</td><td class="param-required">required</td><td>Source agent ID</td></tr>
-                <tr><td class="param-name">to_agent</td><td class="param-type">string</td><td class="param-required">required</td><td>Target agent ID</td></tr>
-                <tr><td class="param-name">capability_id</td><td class="param-type">string</td><td class="param-required">required</td><td>Capability to invoke</td></tr>
-                <tr><td class="param-name">inputs</td><td class="param-type">object</td><td class="param-optional">optional</td><td>Capability inputs</td></tr>
-                <tr><td class="param-name">privacy_level</td><td class="param-type">number</td><td class="param-optional">optional</td><td>0=public, 1=obscured, 2=encrypted, 3=zk</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl -X POST https://cap402.com/a2a/invoke \
-  -H "Content-Type: application/json" \
-  -d '{
-    "from_agent": "trading-bot-alpha",
-    "to_agent": "price-oracle",
-    "capability_id": "cap.price.lookup.v1",
-    "inputs": { "base_token": "SOL" }
-  }'</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"success"</span>: <span class="boolean">true</span>,
-  <span class="key">"a2a_protocol"</span>: {
-    <span class="key">"from"</span>: <span class="string">"trading-bot-alpha"</span>,
-    <span class="key">"to"</span>: <span class="string">"price-oracle"</span>,
-    <span class="key">"execution_time_ms"</span>: <span class="number">164</span>
-  },
-  <span class="key">"outputs"</span>: { <span class="key">"price"</span>: <span class="number">185.42</span> },
-  <span class="key">"reputation_updated"</span>: <span class="boolean">true</span>
-}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method get">GET</span>
-            <span class="endpoint-path">/a2a/discover/:capability_id</span>
-            <span class="endpoint-desc">Find agents that provide a capability</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Discover agents that provide a specific capability. Filter by trust score, latency, and success rate.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Path Parameters</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">capability_id</td><td class="param-type">string</td><td class="param-required">required</td><td>Capability to search for</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Query Parameters</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">min_trust</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Minimum trust score (0-100)</td></tr>
-                <tr><td class="param-name">max_latency</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Maximum avg latency in ms</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl "https://cap402.com/a2a/discover/cap.price.lookup.v1?min_trust=50"</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"agents"</span>: [
-    {
-      <span class="key">"agent_id"</span>: <span class="string">"price-oracle"</span>,
-      <span class="key">"trust_score"</span>: <span class="number">87</span>,
-      <span class="key">"avg_latency_ms"</span>: <span class="number">45</span>,
-      <span class="key">"success_rate"</span>: <span class="number">0.99</span>,
-      <span class="key">"total_invocations"</span>: <span class="number">12450</span>
-    }
-  ],
-  <span class="key">"total"</span>: <span class="number">3</span>
-}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method post">POST</span>
-            <span class="endpoint-path">/a2a/auction</span>
-            <span class="endpoint-desc">Agents compete to fulfill request</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Create an auction where multiple agents bid to fulfill a capability request. Winner selected by price, trust, and latency.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Request Body</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">requester_agent</td><td class="param-type">string</td><td class="param-required">required</td><td>Agent requesting the auction</td></tr>
-                <tr><td class="param-name">capability_id</td><td class="param-type">string</td><td class="param-required">required</td><td>Capability to auction</td></tr>
-                <tr><td class="param-name">max_price</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Maximum acceptable bid</td></tr>
-                <tr><td class="param-name">inputs</td><td class="param-type">object</td><td class="param-optional">optional</td><td>Capability inputs</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl -X POST https://cap402.com/a2a/auction \
-  -H "Content-Type: application/json" \
-  -d '{
-    "requester_agent": "my-trading-bot",
-    "capability_id": "cap.price.lookup.v1",
-    "max_price": 10
-  }'</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"auction_id"</span>: <span class="string">"auc_xyz789"</span>,
-  <span class="key">"winner"</span>: {
-    <span class="key">"agent_id"</span>: <span class="string">"price-oracle"</span>,
-    <span class="key">"bid"</span>: <span class="number">5</span>,
-    <span class="key">"trust_score"</span>: <span class="number">87</span>
-  },
-  <span class="key">"total_bids"</span>: <span class="number">4</span>,
-  <span class="key">"outputs"</span>: { <span class="key">"price"</span>: <span class="number">185.42</span> }
-}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method post">POST</span>
-            <span class="endpoint-path">/a2a/swarm</span>
-            <span class="endpoint-desc">Coordinate multiple agents</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Execute a task across multiple agents. Supports parallel (all at once) or sequential (one after another) strategies.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Request Body</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">coordinator_agent</td><td class="param-type">string</td><td class="param-required">required</td><td>Agent coordinating the swarm</td></tr>
-                <tr><td class="param-name">task</td><td class="param-type">object</td><td class="param-required">required</td><td>Task with <code>capability_id</code> and <code>inputs</code></td></tr>
-                <tr><td class="param-name">agents</td><td class="param-type">string[]</td><td class="param-required">required</td><td>Array of agent IDs to include</td></tr>
-                <tr><td class="param-name">strategy</td><td class="param-type">string</td><td class="param-optional">optional</td><td><code>parallel</code> or <code>sequential</code> (default)</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl -X POST https://cap402.com/a2a/swarm \
-  -H "Content-Type: application/json" \
-  -d '{
-    "coordinator_agent": "orchestrator",
-    "task": { "capability_id": "cap.price.lookup.v1" },
-    "agents": ["bot-1", "bot-2", "bot-3"],
-    "strategy": "parallel"
-  }'</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"swarm_id"</span>: <span class="string">"swm_abc123"</span>,
-  <span class="key">"strategy"</span>: <span class="string">"parallel"</span>,
-  <span class="key">"results"</span>: [
-    { <span class="key">"agent"</span>: <span class="string">"bot-1"</span>, <span class="key">"success"</span>: <span class="boolean">true</span>, <span class="key">"latency_ms"</span>: <span class="number">45</span> },
-    { <span class="key">"agent"</span>: <span class="string">"bot-2"</span>, <span class="key">"success"</span>: <span class="boolean">true</span>, <span class="key">"latency_ms"</span>: <span class="number">52</span> },
-    { <span class="key">"agent"</span>: <span class="string">"bot-3"</span>, <span class="key">"success"</span>: <span class="boolean">true</span>, <span class="key">"latency_ms"</span>: <span class="number">38</span> }
-  ],
-  <span class="key">"total_time_ms"</span>: <span class="number">52</span>
-}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method get">GET</span>
-            <span class="endpoint-path">/a2a/leaderboard</span>
-            <span class="endpoint-desc">Agent reputation rankings</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Get ranked list of agents by composite reputation score. Score is calculated from trust, success rate, latency, and capabilities count.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Query Parameters</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">limit</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Max results (default: 10, max: 100)</td></tr>
-                <tr><td class="param-name">sort_by</td><td class="param-type">string</td><td class="param-optional">optional</td><td><code>composite_score</code>, <code>trust_score</code>, <code>total_invocations</code></td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl "https://cap402.com/a2a/leaderboard?limit=5"</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"leaderboard"</span>: [
-    {
-      <span class="key">"rank"</span>: <span class="number">1</span>,
-      <span class="key">"agent_id"</span>: <span class="string">"price-oracle"</span>,
-      <span class="key">"composite_score"</span>: <span class="number">94.5</span>,
-      <span class="key">"trust_score"</span>: <span class="number">87</span>,
-      <span class="key">"success_rate"</span>: <span class="number">0.99</span>,
-      <span class="key">"total_invocations"</span>: <span class="number">12450</span>
-    }
-  ],
-  <span class="key">"total_agents"</span>: <span class="number">47</span>
-}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="endpoint-group">
-        <div class="endpoint-group-title">MEV Protection</div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method post">POST</span>
-            <span class="endpoint-path">/mev/analyze</span>
-            <span class="endpoint-desc">Analyze sandwich attack risk</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Analyze a potential trade for MEV risk. Returns sandwich attack probability, potential loss estimate, and protection recommendations.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Request Body</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">token_in</td><td class="param-type">string</td><td class="param-required">required</td><td>Input token symbol or mint address</td></tr>
-                <tr><td class="param-name">token_out</td><td class="param-type">string</td><td class="param-required">required</td><td>Output token symbol or mint address</td></tr>
-                <tr><td class="param-name">amount</td><td class="param-type">number</td><td class="param-required">required</td><td>Amount in token_in units</td></tr>
-                <tr><td class="param-name">slippage</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Slippage tolerance % (default: 0.5)</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl -X POST https://cap402.com/mev/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "token_in": "SOL",
-    "token_out": "USDC",
-    "amount": 10000,
-    "slippage": 0.5
-  }'</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"risk_level"</span>: <span class="string">"high"</span>,
-  <span class="key">"sandwich_probability"</span>: <span class="number">0.73</span>,
-  <span class="key">"estimated_loss_usd"</span>: <span class="number">542.50</span>,
-  <span class="key">"recommendation"</span>: <span class="string">"Use protected swap"</span>,
-  <span class="key">"analysis"</span>: {
-    <span class="key">"pool_liquidity"</span>: <span class="number">2450000</span>,
-    <span class="key">"trade_impact_bps"</span>: <span class="number">41</span>,
-    <span class="key">"recent_mev_activity"</span>: <span class="boolean">true</span>
-  }
-}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method post">POST</span>
-            <span class="endpoint-path">/mev/protected-swap</span>
-            <span class="endpoint-desc">Execute with MEV protection</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Execute a swap via private mempool (Arcium MPC) for MEV protection. Trade details are hidden from public mempool.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Request Body</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">token_in</td><td class="param-type">string</td><td class="param-required">required</td><td>Input token</td></tr>
-                <tr><td class="param-name">token_out</td><td class="param-type">string</td><td class="param-required">required</td><td>Output token</td></tr>
-                <tr><td class="param-name">amount</td><td class="param-type">number</td><td class="param-required">required</td><td>Amount to swap</td></tr>
-                <tr><td class="param-name">wallet_address</td><td class="param-type">string</td><td class="param-required">required</td><td>Destination wallet</td></tr>
-                <tr><td class="param-name">protection_level</td><td class="param-type">string</td><td class="param-optional">optional</td><td><code>standard</code>, <code>enhanced</code>, <code>maximum</code></td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl -X POST https://cap402.com/mev/protected-swap \
-  -H "Content-Type: application/json" \
-  -d '{
-    "token_in": "SOL",
-    "token_out": "USDC",
-    "amount": 100,
-    "wallet_address": "ABC123...",
-    "protection_level": "maximum"
-  }'</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"success"</span>: <span class="boolean">true</span>,
-  <span class="key">"tx_signature"</span>: <span class="string">"5xYz..."</span>,
-  <span class="key">"amount_received"</span>: <span class="number">18542.50</span>,
-  <span class="key">"mev_saved_usd"</span>: <span class="number">127.30</span>,
-  <span class="key">"protection"</span>: {
-    <span class="key">"level"</span>: <span class="string">"maximum"</span>,
-    <span class="key">"method"</span>: <span class="string">"arcium_mpc"</span>
-  }
-}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="endpoint-group">
-        <div class="endpoint-group-title">Trading Alpha</div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method get">GET</span>
-            <span class="endpoint-path">/alpha/arbitrage</span>
-            <span class="endpoint-desc">Cross-DEX arbitrage opportunities</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Find real-time arbitrage opportunities across DEXs. Returns profitable routes with estimated profit after gas.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Query Parameters</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">min_profit_bps</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Minimum profit in basis points (default: 5)</td></tr>
-                <tr><td class="param-name">max_results</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Max opportunities to return (default: 10)</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl "https://cap402.com/alpha/arbitrage?min_profit_bps=10"</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"opportunities"</span>: [
-    {
-      <span class="key">"pair"</span>: <span class="string">"SOL/USDC"</span>,
-      <span class="key">"buy_dex"</span>: <span class="string">"raydium"</span>,
-      <span class="key">"sell_dex"</span>: <span class="string">"orca"</span>,
-      <span class="key">"profit_bps"</span>: <span class="number">23</span>,
-      <span class="key">"profit_usd"</span>: <span class="number">42.50</span>,
-      <span class="key">"expires_in_ms"</span>: <span class="number">1500</span>
-    }
-  ],
-  <span class="key">"scanned_pairs"</span>: <span class="number">847</span>
-}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method get">GET</span>
-            <span class="endpoint-path">/alpha/whale-tracker</span>
-            <span class="endpoint-desc">Monitor large wallet movements (Live Helius Data)</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Track real whale movements using <strong>Helius Enhanced Transactions API</strong>. Monitors known whale wallets (Jump Trading, large SOL holders, protocol treasuries) for swaps and transfers. Returns market sentiment derived from buy/sell volume analysis.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Data Sources</div>
-              <p>• <strong>Helius</strong> - Real-time transaction data with 3 API keys for high availability<br>
-              • <strong>Nansen</strong> - Smart money labels and wallet categorization (when credits available)<br>
-              • <strong>Jupiter</strong> - Current token prices for USD valuations</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Query Parameters</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">token</td><td class="param-type">string</td><td class="param-optional">optional</td><td>Filter by token symbol (SOL, USDC, JUP, BONK)</td></tr>
-                <tr><td class="param-name">min_value</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Minimum USD value (default: 100000)</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl "https://cap402.com/alpha/whale-tracker?token=SOL&min_value=500000"</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"whale_tracker"</span>: {
-    <span class="key">"movements"</span>: [
-      {
-        <span class="key">"wallet"</span>: <span class="string">"FWzn...ouN5"</span>,
-        <span class="key">"wallet_label"</span>: <span class="string">"Jump Trading (smart_money)"</span>,
-        <span class="key">"action"</span>: <span class="string">"buy"</span>,
-        <span class="key">"token"</span>: <span class="string">"SOL"</span>,
-        <span class="key">"amount"</span>: <span class="number">50000</span>,
-        <span class="key">"value_usd"</span>: <span class="number">7250000</span>,
-        <span class="key">"signature"</span>: <span class="string">"h8ui...fLiP"</span>,
-        <span class="key">"significance"</span>: <span class="string">"BULLISH - Large accumulation"</span>
-      }
-    ],
-    <span class="key">"summary"</span>: {
-      <span class="key">"total_movements"</span>: <span class="number">5</span>,
-      <span class="key">"buy_volume_usd"</span>: <span class="number">45000000</span>,
-      <span class="key">"sell_volume_usd"</span>: <span class="number">12000000</span>,
-      <span class="key">"net_flow_usd"</span>: <span class="number">33000000</span>,
-      <span class="key">"market_sentiment"</span>: <span class="string">"BULLISH"</span>
-    },
-    <span class="key">"data_source"</span>: <span class="string">"helius_enhanced_transactions + nansen_labels"</span>
-  }
-}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method get">GET</span>
-            <span class="endpoint-path">/alpha/smart-money</span>
-            <span class="endpoint-desc">Smart Money Activity (Live Nansen Data)</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Track what smart money wallets are buying and selling using <strong>Nansen TGM API</strong>. Returns labeled traders (funds, whales, smart traders) with their 24h buy/sell volumes and net flow.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Data Source</div>
-              <p>• <strong>Nansen</strong> - Token God Mode who-bought-sold endpoint (1 credit per call)</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Query Parameters</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">token</td><td class="param-type">string</td><td class="param-optional">optional</td><td>Token symbol: SOL, JUP, BONK, WIF, PYTH (default: SOL)</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl "https://cap402.com/alpha/smart-money?token=SOL"</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"smart_money"</span>: {
-    <span class="key">"token"</span>: <span class="string">"SOL"</span>,
-    <span class="key">"traders"</span>: [
-      {
-        <span class="key">"address"</span>: <span class="string">"8aHV...3MXx"</span>,
-        <span class="key">"label"</span>: <span class="string">"Active SOL Millionaire"</span>,
-        <span class="key">"bought_volume_usd"</span>: <span class="number">1578603615</span>,
-        <span class="key">"sold_volume_usd"</span>: <span class="number">38696321</span>,
-        <span class="key">"net_volume_usd"</span>: <span class="number">1539907293</span>,
-        <span class="key">"action"</span>: <span class="string">"accumulating"</span>
-      }
-    ],
-    <span class="key">"summary"</span>: {
-      <span class="key">"accumulators"</span>: <span class="number">14</span>,
-      <span class="key">"distributors"</span>: <span class="number">3</span>,
-      <span class="key">"net_flow_usd"</span>: <span class="number">24500000</span>,
-      <span class="key">"sentiment"</span>: <span class="string">"BULLISH"</span>
-    },
-    <span class="key">"data_source"</span>: <span class="string">"nansen_tgm_who_bought_sold"</span>
-  }
-}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method get">GET</span>
-            <span class="endpoint-path">/alpha/liquidations</span>
-            <span class="endpoint-desc">DeFi liquidation opportunities</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Monitor at-risk DeFi positions approaching liquidation thresholds. Returns positions sorted by proximity to liquidation.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Query Parameters</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">protocol</td><td class="param-type">string</td><td class="param-optional">optional</td><td>Filter by protocol: <code>solend</code>, <code>mango</code>, <code>marginfi</code></td></tr>
-                <tr><td class="param-name">min_value</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Minimum position value USD</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl "https://cap402.com/alpha/liquidations?min_value=10000"</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"at_risk_positions"</span>: [
-    {
-      <span class="key">"protocol"</span>: <span class="string">"solend"</span>,
-      <span class="key">"wallet"</span>: <span class="string">"DEF...789"</span>,
-      <span class="key">"collateral_usd"</span>: <span class="number">125000</span>,
-      <span class="key">"debt_usd"</span>: <span class="number">98000</span>,
-      <span class="key">"health_factor"</span>: <span class="number">1.05</span>,
-      <span class="key">"liquidation_price"</span>: <span class="number">172.50</span>,
-      <span class="key">"current_price"</span>: <span class="number">185.42</span>
-    }
-  ],
-  <span class="key">"total_at_risk_usd"</span>: <span class="number">4250000</span>
-}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="endpoint-group">
-        <div class="endpoint-group-title">Agents</div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method post">POST</span>
-            <span class="endpoint-path">/agents/register</span>
-            <span class="endpoint-desc">Register a new agent</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Register an agent with the CAP-402 network. Agents can provide capabilities and participate in A2A protocol.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Request Body</div>
-              <table class="params-table">
-                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td class="param-name">agent_id</td><td class="param-type">string</td><td class="param-required">required</td><td>Unique agent identifier (alphanumeric, hyphens)</td></tr>
-                <tr><td class="param-name">name</td><td class="param-type">string</td><td class="param-required">required</td><td>Human-readable agent name</td></tr>
-                <tr><td class="param-name">capabilities_provided</td><td class="param-type">string[]</td><td class="param-optional">optional</td><td>Capabilities this agent can fulfill</td></tr>
-                <tr><td class="param-name">webhook_url</td><td class="param-type">string</td><td class="param-optional">optional</td><td>URL for receiving invocation requests</td></tr>
-              </table>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl -X POST https://cap402.com/agents/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_id": "my-trading-bot",
-    "name": "My Trading Bot",
-    "capabilities_provided": ["cap.price.lookup.v1"],
-    "webhook_url": "https://mybot.com/webhook"
-  }'</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"success"</span>: <span class="boolean">true</span>,
-  <span class="key">"agent"</span>: {
-    <span class="key">"agent_id"</span>: <span class="string">"my-trading-bot"</span>,
-    <span class="key">"api_key"</span>: <span class="string">"cap_sk_..."</span>,
-    <span class="key">"trust_score"</span>: <span class="number">50</span>,
-    <span class="key">"created_at"</span>: <span class="number">1705347600000</span>
-  }
-}</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Errors</div>
-              <ul class="error-list">
-                <li><span class="error-code">400</span><span class="error-desc">Invalid agent_id format</span></li>
-                <li><span class="error-code">409</span><span class="error-desc">Agent ID already exists</span></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="endpoint-group">
-        <div class="endpoint-group-title">System</div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method get">GET</span>
-            <span class="endpoint-path">/sponsors/health</span>
-            <span class="endpoint-desc">Sponsor integration health</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Check connectivity and status of all sponsor integrations (Arcium, Noir, Helius, Inco).</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl https://cap402.com/sponsors/health</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"overall_status"</span>: <span class="string">"healthy"</span>,
-  <span class="key">"sponsors"</span>: {
-    <span class="key">"arcium"</span>: { <span class="key">"status"</span>: <span class="string">"connected"</span>, <span class="key">"latency_ms"</span>: <span class="number">45</span> },
-    <span class="key">"noir"</span>: { <span class="key">"status"</span>: <span class="string">"connected"</span>, <span class="key">"latency_ms"</span>: <span class="number">12</span> },
-    <span class="key">"helius"</span>: { <span class="key">"status"</span>: <span class="string">"connected"</span>, <span class="key">"latency_ms"</span>: <span class="number">28</span> },
-    <span class="key">"inco"</span>: { <span class="key">"status"</span>: <span class="string">"connected"</span>, <span class="key">"latency_ms"</span>: <span class="number">67</span> }
-  },
-  <span class="key">"last_check"</span>: <span class="number">1705347600000</span>
-}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="endpoint">
-          <div class="endpoint-header">
-            <span class="method get">GET</span>
-            <span class="endpoint-path">/system/dashboard</span>
-            <span class="endpoint-desc">Real-time system overview</span>
-          </div>
-          <div class="endpoint-body">
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Description</div>
-              <p>Get comprehensive system status including capabilities, agents, invocations, and performance metrics.</p>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Example Request</div>
-              <div class="code-block">curl https://cap402.com/system/dashboard</div>
-            </div>
-            <div class="endpoint-section">
-              <div class="endpoint-section-title">Response</div>
-              <div class="response-block">{
-  <span class="key">"capabilities"</span>: { <span class="key">"total"</span>: <span class="number">13</span>, <span class="key">"active"</span>: <span class="number">13</span> },
-  <span class="key">"agents"</span>: { <span class="key">"registered"</span>: <span class="number">47</span>, <span class="key">"active_24h"</span>: <span class="number">23</span> },
-  <span class="key">"invocations"</span>: {
-    <span class="key">"total_24h"</span>: <span class="number">145230</span>,
-    <span class="key">"success_rate"</span>: <span class="number">0.987</span>,
-    <span class="key">"avg_latency_ms"</span>: <span class="number">89</span>
-  },
-  <span class="key">"privacy"</span>: {
-    <span class="key">"confidential_ratio"</span>: <span class="number">0.77</span>,
-    <span class="key">"zk_proofs_generated"</span>: <span class="number">12450</span>
-  },
-  <span class="key">"sponsors"</span>: { <span class="key">"all_healthy"</span>: <span class="boolean">true</span> },
-  <span class="key">"uptime_percent"</span>: <span class="number">99.97</span>
-}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- SDK Reference Tab -->
-    <div id="sdk" class="tab-content">
-      <div class="whitepaper-content">
-        <h1>Agent SDK Reference</h1>
-        <p>Build fully autonomous agents that monitor markets, analyze risk, and prepare ready-to-sign transactions. You retain full control—just sign in your wallet.</p>
-        
-        <h2>Quick Start</h2>
-        <pre class="code-block">import { cap402 } from '@cap402/sdk';
+    <div class="quick-start">
+      <h3>⚡ Quick Start</h3>
+      <pre class="code-block">import { cap402 } from '@cap402/sdk';
 
-// One-liner operations
-const price = await cap402.price('SOL');           // $143.34
-const wallet = await cap402.wallet('address...');
-const swap = await cap402.swap('SOL', 'USDC', 10); // dry_run by default</pre>
-        
-        <h2>Agent Templates</h2>
-        <h3>Trading Agent</h3>
-        <p>Monitors prices, generates signals, and prepares ready-to-sign swap transactions.</p>
-        <pre class="code-block">import { createTradingAgent } from '@cap402/sdk';
+// Get token price
+const price = await cap402.price('SOL');
+console.log(`SOL: $${price}`);
 
-const trader = createTradingAgent({
-  agent_id: 'sol-trader',
-  watched_tokens: ['SOL', 'ETH', 'BTC'],
-  mev_protection: true
-});
+// Get wallet balances
+const wallet = await cap402.wallet('YOUR_ADDRESS');
+console.log(`Total: $${wallet.total_usd}`);
 
-// Agent prepares transactions autonomously
-trader.on('signal', async (signal) => {
-  const tx = await trader.actOnSignal(signal, 10);
-  // tx is ready for your wallet to sign
-});
-
-await trader.start();</pre>
-        
-        <h3>Prepared Transactions</h3>
-        <p>Agents return ready-to-sign transactions with all details calculated:</p>
-        <pre class="code-block">const prepared = await trader.prepareSwap('SOL', 'USDC', 10);
-
-// Returns:
-{
-  instruction_id: 'prep_1705412400_abc123',
-  type: 'swap',
-  status: 'ready',
-  expires_at: 1705412460000,
-  
-  token_in: 'SOL',
-  token_out: 'USDC',
-  amount_in: 10,
-  expected_out: 1433.40,
-  min_out: 1426.23,
-  slippage_bps: 50,
-  
-  dex: 'jupiter',
-  mev_risk: 'LOW',
-  
-  user_action_required: 'sign_and_submit',
-  instructions_for_user: 'Swap 10 SOL for ~1433.40 USDC. Sign in wallet.'
-}</pre>
-        
-        <h3>Monitoring Agent</h3>
-        <p>Tracks wallet balances and protocol health, triggers alerts.</p>
-        <pre class="code-block">import { createMonitoringAgent } from '@cap402/sdk';
-
-const monitor = createMonitoringAgent({
-  agent_id: 'wallet-monitor',
-  watched_wallets: ['YOUR_WALLET_ADDRESS'],
-  check_interval_ms: 60000,
-  alert_channels: [{ type: 'console', enabled: true }]
-});
-
-monitor.on('alert', (alert) => {
-  console.log(`${alert.severity}: ${alert.title}`);
-});
-
-await monitor.start();</pre>
-        
-        <h3>Analytics Agent</h3>
-        <p>Collects time-series data, generates reports and insights.</p>
-        <pre class="code-block">import { createAnalyticsAgent } from '@cap402/sdk';
-
-const analytics = createAnalyticsAgent({
-  agent_id: 'market-analytics',
-  data_sources: [{
-    id: 'sol-price',
-    type: 'price',
-    capability_id: 'cap.price.lookup.v1',
-    inputs: { base_token: 'SOL' },
-    interval_ms: 60000,
-    enabled: true
-  }]
-});
-
-analytics.on('report_generated', (report) => {
-  console.log('Insights:', report.insights);
-});
-
-await analytics.start();</pre>
-        
-        <h2>Safety Guardrails</h2>
-        <p>Built-in protection with sensible defaults:</p>
-        <table>
-          <tr><th>Limit</th><th>Default</th><th>Description</th></tr>
-          <tr><td>Per Transaction</td><td>$100</td><td>Maximum USD per single transaction</td></tr>
-          <tr><td>Per Hour</td><td>$500</td><td>Maximum USD spending per hour</td></tr>
-          <tr><td>Per Day</td><td>$2,000</td><td>Maximum USD spending per day</td></tr>
-          <tr><td>Trades/Hour</td><td>20</td><td>Maximum trades per hour</td></tr>
-          <tr><td>Invocations/Min</td><td>60</td><td>Rate limit per minute</td></tr>
-        </table>
-        <pre class="code-block">import { createSafetyGuardrails, SAFETY_PRESETS } from '@cap402/sdk';
-
-// Use presets: conservative, standard, aggressive
-const safety = createSafetyGuardrails(SAFETY_PRESETS.conservative);
-
-// Or customize
-const custom = createSafetyGuardrails({
-  spending_limits: {
-    max_per_transaction: 50,
-    max_per_hour: 200
-  },
-  blocked_tokens: ['SCAM_TOKEN']
-});</pre>
-        
-        <h2>Multi-Agent Orchestration</h2>
-        <pre class="code-block">import { createOrchestrator } from '@cap402/sdk';
-
-const orchestrator = createOrchestrator({
-  orchestrator_id: 'trading-swarm',
-  max_agents: 5
-});
-
-// Parallel execution
-const results = await orchestrator.executeParallel([
-  { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'SOL' } },
-  { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'ETH' } }
-]);
-
-// Consensus execution
-const consensus = await orchestrator.executeWithConsensus(
-  'cap.price.lookup.v1',
-  { base_token: 'SOL' },
-  { min_agreement: 0.5 }
-);</pre>
-        
-        <h2>CLI Tools</h2>
-        <pre class="code-block"># Health check
-npm run cli health
-
-# List capabilities
-npm run cli capabilities
-
-# Invoke a capability
-npm run cli invoke cap.price.lookup.v1 '{"base_token":"SOL"}'
-
-# Run examples
-npm run example:trading
-npm run example:monitor</pre>
-        
-        <h2>Key Principles</h2>
-        <ul>
-          <li><strong>Autonomous Decision-Making</strong> — Agents monitor, analyze, and prepare transactions 24/7</li>
-          <li><strong>User Control</strong> — You sign transactions in your own wallet. We never hold keys.</li>
-          <li><strong>Safety First</strong> — Spending limits, rate controls, and emergency stop built-in</li>
-          <li><strong>MEV Protection</strong> — Risk analysis before every trade</li>
-          <li><strong>Zero Configuration</strong> — Sensible defaults, one-liner APIs</li>
-        </ul>
-      </div>
-    </div>
-    
-    <!-- Whitepaper Tab -->
-    <div id="whitepaper" class="tab-content">
-      <div class="whitepaper-content">
-        <h1>CAP-402: Agent Infrastructure Standard</h1>
-        <p><strong>A Protocol for Semantic Capability Routing Between Autonomous Agents</strong></p>
-        <p>Version 1.0 | January 2026 | <a href="https://cap402.com" style="color:var(--arcium-purple)">cap402.com</a></p>
-        
-        <h2>Abstract</h2>
-        <p>As autonomous AI agents proliferate across industries, a critical infrastructure gap has emerged: there is no standard protocol for agents to discover, negotiate, and execute capabilities from other agents or services. CAP-402 addresses this gap by introducing a semantic capability routing protocol that provides privacy-aware, economically-signaled execution with verifiable receipts.</p>
-        <p>CAP-402 uniquely combines three complementary cryptographic technologies—<strong>Noir</strong> for zero-knowledge proofs, <strong>Arcium</strong> for confidential computation, and <strong>Inco</strong> for encrypted on-chain state—to deliver a complete privacy stack that enables fully private, verifiable, agent-driven authorization and execution.</p>
-        <p>This whitepaper presents the CAP-402 protocol specification, its architecture, security model, and economic framework. We demonstrate how CAP-402 enables a new paradigm where <strong>agents do not call APIs directly—agents call capabilities</strong>.</p>
-        
-        <h2>1. Introduction</h2>
-        <p>The emergence of autonomous AI agents represents a fundamental shift in how software systems interact. Unlike traditional APIs designed for human developers, agent-to-agent communication requires:</p>
-        <ul>
-          <li><strong>Semantic understanding</strong>: Agents need to discover capabilities by intent, not by endpoint</li>
-          <li><strong>Privacy preservation</strong>: Sensitive operations must be executable without exposing data</li>
-          <li><strong>Economic coordination</strong>: Agents must negotiate costs and value exchange</li>
-          <li><strong>Verifiability</strong>: Execution results must be provable and auditable</li>
-          <li><strong>Composability</strong>: Complex workflows must be expressible as capability chains</li>
-        </ul>
-        
-        <h3>1.1 Design Principles</h3>
-        <ol>
-          <li><strong>Capabilities over APIs</strong>: Abstract what can be done, not how it's implemented</li>
-          <li><strong>Privacy by default</strong>: Support confidential execution as a first-class feature</li>
-          <li><strong>Economic signaling</strong>: Enable value exchange without custody</li>
-          <li><strong>Verifiable execution</strong>: Every invocation produces a cryptographic receipt</li>
-          <li><strong>Progressive decentralization</strong>: Start centralized, evolve to fully decentralized</li>
-        </ol>
-        
-        <h3>1.2 Key Innovation: The Privacy Stack</h3>
-        <p>CAP-402's primary differentiator is its unified privacy stack. While most applications choose a single privacy technology, CAP-402 integrates three complementary systems:</p>
-        <table>
-          <tr><th>Technology</th><th>Role</th><th>Output</th></tr>
-          <tr><td><strong>Noir</strong></td><td>Proves private facts</td><td>ZK Proofs</td></tr>
-          <tr><td><strong>Arcium</strong></td><td>Decides privately using hidden logic</td><td>Signed Decisions</td></tr>
-          <tr><td><strong>Inco</strong></td><td>Stores & executes privately on-chain</td><td>Encrypted State</td></tr>
-        </table>
-        <blockquote>Noir proves things privately, Arcium decides things privately, Inco stores and executes things privately.</blockquote>
-        
-        <h2>2. Problem Statement</h2>
-        <h3>2.1 The Current Landscape</h3>
-        <table>
-          <tr><th>Problem</th><th>Impact</th></tr>
-          <tr><td><strong>No discovery standard</strong></td><td>Agents must hard-code API endpoints</td></tr>
-          <tr><td><strong>No privacy layer</strong></td><td>All operations are visible, enabling front-running</td></tr>
-          <tr><td><strong>No economic coordination</strong></td><td>Ad-hoc pricing, no micropayments</td></tr>
-          <tr><td><strong>No trust framework</strong></td><td>No way to verify agent capabilities</td></tr>
-          <tr><td><strong>No composability</strong></td><td>Each integration built from scratch</td></tr>
-        </table>
-        
-        <h3>2.2 The Privacy Crisis</h3>
-        <p>Traditional blockchain applications leak everything:</p>
-        <ul>
-          <li><strong>Trading strategies</strong> — Competitors can copy or front-run</li>
-          <li><strong>User balances</strong> — Portfolio exposure to adversaries</li>
-          <li><strong>Order logic</strong> — MEV bots exploit visible intents</li>
-          <li><strong>Risk models</strong> — Proprietary algorithms become public</li>
-          <li><strong>AI prompts/weights</strong> — Intellectual property exposed</li>
-        </ul>
-        
-        <h3>2.3 Consequences Without CAP-402</h3>
-        <ul>
-          <li><strong>MEV extraction</strong>: Trading agents lose $500+ per large swap to front-runners</li>
-          <li><strong>Data exposure</strong>: Portfolio queries reveal positions to competitors</li>
-          <li><strong>Vendor lock-in</strong>: Agents tied to specific service providers</li>
-          <li><strong>Integration overhead</strong>: 10x development time for each new capability</li>
-          <li><strong>Trust vacuum</strong>: No reputation system for agent reliability</li>
-        </ul>
-        
-        <h2>3. Protocol Overview</h2>
-        <h3>3.1 Core Concepts</h3>
-        <p><strong>Capability</strong>: A versioned, semantic contract defining:</p>
-        <ul>
-          <li><strong>Identity</strong>: Stable ID (e.g., <code>cap.price.lookup.v1</code>)</li>
-          <li><strong>Interface</strong>: Typed inputs/outputs (JSON Schema)</li>
-          <li><strong>Execution</strong>: Mode (public/confidential) + proof type</li>
-          <li><strong>Economics</strong>: Cost hints, currency, payment methods</li>
-        </ul>
-        <p><strong>Invocation</strong>: A request to execute a capability with specific inputs, returning outputs, a cryptographic receipt, and economic hints.</p>
-        <p><strong>Composition</strong>: Chaining multiple capabilities into a single workflow with automatic data flow, error handling, and a single receipt for the entire chain.</p>
-        
-        <h3>3.2 Protocol Flow</h3>
-        <pre class="code-block">1. Discovery    Agent queries: "I need to swap tokens privately"
-                Router returns: [cap.confidential.swap.v1, cap.cspl.wrap.v1, ...]
-
-2. Negotiation  Agent requests options for cap.confidential.swap.v1
-                Router returns: [{privacy: 2, cost: 0.01}, {privacy: 3, cost: 0.05}]
-
-3. Invocation   Agent invokes with selected option
-                Router executes via appropriate executor
-
-4. Receipt      Agent receives cryptographic receipt
-                Receipt can be verified without re-execution
-
-5. Settlement   Economic hints enable payment (X.402 or on-chain)</pre>
-        
-        <h2>4. Architecture</h2>
-        <h3>4.1 Layer Model</h3>
-        <table>
-          <tr><th>Layer</th><th>Components</th></tr>
-          <tr><td><strong>Application</strong></td><td>Agents, SDKs, Integrations</td></tr>
-          <tr><td><strong>Protocol</strong></td><td>Capability Schema, Routing, Composition, Receipts</td></tr>
-          <tr><td><strong>Execution</strong></td><td>Public Executor, Confidential Executor</td></tr>
-          <tr><td><strong>Privacy</strong></td><td>Noir ZK Proofs, Arcium MPC, Inco FHE</td></tr>
-          <tr><td><strong>Security</strong></td><td>Tokens, Trust Network, Handshake, Semantic Encryption</td></tr>
-          <tr><td><strong>Economic</strong></td><td>X.402 Hints, Privacy Cash, Pricing</td></tr>
-          <tr><td><strong>Settlement</strong></td><td>Solana, Future: Multi-chain</td></tr>
-        </table>
-        
-        <h3>4.2 Component Overview</h3>
-        <table>
-          <tr><th>Component</th><th>Purpose</th></tr>
-          <tr><td><strong>Registry</strong></td><td>Stores capability definitions</td></tr>
-          <tr><td><strong>Router</strong></td><td>Routes invocations to executors</td></tr>
-          <tr><td><strong>Public Executor</strong></td><td>Standard API/RPC execution</td></tr>
-          <tr><td><strong>Confidential Executor</strong></td><td>Privacy-preserving via Arcium MPC</td></tr>
-          <tr><td><strong>Receipt Manager</strong></td><td>Generates and verifies receipts</td></tr>
-          <tr><td><strong>Token Manager</strong></td><td>Issues and validates capability tokens</td></tr>
-          <tr><td><strong>Trust Network</strong></td><td>Manages agent reputation</td></tr>
-        </table>
-        
-        <h2>5. Cryptographic Foundation</h2>
-        
-        <h3>5.1 Noir — Zero-Knowledge Proof Generation</h3>
-        <p><strong>What It Is</strong>: Noir is a domain-specific programming language designed for writing zero-knowledge programs—code that can prove something is true without revealing the underlying data.</p>
-        <p><strong>Role in CAP-402</strong>: Noir answers the question: <em>"Can you prove you're allowed to do this?"</em></p>
-        <pre class="code-block">User generates ZK proof that:
-  → They own a specific credential
-  → Their balance exceeds a threshold
-  → Their identity satisfies a condition
-  
-Result: Verifier learns ONLY that the condition is satisfied
-        No wallet balances, identities, or secrets exposed</pre>
-        <p><strong>Key Properties</strong>: Privacy (secrets never leave prover's device), Verifiability (proofs are mathematically sound), Portability (proofs can be verified anywhere).</p>
-        
-        <h3>5.2 Arcium — Confidential Computation</h3>
-        <p><strong>What It Is</strong>: Arcium provides encrypted compute on-chain. Unlike traditional blockchains where data and computation are public, Arcium enables computation on encrypted data while keeping inputs private and producing verifiable results.</p>
-        <p><strong>Role in CAP-402</strong>: Arcium answers the question: <em>"Given everything we know privately, should this be allowed?"</em></p>
-        <pre class="code-block">Arcium receives:
-  → Verified Noir proof
-  → Encrypted strategy state
-  → Encrypted thresholds and parameters
-  
-Arcium computes:
-  → Whether request satisfies all private rules
-  
-Result: ALLOW or DENY (signed/attested)
-        Nobody learns: strategy details, thresholds, 
-        risk models, or why it passed/failed</pre>
-        <p><strong>What Arcium Protects</strong>: Authorization rules and logic, Risk checks and thresholds, Strategy conditions, AI/scoring logic, User behavior signals.</p>
-        
-        <h3>5.3 Inco — Confidential On-Chain State</h3>
-        <p><strong>What It Is</strong>: Inco is the confidentiality layer for Web3—infrastructure that enables private smart contracts and encrypted on-chain state without sacrificing composability.</p>
-        <p><strong>Role in CAP-402</strong>: Inco answers the question: <em>"Where do we safely store and execute this without leaking it on-chain?"</em></p>
-        <pre class="code-block">If authorization ALLOWED:
-  → Inco executes the action
-  → Updates private balances
-  → Updates private usage counters
-  → Updates private permissions
-  → Stores everything confidentially
-  
-Public visibility: Only that something happened
-                   NOT what or why</pre>
-        <p><strong>What Inco Enables</strong>: Confidential token balances, Private DeFi positions, Hidden game logic, Selective disclosure, Confidential payroll and voting.</p>
-        
-        <h3>5.4 Why All Three Are Required</h3>
-        <table>
-          <tr><th>Technology</th><th>What Happens If Removed</th></tr>
-          <tr><td><strong>Noir</strong></td><td>Cannot generate portable proofs; users must expose data to prove conditions</td></tr>
-          <tr><td><strong>Arcium</strong></td><td>Decision logic becomes public; strategies can be copied or gamed</td></tr>
-          <tr><td><strong>Inco</strong></td><td>On-chain state leaks; execution results expose private information</td></tr>
-        </table>
-        
-        <h2>6. Privacy Gradient</h2>
-        <table>
-          <tr><th>Level</th><th>Name</th><th>Technology</th><th>Description</th><th>Cost</th></tr>
-          <tr><td>0</td><td><strong>Public</strong></td><td>Direct execution</td><td>Standard execution, visible results</td><td>1.0x</td></tr>
-          <tr><td>1</td><td><strong>Obscured</strong></td><td>Router attestation</td><td>Basic obfuscation, limited visibility</td><td>1.1x</td></tr>
-          <tr><td>2</td><td><strong>Encrypted</strong></td><td>Arcium MPC</td><td>Strong encryption, authorized access only</td><td>1.5x</td></tr>
-          <tr><td>3</td><td><strong>ZK Verifiable</strong></td><td>Noir + Inco</td><td>Zero-knowledge proofs, maximum privacy</td><td>2.0x</td></tr>
-        </table>
-        
-        <h2>7. Capability Schema</h2>
-        <pre class="code-block">interface Capability {
-  id: string;              // e.g., "cap.price.lookup.v1"
-  name: string;            // Human-readable name
-  description: string;     // What this capability does
-  version: string;         // Semantic version
-  
-  execution: {
-    mode: "public" | "confidential";
-    proof_type: ProofType;
-    timeout_ms: number;
-  };
-  
-  inputs: { schema: JSONSchema; required: string[]; };
-  outputs: { schema: JSONSchema; };
-  
-  economics: {
-    cost_hint: string;
-    currency: string;
-    payment_methods: string[];
-  };
-}</pre>
-        
-        <h3>7.1 Capability Categories</h3>
-        <table>
-          <tr><th>Category</th><th>Examples</th><th>Mode</th><th>Privacy Stack</th></tr>
-          <tr><td><strong>Price Data</strong></td><td><code>cap.price.lookup.v1</code></td><td>Public</td><td>—</td></tr>
-          <tr><td><strong>Wallet Operations</strong></td><td><code>cap.wallet.snapshot.v1</code></td><td>Public/Confidential</td><td>Inco</td></tr>
-          <tr><td><strong>Confidential Compute</strong></td><td><code>cap.fhe.compute.v1</code></td><td>Confidential</td><td>Inco FHE</td></tr>
-          <tr><td><strong>Private Swaps</strong></td><td><code>cap.confidential.swap.v1</code></td><td>Confidential</td><td>Arcium MPC</td></tr>
-          <tr><td><strong>ZK Proofs</strong></td><td><code>cap.zk.proof.balance.v1</code></td><td>Confidential</td><td>Noir</td></tr>
-          <tr><td><strong>Messaging</strong></td><td><code>cap.lightning.message.v1</code></td><td>Confidential</td><td>Inco + Arcium</td></tr>
-        </table>
-        
-        <h2>8. Economic Model</h2>
-        <h3>8.1 Trust-Based Pricing</h3>
-        <table>
-          <tr><th>Trust Level</th><th>Rate Limit</th><th>Discount</th></tr>
-          <tr><td>Anonymous</td><td>10 req/min</td><td>0%</td></tr>
-          <tr><td>Verified</td><td>50 req/min</td><td>10%</td></tr>
-          <tr><td>Trusted</td><td>200 req/min</td><td>20%</td></tr>
-          <tr><td>Premium</td><td>1000 req/min</td><td>50%</td></tr>
-        </table>
-        
-        <h3>8.2 Payment Methods</h3>
-        <ul>
-          <li><strong>X.402 Payment Hints</strong>: HTTP-native micropayments</li>
-          <li><strong>Privacy Cash</strong>: Anonymous payment notes</li>
-          <li><strong>On-chain Settlement</strong>: Solana SPL tokens</li>
-          <li><strong>Subscription</strong>: Pre-paid capability bundles</li>
-        </ul>
-        
-        <h2>9. Security Framework</h2>
-        <h3>9.1 Multi-Layer Authentication</h3>
-        <table>
-          <tr><th>Layer</th><th>Mechanism</th></tr>
-          <tr><td><strong>Layer 1</strong></td><td>API Key Authentication — Agent identity verification</td></tr>
-          <tr><td><strong>Layer 2</strong></td><td>Capability Tokens — Fine-grained access control, scoped to specific capabilities</td></tr>
-          <tr><td><strong>Layer 3</strong></td><td>Handshake Protocol — Multi-step authentication for confidential ops</td></tr>
-          <tr><td><strong>Layer 4</strong></td><td>Semantic Encryption — Payload-level encryption, intent obfuscation</td></tr>
-        </table>
-        
-        <h3>9.2 Security Properties</h3>
-        <table>
-          <tr><th>Property</th><th>Mechanism</th></tr>
-          <tr><td><strong>Timing-safe comparisons</strong></td><td><code>crypto.timingSafeEqual</code> for all secrets</td></tr>
-          <tr><td><strong>Request signing</strong></td><td>HMAC-SHA256 signatures</td></tr>
-          <tr><td><strong>Input sanitization</strong></td><td>XSS/injection prevention</td></tr>
-          <tr><td><strong>Rate limiting</strong></td><td>IP + agent-based limits</td></tr>
-          <tr><td><strong>Audit logging</strong></td><td>Full event trail</td></tr>
-        </table>
-        
-        <h2>10. Use Cases</h2>
-        
-        <h3>10.1 Private DeFi Trading</h3>
-        <p><strong>Problem</strong>: MEV bots front-run large swaps, extracting $500+ per trade.</p>
-        <pre class="code-block"># 1. Wrap tokens to confidential
-POST /invoke
-{"capability_id": "cap.cspl.wrap.v1", "inputs": {"amount": 1000, "mint": "SOL"}}
-
-# 2. Execute private swap (amount hidden)
-POST /invoke
-{"capability_id": "cap.confidential.swap.v1", "inputs": {...}}
-
-# Result: Zero MEV extraction, competitors don't see position size</pre>
-        
-        <h3>10.2 Proof of Wealth Without Disclosure</h3>
-        <p><strong>Problem</strong>: Proving creditworthiness exposes entire portfolio.</p>
-        <pre class="code-block">POST /invoke
-{
-  "capability_id": "cap.zk.proof.balance.v1",
-  "inputs": {
-    "wallet": "WALLET",
-    "threshold": 10000,
-    "currency": "USD"
-  }
-}
-
-# Returns: ZK proof that balance > $10K, without revealing actual amount</pre>
-        
-        <h3>10.3 Encrypted Agent Messaging</h3>
-        <p><strong>Problem</strong>: Agent communications are public, strategies leaked.</p>
-        <pre class="code-block">POST /invoke
-{
-  "capability_id": "cap.lightning.message.v1",
-  "inputs": {
-    "recipient": "agent_xyz",
-    "message": "Trading signal: BUY SOL",
-    "encryption": "fhe"
-  }
-}
-
-# Result: Only recipient can decrypt, even router can't read</pre>
-        
-        <h2>11. Implementation</h2>
-        <table>
-          <tr><th>Metric</th><th>Value</th></tr>
-          <tr><td><strong>TypeScript files</strong></td><td>58</td></tr>
-          <tr><td><strong>Tests</strong></td><td>306 (262 passing, 44 external API dependent)</td></tr>
-          <tr><td><strong>API endpoints</strong></td><td>100+</td></tr>
-          <tr><td><strong>Capabilities</strong></td><td>13</td></tr>
-          <tr><td><strong>Sponsor integrations</strong></td><td>4 (Arcium, Noir, Helius, Inco)</td></tr>
-        </table>
-        
-        <h2>12. Market Opportunity</h2>
-        <table>
-          <tr><th>Segment</th><th>2024</th><th>2026 (Projected)</th><th>CAGR</th></tr>
-          <tr><td>AI Agent Platforms</td><td>$2.1B</td><td>$8.4B</td><td>100%+</td></tr>
-          <tr><td>DeFi Infrastructure</td><td>$47B TVL</td><td>$150B TVL</td><td>78%</td></tr>
-          <tr><td>Privacy Tech (ZK/MPC)</td><td>$890M</td><td>$4.2B</td><td>117%</td></tr>
-          <tr><td><strong>Combined TAM</strong></td><td><strong>$50B</strong></td><td><strong>$162B</strong></td><td><strong>80%</strong></td></tr>
-        </table>
-        
-        <h2>13. Roadmap</h2>
-        <h3>Phase 1: Foundation ✅ Complete</h3>
-        <ul>
-          <li>Protocol specification (OpenAPI 3.1, JSON Schema, TypeScript types)</li>
-          <li>Reference router (58 TypeScript files, 100+ endpoints)</li>
-          <li>Privacy stack integration (Noir, Arcium, Inco fully integrated)</li>
-          <li>Security framework (Multi-layer auth, capability tokens, trust network)</li>
-          <li>Test coverage (306 tests)</li>
-        </ul>
-        
-        <h3>Phase 2: Expansion (Q1 2026)</h3>
-        <ul>
-          <li>Multi-language SDKs (Python, Rust, Go)</li>
-          <li>Capability expansion (50+ capabilities)</li>
-          <li>Mainnet deployment (Solana mainnet)</li>
-        </ul>
-        
-        <h3>Phase 3: Decentralization (Q2 2026)</h3>
-        <ul>
-          <li>Distributed routers (10+ nodes)</li>
-          <li>On-chain registry (Solana program)</li>
-          <li>Staking & governance (CAP token)</li>
-          <li>Cross-chain support (EVM, Cosmos)</li>
-        </ul>
-        
-        <h2>14. Conclusion</h2>
-        <p>CAP-402 represents a fundamental shift in how autonomous agents interact. By introducing semantic capabilities, privacy gradients, and economic coordination, we enable a new paradigm where agents can:</p>
-        <ul>
-          <li><strong>Discover</strong> capabilities by intent, not implementation</li>
-          <li><strong>Execute</strong> with configurable privacy guarantees</li>
-          <li><strong>Verify</strong> results through cryptographic receipts</li>
-          <li><strong>Compose</strong> complex workflows atomically</li>
-          <li><strong>Transact</strong> through standardized economic hints</li>
-        </ul>
-        <blockquote>CAP-402 is not just a protocol—it's the infrastructure layer for the agent economy.<br><br><strong>"Agents don't call APIs. Agents call capabilities."</strong></blockquote>
-      </div>
+// Prepare a swap (agent does the work, you sign)
+const swap = await cap402.swap('SOL', 'USDC', 10);
+console.log(`Would receive: ${swap.amount_out} USDC`);</pre>
     </div>
   </div>
-  
-  <script>
-    // Tab switching
-    document.getElementById('tab-api').addEventListener('click', function() {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById('api').classList.add('active');
-    });
-    document.getElementById('tab-sdk').addEventListener('click', function() {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById('sdk').classList.add('active');
-    });
-    document.getElementById('tab-whitepaper').addEventListener('click', function() {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById('whitepaper').classList.add('active');
-    });
-    // Endpoint toggling
-    document.querySelectorAll('.endpoint').forEach(ep => {
-      ep.addEventListener('click', function() { this.classList.toggle('open'); });
-    });
-  </script>
 </body>
 </html>
