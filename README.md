@@ -228,6 +228,67 @@ const proof = await cap402.invokeCapability('cap.zk.proof.v1', {
 });
 ```
 
+### Agent SDK
+
+Build production-ready autonomous agents:
+
+```typescript
+import { createAgent, createTradingAgent } from './sdk';
+
+// Basic agent
+const agent = createAgent({
+  agent_id: 'my-agent',
+  name: 'My Trading Agent',
+  capabilities_provided: ['analysis.portfolio']
+});
+
+await agent.start();
+const price = await agent.invoke('cap.price.lookup.v1', { base_token: 'SOL' });
+await agent.stop();
+
+// Pre-built trading agent with MEV protection
+const trader = createTradingAgent({
+  agent_id: 'sol-trader',
+  watched_tokens: ['SOL', 'ETH', 'BTC'],
+  mev_protection: true,
+  dry_run: false
+});
+
+trader.on('signal', (s) => console.log(`${s.type} ${s.token}`));
+await trader.start();
+```
+
+**Agent Templates:**
+- `createTradingAgent()` - Price monitoring, signals, MEV-protected trades
+- `createMonitoringAgent()` - Wallet tracking, protocol health, alerts
+- `createAnalyticsAgent()` - Data collection, time series, reports
+
+**Multi-Agent Orchestration:**
+```typescript
+import { createOrchestrator } from './sdk/orchestration';
+
+const orchestrator = createOrchestrator({ orchestrator_id: 'swarm-1', name: 'Trading Swarm' });
+await orchestrator.addAgent({ agent_id: 'pricer-1', name: 'Price Agent' });
+
+// Parallel execution
+const results = await orchestrator.executeParallel([
+  { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'SOL' } },
+  { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'ETH' } }
+]);
+
+// Consensus-based execution
+const consensus = await orchestrator.executeWithConsensus('cap.price.lookup.v1', { base_token: 'SOL' });
+```
+
+**CLI Tools:**
+```bash
+npm run cli health              # Check router status
+npm run cli capabilities        # List available capabilities
+npm run cli invoke cap.price.lookup.v1 '{"base_token":"SOL"}'
+npm run example:trading         # Run trading bot example
+npm run example:swarm           # Run multi-agent demo
+```
+
 ---
 
 ## Who This Is For

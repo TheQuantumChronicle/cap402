@@ -439,6 +439,48 @@ class AgentRegistry {
   }
 
   /**
+   * Record metrics reported by an agent (for production observability)
+   */
+  recordMetrics(agentId: string, metrics: {
+    invocations: number;
+    success_rate: number;
+    avg_latency_ms: number;
+    errors: number;
+    uptime_ms: number;
+    reported_at: number;
+  }): void {
+    const agent = this.agents.get(agentId);
+    if (!agent) return;
+
+    // Update reputation based on reported metrics
+    agent.reputation.total_invocations = metrics.invocations;
+    agent.reputation.successful_invocations = Math.round(metrics.invocations * metrics.success_rate);
+    agent.reputation.failed_invocations = metrics.errors;
+    agent.reputation.average_response_time_ms = metrics.avg_latency_ms;
+    
+    // Calculate uptime percentage (assuming 24h window)
+    const uptimeHours = metrics.uptime_ms / (1000 * 60 * 60);
+    agent.reputation.uptime_percentage = Math.min(100, (uptimeHours / 24) * 100);
+
+    // Update trust score
+    agent.trust_score = Math.round(metrics.success_rate * 100);
+    agent.last_active = Date.now();
+
+    // Store in metadata for historical tracking
+    if (!agent.metadata.metrics_history) {
+      agent.metadata.metrics_history = [];
+    }
+    agent.metadata.metrics_history.push({
+      ...metrics,
+      recorded_at: Date.now()
+    });
+    // Keep only last 100 entries
+    if (agent.metadata.metrics_history.length > 100) {
+      agent.metadata.metrics_history = agent.metadata.metrics_history.slice(-100);
+    }
+  }
+
+  /**
    * Get registry statistics
    */
   getStats(): {

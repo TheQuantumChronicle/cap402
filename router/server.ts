@@ -1510,6 +1510,82 @@ app.post('/agents/register', async (req: Request, res: Response) => {
   }
 });
 
+// Agent Deregistration - graceful shutdown support
+app.post('/agents/deregister', async (req: Request, res: Response) => {
+  try {
+    const { agent_id } = req.body;
+    if (!agent_id) {
+      return res.status(400).json({ success: false, error: 'agent_id required' });
+    }
+
+    const { agentRegistry } = await import('./agent-registry');
+    const agent = agentRegistry.getAgent(agent_id);
+    
+    if (!agent) {
+      return res.status(404).json({ success: false, error: 'Agent not found' });
+    }
+
+    // Update agent status to inactive (graceful shutdown)
+    agentRegistry.updateAgentStatus(agent_id, 'inactive');
+
+    // Record in activity feed
+    const { activityFeed } = await import('./activity-feed');
+    activityFeed.record('agent_registered', agent_id, { action: 'deregistered', reason: 'graceful_shutdown' });
+
+    res.json({
+      success: true,
+      agent_id,
+      message: 'Agent deregistered successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Deregistration failed'
+    });
+  }
+});
+
+// Agent Metrics Reporting - production observability
+app.post('/agents/metrics', async (req: Request, res: Response) => {
+  try {
+    const { agent_id, metrics, timestamp } = req.body;
+    if (!agent_id || !metrics) {
+      return res.status(400).json({ success: false, error: 'agent_id and metrics required' });
+    }
+
+    const { agentRegistry } = await import('./agent-registry');
+    const agent = agentRegistry.getAgent(agent_id);
+    
+    if (!agent) {
+      return res.status(404).json({ success: false, error: 'Agent not found' });
+    }
+
+    // Store metrics (could be expanded to time-series storage)
+    agentRegistry.recordMetrics(agent_id, {
+      invocations: metrics.invocations || 0,
+      success_rate: metrics.success_rate || 1,
+      avg_latency_ms: metrics.avg_latency_ms || 0,
+      errors: metrics.errors || 0,
+      uptime_ms: metrics.uptime_ms || 0,
+      reported_at: timestamp || Date.now()
+    });
+
+    // Update last seen
+    agentRegistry.updateAgentStatus(agent_id, 'active');
+
+    res.json({
+      success: true,
+      agent_id,
+      received_at: Date.now()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Metrics reporting failed'
+    });
+  }
+});
+
 // Discover agents by capability (must be before :agent_id route)
 app.get('/agents/discover', async (req: Request, res: Response) => {
   try {
@@ -1545,6 +1621,33 @@ app.get('/agents/discover', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Discovery failed'
+    });
+  }
+});
+
+// List all registered agents
+app.get('/agents', async (req: Request, res: Response) => {
+  try {
+    const { agentRegistry } = await import('./agent-registry');
+    const agents = agentRegistry.getAllAgents();
+    
+    res.json({
+      success: true,
+      count: agents.length,
+      agents: agents.map(a => ({
+        agent_id: a.agent_id,
+        name: a.name,
+        description: a.description,
+        capabilities_provided: a.capabilities_provided,
+        trust_score: a.trust_score,
+        status: a.status,
+        registered_at: new Date(a.registered_at).toISOString()
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to list agents'
     });
   }
 });
@@ -1719,7 +1822,15 @@ app.get('/agents/:agent_id/messages', async (req: Request, res: Response) => {
   try {
     const { agentSocialManager } = await import('./agent-social');
     const unread_only = req.query.unread === 'true';
-    const messages = agentSocialManager.getMessages(req.params.agent_id, unread_only);
+    const since = req.query.since ? parseInt(req.query.since as string) : undefined;
+    
+    let messages = agentSocialManager.getMessages(req.params.agent_id, unread_only);
+    
+    // Filter by timestamp if 'since' provided
+    if (since) {
+      messages = messages.filter((m: any) => m.timestamp > since);
+    }
+    
     res.json({
       success: true,
       count: messages.length,
@@ -1750,6 +1861,41 @@ app.post('/agents/:agent_id/messages', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Send failed'
+    });
+  }
+});
+
+// A2A Message endpoint - simplified for SDK
+app.post('/a2a/message', async (req: Request, res: Response) => {
+  try {
+    const { agentSocialManager } = await import('./agent-social');
+    const { from_agent, to_agent, message_type, payload, timestamp } = req.body;
+    
+    if (!from_agent || !to_agent || !payload) {
+      return res.status(400).json({ success: false, error: 'from_agent, to_agent, and payload required' });
+    }
+    
+    const message = agentSocialManager.sendMessage(
+      from_agent,
+      to_agent,
+      { 
+        subject: message_type || 'broadcast',
+        content: typeof payload === 'string' ? payload : JSON.stringify(payload),
+        type: message_type || 'broadcast'
+      }
+    );
+    
+    res.json({ 
+      success: true, 
+      delivered: true,
+      message_id: message.id,
+      timestamp: timestamp || Date.now()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      delivered: false,
+      error: error instanceof Error ? error.message : 'Message delivery failed'
     });
   }
 });

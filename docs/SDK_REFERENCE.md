@@ -477,5 +477,253 @@ ARCIUM_PROGRAM_ID=<your-program-id>
 
 ---
 
-**Last Updated**: January 13, 2026  
-**CAP-402 Version**: 0.1.0
+## 🤖 CAP-402 Agent SDK
+
+**Status**: ✅ Production Ready  
+**Purpose**: Build autonomous agents that use CAP-402 capabilities  
+**Location**: `sdk/` directory
+
+### Installation
+
+```typescript
+import { 
+  createAgent, 
+  createTradingAgent, 
+  createMonitoringAgent,
+  createOrchestrator 
+} from './sdk';
+```
+
+### Core Agent Class
+
+The `CAP402Agent` class provides production-ready agent infrastructure:
+
+```typescript
+import { createAgent } from './sdk';
+
+const agent = createAgent({
+  agent_id: 'my-trading-agent',
+  name: 'My Trading Agent',
+  router_url: 'https://cap402.com',
+  capabilities_provided: ['analysis.portfolio'],
+  capabilities_required: ['cap.price.lookup.v1'],
+  timeout: 30000,
+  retry_attempts: 3
+});
+
+// Lifecycle
+await agent.start();
+await agent.pause();
+await agent.resume();
+await agent.stop();
+
+// Invoke capabilities
+const result = await agent.invoke('cap.price.lookup.v1', {
+  base_token: 'SOL',
+  quote_token: 'USD'
+});
+
+// A2A Protocol
+const agents = await agent.discoverAgents({ capability: 'cap.swap.execute.v1' });
+const auction = await agent.startAuction({ capability_id: 'cap.swap.execute.v1', max_price: 0.01 });
+await agent.sendMessage('other-agent', 'collaboration', { proposal: 'joint-trade' });
+```
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **Lifecycle Management** | start, stop, pause, resume with graceful shutdown |
+| **Circuit Breakers** | Automatic failure detection and recovery |
+| **Retry Logic** | Exponential backoff with configurable attempts |
+| **Health Checks** | Auto-reconnection on connection loss |
+| **Metrics** | Invocation counts, latency, success rates |
+| **A2A Protocol** | Agent discovery, auctions, swarms, messaging |
+| **Event System** | Subscribe to errors, rate limits, circuit opens |
+
+### Agent Templates
+
+Pre-built agents for common use cases:
+
+#### Trading Agent
+```typescript
+import { createTradingAgent } from './sdk/agents';
+
+const trader = createTradingAgent({
+  agent_id: 'sol-trader',
+  name: 'SOL Trading Bot',
+  watched_tokens: ['SOL', 'ETH', 'BTC'],
+  price_check_interval_ms: 30000,
+  trading_limits: {
+    max_position_size: 1000,
+    max_daily_trades: 20
+  },
+  mev_protection: true,
+  dry_run: true  // Set false for real trades
+});
+
+trader.on('signal', (signal) => console.log('Trade signal:', signal));
+trader.on('price_alert', (alert) => console.log('Price alert:', alert));
+
+await trader.start();
+```
+
+#### Monitoring Agent
+```typescript
+import { createMonitoringAgent } from './sdk/agents';
+
+const monitor = createMonitoringAgent({
+  agent_id: 'wallet-monitor',
+  name: 'Wallet Monitor',
+  watched_wallets: ['82MfBWDVuG7yB5j1kxxA8RCB6vbrJCTmQbowXPmvHv7j'],
+  watched_protocols: ['jupiter', 'raydium'],
+  check_interval_ms: 60000,
+  thresholds: {
+    balance_change_percent: 5,
+    health_score_min: 70
+  }
+});
+
+monitor.on('alert', (alert) => console.log('Alert:', alert));
+await monitor.start();
+```
+
+#### Analytics Agent
+```typescript
+import { createAnalyticsAgent } from './sdk/agents';
+
+const analytics = createAnalyticsAgent({
+  agent_id: 'data-collector',
+  name: 'Market Analytics',
+  data_sources: [
+    { id: 'sol-price', type: 'price', capability_id: 'cap.price.lookup.v1', 
+      inputs: { base_token: 'SOL' }, interval_ms: 60000, enabled: true }
+  ],
+  report_interval_ms: 300000
+});
+
+analytics.on('report_generated', (report) => console.log('Report:', report));
+await analytics.start();
+```
+
+### Multi-Agent Orchestration
+
+Coordinate multiple agents for complex workflows:
+
+```typescript
+import { createOrchestrator } from './sdk/orchestration';
+
+const orchestrator = createOrchestrator({
+  orchestrator_id: 'swarm-coordinator',
+  name: 'Trading Swarm',
+  max_agents: 5
+});
+
+await orchestrator.start();
+
+// Add specialized agents
+await orchestrator.addAgent({ agent_id: 'pricer-1', name: 'Price Agent' });
+await orchestrator.addAgent({ agent_id: 'pricer-2', name: 'Price Agent 2' });
+
+// Parallel execution
+const results = await orchestrator.executeParallel([
+  { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'SOL' } },
+  { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'ETH' } }
+]);
+
+// Consensus pricing
+const consensus = await orchestrator.executeWithConsensus(
+  'cap.price.lookup.v1',
+  { base_token: 'SOL' },
+  { min_agreement: 0.5 }
+);
+
+// Workflow execution
+const workflow = orchestrator.createWorkflow('Portfolio Analysis', [
+  { name: 'Get Wallet', capability_id: 'cap.wallet.snapshot.v1', inputs: { address: '...' } },
+  { name: 'Get Prices', capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'SOL' } }
+]);
+const result = await orchestrator.executeWorkflow(workflow.workflow_id);
+```
+
+### CLI Tool
+
+Command-line interface for agent management:
+
+```bash
+# Health check
+npm run cli health
+
+# List capabilities
+npm run cli capabilities
+
+# Invoke capability
+npm run cli invoke cap.price.lookup.v1 '{"base_token":"SOL"}'
+
+# List agents
+npm run cli agents
+
+# Register agent
+npm run cli register my-agent "My Agent" "cap1,cap2"
+
+# Run examples
+npm run example:trading
+npm run example:monitor
+npm run example:swarm
+```
+
+### Webhooks
+
+Async notifications for agent events:
+
+```typescript
+import { createWebhookManager } from './sdk/webhooks';
+
+const webhooks = createWebhookManager('my-agent');
+
+webhooks.registerWebhook({
+  id: 'slack-alerts',
+  url: 'https://hooks.slack.com/...',
+  events: ['alert', 'trade_executed'],
+  enabled: true,
+  secret: 'webhook-secret'
+});
+
+// Dispatch events
+await webhooks.dispatch('trade_executed', { token: 'SOL', amount: 100 });
+```
+
+### Testing
+
+Real integration testing against live router:
+
+```typescript
+import { AgentTester, runQuickTest } from './sdk/testing';
+
+// Quick test
+await runQuickTest('https://cap402.com');
+
+// Custom test suite
+const tester = new AgentTester({ router_url: 'https://cap402.com' });
+await tester.connect();
+
+await tester.runSuite({
+  name: 'My Tests',
+  tests: [
+    {
+      name: 'Price Check',
+      capability_id: 'cap.price.lookup.v1',
+      inputs: { base_token: 'SOL' },
+      expected: { success: true, has_outputs: ['price'] }
+    }
+  ]
+});
+
+tester.printSummary();
+await tester.disconnect();
+```
+
+---
+
+**Last Updated**: January 16, 2026  
+**CAP-402 Version**: 0.2.0

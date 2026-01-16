@@ -899,6 +899,88 @@ Several converging trends make CAP-402 timely:
 
 ---
 
+## 13.5 Agent SDK & Developer Tools
+
+CAP-402 provides a comprehensive SDK for building production-ready autonomous agents.
+
+### Production Agent SDK
+
+The Agent SDK enables developers to build agents with enterprise-grade features:
+
+```typescript
+import { createAgent } from '@cap402/sdk';
+
+const agent = createAgent({
+  agent_id: 'trading-bot-001',
+  name: 'Arbitrage Bot',
+  capabilities_provided: ['trading.arbitrage'],
+  capabilities_required: ['cap.price.lookup.v1', 'cap.swap.execute.v1']
+});
+
+await agent.start();
+const price = await agent.invoke('cap.price.lookup.v1', { base_token: 'SOL' });
+await agent.stop();
+```
+
+### SDK Features
+
+| Feature | Description |
+|---------|-------------|
+| **Lifecycle Management** | Start, stop, pause, resume with graceful shutdown |
+| **Circuit Breakers** | Automatic failure detection and recovery |
+| **Retry Logic** | Exponential backoff with configurable attempts |
+| **Health Checks** | Auto-reconnection on connection loss |
+| **Metrics Collection** | Invocation counts, latency, success rates |
+| **A2A Protocol** | Agent discovery, auctions, swarms, messaging |
+| **Event System** | Subscribe to errors, rate limits, circuit opens |
+
+### Pre-Built Agent Templates
+
+| Template | Purpose | Key Features |
+|----------|---------|--------------|
+| **Trading Agent** | Price monitoring, trade execution | MEV protection, signals, position tracking |
+| **Monitoring Agent** | Wallet/protocol surveillance | Alerts, thresholds, multi-channel notifications |
+| **Analytics Agent** | Data collection & reporting | Time series, correlations, anomaly detection |
+
+### Multi-Agent Orchestration
+
+Coordinate multiple agents for complex workflows:
+
+```typescript
+import { createOrchestrator } from '@cap402/sdk';
+
+const orchestrator = createOrchestrator({
+  orchestrator_id: 'swarm-001',
+  name: 'Trading Swarm'
+});
+
+// Parallel execution across agents
+const results = await orchestrator.executeParallel([
+  { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'SOL' } },
+  { capability_id: 'cap.price.lookup.v1', inputs: { base_token: 'ETH' } }
+]);
+
+// Consensus-based execution
+const consensus = await orchestrator.executeWithConsensus(
+  'cap.price.lookup.v1',
+  { base_token: 'SOL' },
+  { min_agreement: 0.5 }
+);
+```
+
+### CLI Tools
+
+```bash
+npm run cli health              # Check router status
+npm run cli capabilities        # List available capabilities
+npm run cli invoke cap.price.lookup.v1 '{"base_token":"SOL"}'
+npm run cli agents              # List registered agents
+npm run example:trading         # Run trading bot example
+npm run example:swarm           # Run multi-agent demo
+```
+
+---
+
 ## 14. Roadmap
 
 ### Phase 1: Foundation (Complete) ✅

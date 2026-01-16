@@ -672,6 +672,7 @@
     </a>
     <div class="nav-links">
       <a href="#capabilities">Capabilities</a>
+      <a href="#sdk">SDK</a>
       <a href="#infrastructure">Infrastructure</a>
       <a href="/docs">Docs</a>
       <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" rel="noopener noreferrer" class="nav-cta" style="display: flex; align-items: center; padding: 0.5rem;" title="GitHub">
@@ -801,6 +802,106 @@
         <h3 class="scramble" style="font-size: 1rem; margin: 0.5rem 0; color: var(--arcium-purple); opacity: 0.8;">Agent Protocol</h3>
         <span class="scramble" style="font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">Agent-to-agent invocation, discovery, auctions, swarms. Coordinate multi-agent systems.</span>
       </div>
+      <div class="cap-item">
+        <code class="mono scramble">sdk</code>
+        <h3 class="scramble" style="font-size: 1rem; margin: 0.5rem 0; color: var(--arcium-purple); opacity: 0.8;">Agent SDK</h3>
+        <span class="scramble" style="font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">Production-ready SDK with lifecycle management, circuit breakers, retries, and multi-agent orchestration.</span>
+      </div>
+      <div class="cap-item">
+        <code class="mono scramble">templates</code>
+        <h3 class="scramble" style="font-size: 1rem; margin: 0.5rem 0; color: var(--arcium-purple); opacity: 0.8;">Agent Templates</h3>
+        <span class="scramble" style="font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">Pre-built trading, monitoring, and analytics agents. Deploy in minutes with real data.</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="separator"></div>
+
+  <!-- Agent SDK Section -->
+  <section id="sdk" style="padding: 6vh 6vw;">
+    <p style="text-align: center; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1rem;">Agent SDK</p>
+    <h2 style="text-align: center; font-size: 1.5rem; margin-bottom: 2rem; color: var(--text-primary);">Build Production Agents in Minutes</h2>
+    
+    <div style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+      <!-- Code Example -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden;">
+        <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 0.5rem;">
+          <span style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444;"></span>
+          <span style="width: 12px; height: 12px; border-radius: 50%; background: #eab308;"></span>
+          <span style="width: 12px; height: 12px; border-radius: 50%; background: #22c55e;"></span>
+          <span style="margin-left: auto; font-size: 0.7rem; color: var(--text-muted);">trading-bot.ts</span>
+        </div>
+        <pre style="padding: 1rem; font-size: 0.75rem; color: var(--text-primary); margin: 0; overflow-x: auto; font-family: 'JetBrains Mono', monospace; line-height: 1.6;"><span style="color: #c084fc;">import</span> { createTradingAgent } <span style="color: #c084fc;">from</span> <span style="color: #a5d6ff;">'@cap402/sdk'</span>;
+
+<span style="color: #c084fc;">const</span> agent = <span style="color: #7dd3fc;">createTradingAgent</span>({
+  agent_id: <span style="color: #a5d6ff;">'sol-trader'</span>,
+  watched_tokens: [<span style="color: #a5d6ff;">'SOL'</span>, <span style="color: #a5d6ff;">'ETH'</span>, <span style="color: #a5d6ff;">'BTC'</span>],
+  mev_protection: <span style="color: #fbbf24;">true</span>,
+  dry_run: <span style="color: #fbbf24;">false</span>
+});
+
+agent.<span style="color: #7dd3fc;">on</span>(<span style="color: #a5d6ff;">'signal'</span>, (s) => <span style="color: #888;">// Trade signals</span>
+  console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`${s.type} ${s.token}`</span>));
+
+<span style="color: #c084fc;">await</span> agent.<span style="color: #7dd3fc;">start</span>();</pre>
+      </div>
+      
+      <!-- Features List -->
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <span style="font-size: 1.25rem;">🔄</span>
+            <span style="font-weight: 500; color: var(--text-primary);">Lifecycle Management</span>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">Start, stop, pause, resume with graceful shutdown</span>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <span style="font-size: 1.25rem;">⚡</span>
+            <span style="font-weight: 500; color: var(--text-primary);">Circuit Breakers</span>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">Automatic failure detection and recovery</span>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <span style="font-size: 1.25rem;">🤝</span>
+            <span style="font-weight: 500; color: var(--text-primary);">Multi-Agent Swarms</span>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">Orchestrate agents with parallel execution & consensus</span>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <span style="font-size: 1.25rem;">📊</span>
+            <span style="font-weight: 500; color: var(--text-primary);">Built-in Observability</span>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">Metrics, webhooks, and event streams</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Agent Templates -->
+    <div style="max-width: 900px; margin: 2rem auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; text-align: center;">
+        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📈</span>
+        <span style="font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Trading Agent</span>
+        <span style="font-size: 0.75rem; color: var(--text-secondary);">Price monitoring, signals, MEV protection</span>
+      </div>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; text-align: center;">
+        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">👁️</span>
+        <span style="font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Monitoring Agent</span>
+        <span style="font-size: 0.75rem; color: var(--text-secondary);">Wallet tracking, alerts, protocol health</span>
+      </div>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; text-align: center;">
+        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📊</span>
+        <span style="font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Analytics Agent</span>
+        <span style="font-size: 0.75rem; color: var(--text-secondary);">Data collection, reports, correlations</span>
+      </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 2rem;">
+      <a href="/docs/SDK_REFERENCE.md" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+        📚 SDK Documentation
+      </a>
     </div>
   </section>
 
