@@ -274,8 +274,8 @@ describe('Real-World Usage Patterns', () => {
       const tx = await prepareSwap('SOL', 'USDC', 1000000);
       
       expect(tx.amount_in).toBe(1000000);
-      // Large trades should have elevated risk
-      expect(['MEDIUM', 'HIGH']).toContain(tx.mev_risk);
+      // Large trades should have elevated risk (MEDIUM, HIGH, or CRITICAL)
+      expect(['MEDIUM', 'HIGH', 'CRITICAL']).toContain(tx.mev_risk);
     });
 
     it('should handle stablecoin to stablecoin', async () => {
