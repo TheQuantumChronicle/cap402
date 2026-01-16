@@ -3247,6 +3247,37 @@ export class TradingAgent extends EventEmitter {
   // ============================================
 
   /**
+   * Create a conditional order (internal helper to reduce duplication)
+   */
+  private createConditionalOrder(
+    type: 'stop_loss' | 'take_profit' | 'trailing_stop',
+    token: string,
+    triggerPrice: number,
+    amount: number,
+    targetToken: string,
+    expiresInHours?: number,
+    extras?: { trailing_percent?: number; highest_price?: number }
+  ): ConditionalOrder {
+    const prefix = type === 'stop_loss' ? 'sl' : type === 'take_profit' ? 'tp' : 'ts';
+    const order: ConditionalOrder = {
+      order_id: `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type,
+      token,
+      trigger_price: triggerPrice,
+      amount,
+      target_token: targetToken,
+      status: 'active',
+      created_at: Date.now(),
+      expires_at: expiresInHours ? Date.now() + expiresInHours * 3600000 : undefined,
+      ...extras
+    };
+
+    this.conditionalOrders.set(order.order_id, order);
+    this.emit('order_created', order);
+    return order;
+  }
+
+  /**
    * Set a stop-loss order - automatically sells when price drops below trigger
    * 
    * @example
@@ -3260,22 +3291,8 @@ export class TradingAgent extends EventEmitter {
     targetToken: string = 'USDC',
     expiresInHours?: number
   ): ConditionalOrder {
-    const order: ConditionalOrder = {
-      order_id: `sl_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-      type: 'stop_loss',
-      token,
-      trigger_price: triggerPrice,
-      amount,
-      target_token: targetToken,
-      status: 'active',
-      created_at: Date.now(),
-      expires_at: expiresInHours ? Date.now() + expiresInHours * 3600000 : undefined
-    };
-
-    this.conditionalOrders.set(order.order_id, order);
-    this.emit('order_created', order);
+    const order = this.createConditionalOrder('stop_loss', token, triggerPrice, amount, targetToken, expiresInHours);
     console.log(`🛑 Stop-loss set: Sell ${amount} ${token} if price < $${triggerPrice}`);
-
     return order;
   }
 
@@ -3293,22 +3310,8 @@ export class TradingAgent extends EventEmitter {
     targetToken: string = 'USDC',
     expiresInHours?: number
   ): ConditionalOrder {
-    const order: ConditionalOrder = {
-      order_id: `tp_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-      type: 'take_profit',
-      token,
-      trigger_price: triggerPrice,
-      amount,
-      target_token: targetToken,
-      status: 'active',
-      created_at: Date.now(),
-      expires_at: expiresInHours ? Date.now() + expiresInHours * 3600000 : undefined
-    };
-
-    this.conditionalOrders.set(order.order_id, order);
-    this.emit('order_created', order);
+    const order = this.createConditionalOrder('take_profit', token, triggerPrice, amount, targetToken, expiresInHours);
     console.log(`🎯 Take-profit set: Sell ${amount} ${token} if price > $${triggerPrice}`);
-
     return order;
   }
 
@@ -3328,23 +3331,11 @@ export class TradingAgent extends EventEmitter {
     const currentPrice = this.prices.get(token)?.price || 0;
     const triggerPrice = currentPrice * (1 - trailingPercent / 100);
 
-    const order: ConditionalOrder = {
-      order_id: `ts_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-      type: 'trailing_stop',
-      token,
-      trigger_price: triggerPrice,
-      amount,
-      target_token: targetToken,
-      status: 'active',
-      created_at: Date.now(),
-      trailing_percent: trailingPercent,
-      highest_price: currentPrice
-    };
-
-    this.conditionalOrders.set(order.order_id, order);
-    this.emit('order_created', order);
+    const order = this.createConditionalOrder(
+      'trailing_stop', token, triggerPrice, amount, targetToken, undefined,
+      { trailing_percent: trailingPercent, highest_price: currentPrice }
+    );
     console.log(`📉 Trailing stop set: ${trailingPercent}% below high (currently $${triggerPrice.toFixed(2)})`);
-
     return order;
   }
 
