@@ -6791,7 +6791,7 @@ app.post('/trading/mev/analyze', async (req: Request, res: Response) => {
       });
     }
     
-    const analysis = mevProtection.analyzeRisk(
+    const analysis = await mevProtection.analyzeRisk(
       token_in,
       token_out,
       amount_in,

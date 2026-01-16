@@ -261,6 +261,16 @@ class MEVProtectionService {
   ): Promise<MEVRiskAnalysis> {
     const analysisId = `mev_${crypto.randomBytes(8).toString('hex')}`;
     
+    // Fetch real market data first (with timeout to prevent hanging)
+    try {
+      await Promise.race([
+        this.fetchRealMarketData(tokenIn),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+      ]);
+    } catch {
+      // Use defaults if fetch fails or times out
+    }
+    
     // Calculate individual risk components
     const sandwichRisk = this.calculateSandwichRisk(tokenIn, amountInUsd);
     const frontrunRisk = this.calculateFrontrunRisk(tokenIn, tokenOut, amountInUsd);
