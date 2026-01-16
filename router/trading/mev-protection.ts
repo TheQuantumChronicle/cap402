@@ -13,9 +13,17 @@
 import * as crypto from 'crypto';
 import { signalService } from './realtime-signals';
 
-export type MEVAttackType = 'sandwich' | 'frontrun' | 'backrun' | 'jit_liquidity';
+export type MEVAttackType = 'sandwich' | 'frontrun' | 'backrun' | 'jit_liquidity' | 'time_bandit' | 'uncle_bandit';
 
 export type ProtectionLevel = 'none' | 'basic' | 'standard' | 'maximum';
+
+// Time windows for attack detection
+const ATTACK_WINDOWS = {
+  SANDWICH_WINDOW_MS: 2000,      // Sandwiches happen within 2 blocks
+  FRONTRUN_WINDOW_MS: 400,       // Frontrun must be in same/next block
+  JIT_WINDOW_MS: 1000,           // JIT liquidity added just before
+  TIME_BANDIT_BLOCKS: 6,         // Reorg attacks within 6 blocks
+} as const;
 
 export interface MEVRiskAnalysis {
   analysis_id: string;
@@ -41,22 +49,44 @@ export interface MEVRiskAnalysis {
       probability: number;
       estimated_loss_usd: number;
       detected_bots: number;
+      attack_window_ms: number;
     };
     frontrun_risk: {
       probability: number;
       estimated_loss_usd: number;
       pending_similar_trades: number;
+      gas_price_premium_percent: number;
     };
     backrun_risk: {
       probability: number;
       estimated_loss_usd: number;
+    };
+    jit_liquidity_risk: {
+      probability: number;
+      estimated_loss_usd: number;
+      suspicious_lp_activity: boolean;
+    };
+    time_bandit_risk: {
+      probability: number;
+      reorg_vulnerability: boolean;
+      blocks_at_risk: number;
     };
     
     // Market conditions
     market_conditions: {
       volatility: 'low' | 'medium' | 'high';
       liquidity_depth_usd: number;
-      recent_mev_activity: number; // MEV extractions in last hour
+      recent_mev_activity: number;
+      gas_price_gwei: number;
+      block_fullness_percent: number;
+      mempool_congestion: 'low' | 'medium' | 'high';
+    };
+    
+    // Timing analysis
+    timing: {
+      optimal_execution_window_ms: number;
+      avoid_blocks: number[];
+      recommended_delay_ms: number;
     };
   };
   
@@ -194,12 +224,16 @@ class MEVProtectionService {
     const sandwichRisk = this.calculateSandwichRisk(tokenIn, amountInUsd);
     const frontrunRisk = this.calculateFrontrunRisk(tokenIn, tokenOut, amountInUsd);
     const backrunRisk = this.calculateBackrunRisk(tokenOut, amountInUsd);
+    const jitRisk = this.calculateJITLiquidityRisk(tokenIn, tokenOut, amountInUsd);
+    const timeBanditRisk = this.calculateTimeBanditRisk(amountInUsd);
     
     // Overall risk score (weighted average)
     const overallScore = Math.round(
-      sandwichRisk.probability * 0.5 +
-      frontrunRisk.probability * 0.35 +
-      backrunRisk.probability * 0.15
+      sandwichRisk.probability * 0.4 +
+      frontrunRisk.probability * 0.3 +
+      backrunRisk.probability * 0.1 +
+      jitRisk.probability * 0.15 +
+      timeBanditRisk.probability * 0.05
     );
     
     const riskLevel = overallScore >= 75 ? 'critical' :
@@ -209,12 +243,20 @@ class MEVProtectionService {
     // Get market conditions
     const volatility = this.marketVolatility[tokenIn] || 'medium';
     const liquidityDepthUsd = this.liquidityDepth[tokenIn] || 1000000;
+    const gasPrice = 0.000025 + Math.random() * 0.00005; // Simulated gas in SOL
+    const gasPriceGwei = Math.round(gasPrice * 1e9 * 100) / 100;
+    const blockFullness = 60 + Math.random() * 35;
+    const mempoolCongestion = blockFullness > 85 ? 'high' : blockFullness > 70 ? 'medium' : 'low';
+    
+    // Calculate timing recommendations
+    const timing = this.calculateOptimalTiming(overallScore, volatility, mempoolCongestion);
     
     // Calculate total estimated loss
     const totalEstimatedLoss = 
       sandwichRisk.estimated_loss_usd +
       frontrunRisk.estimated_loss_usd +
-      backrunRisk.estimated_loss_usd;
+      backrunRisk.estimated_loss_usd +
+      jitRisk.estimated_loss_usd;
     
     // Generate execution options
     const executionOptions = this.generateExecutionOptions(
@@ -243,11 +285,17 @@ class MEVProtectionService {
         sandwich_risk: sandwichRisk,
         frontrun_risk: frontrunRisk,
         backrun_risk: backrunRisk,
+        jit_liquidity_risk: jitRisk,
+        time_bandit_risk: timeBanditRisk,
         market_conditions: {
           volatility,
           liquidity_depth_usd: liquidityDepthUsd,
-          recent_mev_activity: this.knownMEVBots.size * 10 // Simulated
-        }
+          recent_mev_activity: this.knownMEVBots.size * 10,
+          gas_price_gwei: gasPriceGwei,
+          block_fullness_percent: Math.round(blockFullness),
+          mempool_congestion: mempoolCongestion
+        },
+        timing
       },
       recommendation,
       execution_options: executionOptions
@@ -273,9 +321,9 @@ class MEVProtectionService {
     probability: number;
     estimated_loss_usd: number;
     detected_bots: number;
+    attack_window_ms: number;
   } {
     // Larger trades = higher sandwich risk
-    // Base probability increases with trade size
     let baseProbability = Math.min(90, (amountUsd / 1000) * 5);
     
     // Adjust for market volatility
@@ -287,10 +335,14 @@ class MEVProtectionService {
     const lossPercent = 0.5 + (baseProbability / 100) * 1.5;
     const estimatedLoss = amountUsd * (lossPercent / 100);
     
+    // Attack window depends on block time and bot speed
+    const attackWindow = ATTACK_WINDOWS.SANDWICH_WINDOW_MS * (1 + baseProbability / 100);
+    
     return {
       probability: Math.round(Math.min(95, baseProbability)),
       estimated_loss_usd: Math.round(estimatedLoss * 100) / 100,
-      detected_bots: Math.floor(baseProbability / 20)
+      detected_bots: Math.floor(baseProbability / 20),
+      attack_window_ms: Math.round(attackWindow)
     };
   }
 
@@ -298,6 +350,7 @@ class MEVProtectionService {
     probability: number;
     estimated_loss_usd: number;
     pending_similar_trades: number;
+    gas_price_premium_percent: number;
   } {
     // Frontrun risk depends on trade predictability
     let baseProbability = Math.min(80, (amountUsd / 2000) * 5);
@@ -311,10 +364,14 @@ class MEVProtectionService {
     const lossPercent = 0.3 + (baseProbability / 100) * 0.7;
     const estimatedLoss = amountUsd * (lossPercent / 100);
     
+    // Gas premium bots would pay to frontrun
+    const gasPremium = 10 + (baseProbability / 100) * 50; // 10-60%
+    
     return {
       probability: Math.round(Math.min(85, baseProbability)),
       estimated_loss_usd: Math.round(estimatedLoss * 100) / 100,
-      pending_similar_trades: Math.floor(Math.random() * 5)
+      pending_similar_trades: Math.floor(Math.random() * 5),
+      gas_price_premium_percent: Math.round(gasPremium)
     };
   }
 
@@ -330,6 +387,86 @@ class MEVProtectionService {
     return {
       probability: Math.round(baseProbability),
       estimated_loss_usd: Math.round(estimatedLoss * 100) / 100
+    };
+  }
+
+  private calculateJITLiquidityRisk(tokenIn: string, tokenOut: string, amountUsd: number): {
+    probability: number;
+    estimated_loss_usd: number;
+    suspicious_lp_activity: boolean;
+  } {
+    // JIT liquidity attacks add liquidity just before a large trade
+    // then remove it immediately after, capturing fees
+    let baseProbability = Math.min(70, (amountUsd / 3000) * 5);
+    
+    // Higher for less liquid pairs
+    const liquidity = this.liquidityDepth[tokenIn] || 1000000;
+    if (liquidity < 500000) baseProbability *= 1.4;
+    if (liquidity > 5000000) baseProbability *= 0.6;
+    
+    // JIT typically extracts 0.1-0.5% via fee manipulation
+    const lossPercent = 0.1 + (baseProbability / 100) * 0.4;
+    const estimatedLoss = amountUsd * (lossPercent / 100);
+    
+    return {
+      probability: Math.round(Math.min(75, baseProbability)),
+      estimated_loss_usd: Math.round(estimatedLoss * 100) / 100,
+      suspicious_lp_activity: baseProbability > 40
+    };
+  }
+
+  private calculateTimeBanditRisk(amountUsd: number): {
+    probability: number;
+    reorg_vulnerability: boolean;
+    blocks_at_risk: number;
+  } {
+    // Time bandit attacks involve reorging blocks to extract MEV
+    // Only profitable for very large trades on chains with weak finality
+    // Solana has strong finality, so this is rare
+    const baseProbability = amountUsd > 100000 ? Math.min(20, amountUsd / 50000) : 0;
+    
+    return {
+      probability: Math.round(baseProbability),
+      reorg_vulnerability: amountUsd > 500000,
+      blocks_at_risk: baseProbability > 10 ? ATTACK_WINDOWS.TIME_BANDIT_BLOCKS : 0
+    };
+  }
+
+  private calculateOptimalTiming(
+    riskScore: number,
+    volatility: 'low' | 'medium' | 'high',
+    congestion: 'low' | 'medium' | 'high'
+  ): {
+    optimal_execution_window_ms: number;
+    avoid_blocks: number[];
+    recommended_delay_ms: number;
+  } {
+    // Calculate optimal execution window based on risk
+    let windowMs = 400; // Base Solana block time
+    if (riskScore > 50) windowMs = 800;
+    if (riskScore > 75) windowMs = 1200;
+    
+    // Adjust for volatility
+    if (volatility === 'high') windowMs *= 0.7; // Execute faster in volatile markets
+    if (volatility === 'low') windowMs *= 1.3; // Can wait in stable markets
+    
+    // Recommended delay based on congestion
+    let delayMs = 0;
+    if (congestion === 'high') delayMs = 2000; // Wait for congestion to clear
+    if (congestion === 'medium') delayMs = 500;
+    
+    // Blocks to avoid (simulated - would come from MEV bot activity analysis)
+    const avoidBlocks: number[] = [];
+    if (riskScore > 60) {
+      // Avoid next few blocks if high risk
+      const currentBlock = Math.floor(Date.now() / 400);
+      avoidBlocks.push(currentBlock + 1, currentBlock + 2);
+    }
+    
+    return {
+      optimal_execution_window_ms: Math.round(windowMs),
+      avoid_blocks: avoidBlocks,
+      recommended_delay_ms: delayMs
     };
   }
 
