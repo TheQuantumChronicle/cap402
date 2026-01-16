@@ -448,6 +448,74 @@ const errors = log.getLogs({ level: 'error', limit: 10 });
 // Set global log level
 setLogLevel('warn'); // Only warn and error</pre>
 
+    <h2>Input Validation & Rate Limiting</h2>
+    <p>Built-in protection against invalid inputs and abuse:</p>
+    <pre class="code-block">// All inputs are validated automatically
+await trader.prepareSwap('SOL', 'USDC', 10);
+// Validates: token format, amount > 0, amount < max
+
+// Rate limits per operation (per minute)
+// prepareSwap: 60, executeTrade: 20, requestQuote: 100
+
+// If rate limit exceeded:
+// Error: "Rate limit exceeded for prepareSwap. Try again in 45s"</pre>
+
+    <h3>Rate Limits</h3>
+    <table>
+      <tr><th>Operation</th><th>Limit</th><th>Window</th></tr>
+      <tr><td>prepareSwap</td><td>60</td><td>1 minute</td></tr>
+      <tr><td>executeTrade</td><td>20</td><td>1 minute</td></tr>
+      <tr><td>requestQuote</td><td>100</td><td>1 minute</td></tr>
+      <tr><td>detectAlpha</td><td>30</td><td>1 minute</td></tr>
+    </table>
+
+    <h2>Large Trade Confirmation</h2>
+    <p>Trades over $500 require explicit confirmation:</p>
+    <pre class="code-block">// Check if confirmation needed
+if (trader.requiresConfirmation('SOL', 100)) {
+  const confirmId = trader.requestTradeConfirmation('SOL', 'USDC', 100);
+  // Emits 'confirmation_required' event
+  
+  // User confirms (e.g., via UI)
+  if (trader.confirmTrade(confirmId)) {
+    await trader.executeTrade('SOL', 'USDC', 100);
+  }
+}
+
+// Listen for confirmation events
+trader.on('confirmation_required', ({ confirmation_id, amount, usd_value, message }) => {
+  console.log(message);
+  // "Large trade detected: 100 SOL (~$14,334). Confirm to proceed."
+});</pre>
+
+    <h2>Resilience Utilities</h2>
+    <p>Built-in wrappers for reliable operations:</p>
+    <pre class="code-block">// Retry with exponential backoff
+const result = await trader.withRetry(
+  () => trader.prepareSwap('SOL', 'USDC', 10),
+  { maxRetries: 5, initialDelayMs: 1000 }
+);
+
+// Safe wrapper - no try/catch needed
+const { success, data, error } = await trader.safe(
+  () => trader.requestQuote('agent-xyz', 'SOL', 'USDC', 100)
+);
+if (success) console.log(data);
+
+// With timeout
+const tx = await trader.withTimeout(
+  () => trader.prepareSwap('SOL', 'USDC', 10),
+  5000 // 5 second timeout
+);
+
+// Batch with concurrency limit
+const tokens = ['SOL', 'ETH', 'BTC', 'AVAX', 'MATIC'];
+const { results, errors } = await trader.batch(
+  tokens,
+  (token) => trader.prepareSwap(token, 'USDC', 10),
+  { concurrency: 3 }
+);</pre>
+
     <h2>Key Principles</h2>
     <ul>
       <li><strong>Autonomous Decision-Making</strong> — Agents monitor, analyze, and prepare transactions 24/7</li>
