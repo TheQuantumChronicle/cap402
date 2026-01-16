@@ -1589,23 +1589,23 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
         if (this.y < 0) this.y = height;
         if (this.y > height) this.y = 0;
         
-        // Boost alpha and size when scrolling
-        this.alpha = this.baseAlpha + (scrollGlow * 0.6);
-        this.glowSize = this.size + (scrollGlow * 3);
+        // Boost alpha and size when scrolling (subtle)
+        this.alpha = this.baseAlpha + (scrollGlow * 0.3);
+        this.glowSize = this.size + (scrollGlow * 1.5);
       }
       draw() {
-        // Draw glow layer when scrolling
-        if (scrollGlow > 0.05) {
+        // Draw glow layer when scrolling (subtle effect)
+        if (scrollGlow > 0.08) {
           const gradient = ctx.createRadialGradient(
             this.x, this.y, 0,
-            this.x, this.y, this.glowSize * 4
+            this.x, this.y, this.glowSize * 2.5
           );
-          gradient.addColorStop(0, `hsla(${this.hue}, 80%, 60%, ${scrollGlow * 0.4})`);
-          gradient.addColorStop(0.5, `hsla(${this.hue}, 80%, 50%, ${scrollGlow * 0.15})`);
+          gradient.addColorStop(0, `hsla(${this.hue}, 70%, 55%, ${scrollGlow * 0.2})`);
+          gradient.addColorStop(0.6, `hsla(${this.hue}, 70%, 45%, ${scrollGlow * 0.06})`);
           gradient.addColorStop(1, 'transparent');
           ctx.fillStyle = gradient;
           ctx.beginPath();
-          ctx.arc(this.x, this.y, this.glowSize * 4, 0, Math.PI * 2);
+          ctx.arc(this.x, this.y, this.glowSize * 2.5, 0, Math.PI * 2);
           ctx.fill();
         }
         
