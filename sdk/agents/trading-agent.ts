@@ -137,6 +137,26 @@ export interface ConditionalOrder {
   highest_price?: number;
 }
 
+/**
+ * DCA (Dollar Cost Averaging) schedule
+ */
+export interface DCASchedule {
+  schedule_id: string;
+  token_to_buy: string;
+  token_to_spend: string;
+  amount_per_interval: number;
+  interval_ms: number;
+  total_intervals?: number;
+  intervals_completed: number;
+  total_spent: number;
+  total_acquired: number;
+  avg_price: number;
+  status: 'active' | 'paused' | 'completed' | 'cancelled';
+  created_at: number;
+  next_execution: number;
+  last_execution?: number;
+}
+
 export interface PreparedTransaction {
   instruction_id: string;
   type: 'swap' | 'transfer' | 'stake';
@@ -478,6 +498,8 @@ export class TradingAgent extends EventEmitter {
   private positions: Map<string, Position> = new Map();
   private trades: TradeExecution[] = [];
   private conditionalOrders: Map<string, ConditionalOrder> = new Map();
+  private dcaSchedules: Map<string, DCASchedule> = new Map();
+  private dcaTimers: Map<string, NodeJS.Timeout> = new Map();
   private dailyTradeCount = 0;
   private lastDayReset = Date.now();
   private priceCheckTimer?: NodeJS.Timeout;
@@ -3247,6 +3269,182 @@ export class TradingAgent extends EventEmitter {
    */
   getActiveOrders(): ConditionalOrder[] {
     return Array.from(this.conditionalOrders.values()).filter(o => o.status === 'active');
+  }
+
+  // ============================================
+  // DCA (Dollar Cost Averaging)
+  // ============================================
+
+  /**
+   * Start a DCA schedule - buy fixed amount at regular intervals
+   * 
+   * @example
+   * // Buy $50 of SOL every hour for 24 hours
+   * agent.startDCA('SOL', 'USDC', 50, 'hourly', 24);
+   */
+  startDCA(
+    tokenToBuy: string,
+    tokenToSpend: string,
+    amountPerInterval: number,
+    interval: 'hourly' | 'daily' | 'weekly' | number,
+    totalIntervals?: number
+  ): DCASchedule {
+    const intervalMs = typeof interval === 'number' 
+      ? interval 
+      : interval === 'hourly' ? 3600000 
+      : interval === 'daily' ? 86400000 
+      : 604800000;
+
+    const schedule: DCASchedule = {
+      schedule_id: `dca_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      token_to_buy: tokenToBuy,
+      token_to_spend: tokenToSpend,
+      amount_per_interval: amountPerInterval,
+      interval_ms: intervalMs,
+      total_intervals: totalIntervals,
+      intervals_completed: 0,
+      total_spent: 0,
+      total_acquired: 0,
+      avg_price: 0,
+      status: 'active',
+      created_at: Date.now(),
+      next_execution: Date.now()
+    };
+
+    this.dcaSchedules.set(schedule.schedule_id, schedule);
+    this.emit('dca_started', schedule);
+
+    // Execute first buy immediately
+    this.executeDCAInterval(schedule.schedule_id);
+
+    // Schedule recurring buys
+    const timer = setInterval(() => {
+      this.executeDCAInterval(schedule.schedule_id);
+    }, intervalMs);
+    this.dcaTimers.set(schedule.schedule_id, timer);
+
+    const intervalName = typeof interval === 'string' ? interval : `${interval}ms`;
+    console.log(`📅 DCA started: Buy $${amountPerInterval} of ${tokenToBuy} ${intervalName}`);
+    if (totalIntervals) {
+      console.log(`   Total: ${totalIntervals} buys ($${amountPerInterval * totalIntervals} total)`);
+    }
+
+    return schedule;
+  }
+
+  /**
+   * Execute a single DCA interval
+   */
+  private async executeDCAInterval(scheduleId: string): Promise<void> {
+    const schedule = this.dcaSchedules.get(scheduleId);
+    if (!schedule || schedule.status !== 'active') return;
+
+    try {
+      const result = await this.instantSwap(
+        schedule.token_to_spend,
+        schedule.token_to_buy,
+        schedule.amount_per_interval,
+        { skip_mev_check: true }
+      );
+
+      if (result.status === 'executed') {
+        schedule.intervals_completed++;
+        schedule.total_spent += schedule.amount_per_interval;
+        schedule.total_acquired += result.amount_out;
+        schedule.avg_price = schedule.total_spent / schedule.total_acquired;
+        schedule.last_execution = Date.now();
+        schedule.next_execution = Date.now() + schedule.interval_ms;
+
+        this.emit('dca_executed', {
+          schedule_id: scheduleId,
+          interval: schedule.intervals_completed,
+          amount_bought: result.amount_out,
+          price: result.execution_price,
+          total_acquired: schedule.total_acquired,
+          avg_price: schedule.avg_price
+        });
+
+        console.log(`📅 DCA #${schedule.intervals_completed}: Bought ${result.amount_out.toFixed(4)} ${schedule.token_to_buy} @ $${result.execution_price.toFixed(2)}`);
+
+        // Check if completed
+        if (schedule.total_intervals && schedule.intervals_completed >= schedule.total_intervals) {
+          schedule.status = 'completed';
+          this.stopDCA(scheduleId);
+          this.emit('dca_completed', schedule);
+          console.log(`✅ DCA completed: ${schedule.total_acquired.toFixed(4)} ${schedule.token_to_buy} acquired at avg $${schedule.avg_price.toFixed(2)}`);
+        }
+      }
+    } catch (error) {
+      console.error(`DCA execution failed: ${error}`);
+      this.emit('dca_error', { schedule_id: scheduleId, error });
+    }
+  }
+
+  /**
+   * Pause a DCA schedule
+   */
+  pauseDCA(scheduleId: string): boolean {
+    const schedule = this.dcaSchedules.get(scheduleId);
+    if (schedule && schedule.status === 'active') {
+      schedule.status = 'paused';
+      const timer = this.dcaTimers.get(scheduleId);
+      if (timer) clearInterval(timer);
+      this.emit('dca_paused', schedule);
+      console.log(`⏸️ DCA ${scheduleId} paused`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Resume a paused DCA schedule
+   */
+  resumeDCA(scheduleId: string): boolean {
+    const schedule = this.dcaSchedules.get(scheduleId);
+    if (schedule && schedule.status === 'paused') {
+      schedule.status = 'active';
+      const timer = setInterval(() => {
+        this.executeDCAInterval(scheduleId);
+      }, schedule.interval_ms);
+      this.dcaTimers.set(scheduleId, timer);
+      this.emit('dca_resumed', schedule);
+      console.log(`▶️ DCA ${scheduleId} resumed`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Stop and cancel a DCA schedule
+   */
+  stopDCA(scheduleId: string): boolean {
+    const schedule = this.dcaSchedules.get(scheduleId);
+    if (schedule) {
+      schedule.status = 'cancelled';
+      const timer = this.dcaTimers.get(scheduleId);
+      if (timer) {
+        clearInterval(timer);
+        this.dcaTimers.delete(scheduleId);
+      }
+      this.emit('dca_stopped', schedule);
+      console.log(`🛑 DCA ${scheduleId} stopped`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get all DCA schedules
+   */
+  getDCASchedules(): DCASchedule[] {
+    return Array.from(this.dcaSchedules.values());
+  }
+
+  /**
+   * Get DCA schedule by ID
+   */
+  getDCASchedule(scheduleId: string): DCASchedule | undefined {
+    return this.dcaSchedules.get(scheduleId);
   }
 
   /**
