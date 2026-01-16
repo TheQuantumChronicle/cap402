@@ -76,7 +76,7 @@
 <body>
   <div class="topbar">
     <div class="topbar-left">
-      <a href="/"><img src="/public/CAP402logo.png" alt="CAP-402"></a>
+      <a href="/"><img src="/public/logo2.png" alt="CAP-402"></a>
       <h1>SDK Reference</h1>
     </div>
     <div class="nav-links">
@@ -295,6 +295,60 @@ trader.on('a2a_signal', ({ from, signal }) => {
 
 // Poll for signals
 const signals = await trader.pollA2ASignals();</pre>
+
+    <h2>🥷 Stealth Trading Mode</h2>
+    <p>Privacy-first trading with automatic privacy escalation for large trades:</p>
+    <pre class="code-block">import { createTradingAgent } from '@cap402/sdk';
+
+// Enable stealth mode
+const trader = createTradingAgent({
+  agent_id: 'stealth-bot',
+  watched_tokens: ['SOL', 'ETH'],
+  stealth_mode: {
+    enabled: true,
+    auto_privacy_threshold_usd: 10000,  // Auto-escalate > $10K
+    auto_split_threshold_usd: 50000,    // Split orders > $50K
+    randomize_timing: true,              // Random delays
+    decoy_transactions: false            // Optional decoys
+  }
+});
+
+// Analyze stealth options before trading
+const analysis = await trader.analyzeStealthOptions('SOL', 'USDC', 1000);
+console.log(analysis.recommendation);        // 'maximum'
+console.log(analysis.mev_risk.level);        // 'HIGH'
+console.log(analysis.stealth_options);       // Privacy/cost tradeoffs
+
+// Execute stealth trade
+const result = await trader.stealthTrade('SOL', 'USDC', 1000, {
+  privacy_level: 'maximum',  // 'standard' | 'enhanced' | 'maximum'
+  split_order: true,         // Split into chunks
+  max_chunks: 5,             // Number of chunks
+  use_decoys: false          // Decoy transactions
+});
+
+console.log(result.stealth_features_used);
+// ['order_splitting', 'randomized_timing', 'arcium_mpc', 'encrypted_amounts']
+console.log(\`MEV Savings: $\${result.mev_savings_usd}\`);
+console.log(\`Privacy Cost: $\${result.privacy_cost_usd}\`);</pre>
+
+    <h3>Privacy Levels</h3>
+    <table>
+      <tr><th>Level</th><th>Method</th><th>Protection</th><th>Features</th></tr>
+      <tr><td>standard</td><td>Private RPC</td><td>40%</td><td>Hidden from public mempool</td></tr>
+      <tr><td>enhanced</td><td>Jito Bundle</td><td>70%</td><td>Tip protection, atomic execution</td></tr>
+      <tr><td>maximum</td><td>Arcium MPC</td><td>95%</td><td>Encrypted amounts, hidden route, ZK proof</td></tr>
+    </table>
+
+    <h3>Stealth Features</h3>
+    <ul>
+      <li><strong>Order Splitting</strong> — Large orders split into chunks to avoid detection</li>
+      <li><strong>Randomized Timing</strong> — Random delays between chunks prevent pattern analysis</li>
+      <li><strong>Decoy Transactions</strong> — Optional fake trades to confuse observers</li>
+      <li><strong>Encrypted Amounts</strong> — Trade size hidden from all observers</li>
+      <li><strong>Hidden Route</strong> — Swap path through DEXs concealed</li>
+      <li><strong>Auto-Escalation</strong> — Privacy level automatically increases for large trades</li>
+    </ul>
 
     <h2>Alpha Detection</h2>
     <p>Detect trading opportunities with momentum and reversal signals:</p>

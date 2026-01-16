@@ -3852,6 +3852,124 @@ app.get('/alpha/smart-money', async (req: Request, res: Response) => {
   }
 });
 
+// Stealth Trade Analysis - Privacy/cost tradeoffs for large trades
+app.post('/alpha/stealth-analyze', async (req: Request, res: Response) => {
+  try {
+    const { token_in, token_out, amount } = req.body;
+
+    if (!token_in || !token_out || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: 'token_in, token_out, and amount required'
+      });
+    }
+
+    const amountNum = Number(amount);
+    
+    // Get price to calculate USD value
+    const { priceProvider } = await import('../providers/price');
+    let usdValue = amountNum * 100; // Default estimate
+    try {
+      const priceData = await priceProvider.getPrice(token_in, 'USDC');
+      usdValue = amountNum * priceData.price;
+    } catch {
+      // Use default
+    }
+
+    // Get MEV risk analysis
+    const { mevProtection } = await import('./trading/mev-protection');
+    const mevAnalysis = await mevProtection.analyzeRisk(
+      token_in, token_out, amountNum, usdValue, amountNum, 0.5
+    );
+
+    const potentialLoss = 
+      mevAnalysis.risk.sandwich_risk.estimated_loss_usd +
+      mevAnalysis.risk.frontrun_risk.estimated_loss_usd +
+      mevAnalysis.risk.backrun_risk.estimated_loss_usd;
+
+    // Generate stealth options
+    const stealthOptions = [
+      {
+        level: 'standard',
+        method: 'private_rpc',
+        description: 'Route through private RPC endpoint',
+        protection_percent: 40,
+        estimated_cost_usd: 0.02,
+        estimated_savings_usd: potentialLoss * 0.4,
+        net_benefit_usd: potentialLoss * 0.4 - 0.02,
+        features: ['hidden_from_public_mempool'],
+        execution_time_ms: 500
+      },
+      {
+        level: 'enhanced',
+        method: 'jito_bundle',
+        description: 'Execute via Jito bundle with tip',
+        protection_percent: 70,
+        estimated_cost_usd: Math.max(0.05, potentialLoss * 0.1),
+        estimated_savings_usd: potentialLoss * 0.7,
+        net_benefit_usd: potentialLoss * 0.7 - Math.max(0.05, potentialLoss * 0.1),
+        features: ['jito_bundle', 'tip_protection', 'atomic_execution'],
+        execution_time_ms: 600
+      },
+      {
+        level: 'maximum',
+        method: 'arcium_mpc',
+        description: 'Confidential execution via Arcium MPC',
+        protection_percent: 95,
+        estimated_cost_usd: Math.max(0.10, potentialLoss * 0.2),
+        estimated_savings_usd: potentialLoss * 0.95,
+        net_benefit_usd: potentialLoss * 0.95 - Math.max(0.10, potentialLoss * 0.2),
+        features: ['encrypted_amounts', 'hidden_route', 'zk_proof', 'confidential_settlement'],
+        execution_time_ms: 1500
+      }
+    ];
+
+    // Determine recommendations
+    const recommendation = potentialLoss > 50 ? 'maximum' : potentialLoss > 10 ? 'enhanced' : 'standard';
+    const splitRecommended = usdValue > 50000;
+    const recommendedChunks = splitRecommended ? Math.min(10, Math.ceil(usdValue / 10000)) : 1;
+
+    res.json({
+      success: true,
+      stealth_analysis: {
+        trade: {
+          token_in,
+          token_out,
+          amount: amountNum,
+          usd_value: Math.round(usdValue * 100) / 100
+        },
+        mev_risk: {
+          level: mevAnalysis.risk.level.toUpperCase(),
+          potential_loss_usd: potentialLoss.toFixed(2),
+          sandwich_probability: mevAnalysis.risk.sandwich_risk.probability + '%',
+          frontrun_probability: mevAnalysis.risk.frontrun_risk.probability + '%'
+        },
+        stealth_options: stealthOptions,
+        recommendation: {
+          privacy_level: recommendation,
+          split_order: splitRecommended,
+          chunks: recommendedChunks,
+          reasoning: splitRecommended 
+            ? `Large trade ($${usdValue.toFixed(0)}). Split into ${recommendedChunks} chunks with ${recommendation} privacy.`
+            : `Use ${recommendation} privacy for optimal protection/cost ratio.`
+        },
+        privacy_features: {
+          order_splitting: 'Split large orders to avoid detection patterns',
+          randomized_timing: 'Add random delays between chunks',
+          decoy_transactions: 'Optional fake trades to confuse analysis',
+          encrypted_amounts: 'Hide trade size from all observers',
+          hidden_route: 'Conceal swap path through DEXs'
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Stealth analysis failed'
+    });
+  }
+});
+
 // Private Trade Execution - Confidential swap with hidden amounts
 app.post('/alpha/private-trade', async (req: Request, res: Response) => {
   try {
