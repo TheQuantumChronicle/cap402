@@ -350,6 +350,149 @@ console.log(\`Privacy Cost: $\${result.privacy_cost_usd}\`);</pre>
       <li><strong>Auto-Escalation</strong> — Privacy level automatically increases for large trades</li>
     </ul>
 
+    <h2>⚡ Instant Execution</h2>
+    <p>Sub-second trade execution with caching, parallel requests, and smart routing:</p>
+    <pre class="code-block">// Instant swap - fastest execution
+const result = await trader.instantSwap('SOL', 'USDC', 10);
+console.log(\`Executed in \${result.latency_ms}ms\`);
+
+// Smart trade - auto-selects best method based on size
+// < $100: instant (skip MEV)
+// $100-$10K: protected (standard MEV)
+// > $10K: stealth (split + max privacy)
+const smart = await trader.smartTrade('SOL', 'USDC', 100);
+console.log(\`Method: \${smart.method}\`); // 'instant' | 'protected' | 'stealth'
+
+// Race swap - races multiple execution paths
+const race = await trader.raceSwap('SOL', 'USDC', 10);
+console.log(\`Winner: \${race.winning_method}\`);
+
+// Warm up caches for fastest execution
+await trader.warmUp([
+  { tokenIn: 'SOL', tokenOut: 'USDC' },
+  { tokenIn: 'ETH', tokenOut: 'USDC' }
+]);</pre>
+
+    <h2>📊 Risk Management</h2>
+    <p>Automated stop-loss, take-profit, and trailing stops:</p>
+    <pre class="code-block">// Stop-loss - sell when price drops below trigger
+trader.setStopLoss('SOL', 140, 10, 'USDC');
+// Sells 10 SOL if price drops below $140
+
+// Take-profit - sell when price rises above trigger
+trader.setTakeProfit('SOL', 200, 10, 'USDC');
+// Sells 10 SOL if price rises above $200
+
+// Trailing stop - follows price up, triggers on % drop
+trader.setTrailingStop('SOL', 5, 10, 'USDC');
+// Sells 10 SOL if price drops 5% from its high
+
+// Cancel orders
+trader.cancelOrder(order.order_id);
+
+// Get active orders
+const orders = trader.getActiveOrders();</pre>
+
+    <h2>📅 DCA (Dollar Cost Averaging)</h2>
+    <p>Automated recurring buys at regular intervals:</p>
+    <pre class="code-block">// Start DCA - buy $50 of SOL every hour for 24 hours
+const dca = trader.startDCA('SOL', 'USDC', 50, 'hourly', 24);
+
+// Intervals: 'hourly' | 'daily' | 'weekly' | custom ms
+trader.startDCA('ETH', 'USDC', 100, 'daily');      // Daily
+trader.startDCA('BTC', 'USDC', 500, 'weekly');     // Weekly
+trader.startDCA('SOL', 'USDC', 25, 60000);         // Every minute
+
+// Control DCA
+trader.pauseDCA(dca.schedule_id);
+trader.resumeDCA(dca.schedule_id);
+trader.stopDCA(dca.schedule_id);
+
+// Track progress
+const schedule = trader.getDCASchedule(dca.schedule_id);
+console.log(\`Bought: \${schedule.total_acquired} SOL\`);
+console.log(\`Avg price: $\${schedule.avg_price}\`);</pre>
+
+    <h2>📋 Limit Orders</h2>
+    <p>Buy or sell at specific prices:</p>
+    <pre class="code-block">// Limit buy - buy when price drops to limit
+trader.limitBuy('SOL', 'USDC', 10, 140);
+// Buys 10 SOL when price drops to $140
+
+// Limit sell - sell when price rises to limit
+trader.limitSell('SOL', 'USDC', 10, 200);
+// Sells 10 SOL when price rises to $200
+
+// Cancel limit orders
+trader.cancelLimitOrder(order.order_id);
+
+// Get open limit orders
+const limitOrders = trader.getOpenLimitOrders();</pre>
+
+    <h2>⚖️ Portfolio Rebalancing</h2>
+    <p>Automatically rebalance to target allocations:</p>
+    <pre class="code-block">// Rebalance to 60% SOL, 30% ETH, 10% USDC
+const result = await trader.rebalance({
+  SOL: 60,
+  ETH: 30,
+  USDC: 10
+});
+
+console.log(\`Trades executed: \${result.trades_executed}\`);
+console.log('Before:', result.before);
+console.log('After:', result.after);
+
+// Dry run - preview without executing
+const preview = await trader.rebalance(
+  { SOL: 60, ETH: 30, USDC: 10 },
+  { dry_run: true, tolerance_percent: 2 }
+);</pre>
+
+    <h2>📓 Trade Journal</h2>
+    <p>Track and analyze your trading performance:</p>
+    <pre class="code-block">// Add notes to trades
+trader.addTradeNotes(trade.trade_id, 'Bought on breakout');
+
+// Tag trades for categorization
+trader.tagTrade(trade.trade_id, ['momentum', 'breakout']);
+
+// Set strategy
+trader.setTradeStrategy(trade.trade_id, 'trend-following', 'MA crossover');
+
+// Filter trades
+const momentumTrades = trader.getTradesByTag('momentum');
+const trendTrades = trader.getTradesByStrategy('trend-following');
+
+// Get journal summary
+const summary = trader.getJournalSummary();
+console.log(\`Strategies: \${summary.strategies_used}\`);
+console.log(\`By strategy:\`, summary.by_strategy);
+
+// Export to CSV
+const csv = trader.exportTradesCSV();
+fs.writeFileSync('trades.csv', csv);</pre>
+
+    <h2>📈 Performance Analytics</h2>
+    <p>Detailed trading metrics and statistics:</p>
+    <pre class="code-block">// Get performance analytics
+const analytics = trader.getPerformanceAnalytics();
+
+console.log('Session:', analytics.session);
+// { duration_hours, trades_executed, trades_per_hour }
+
+console.log('PnL:', analytics.pnl);
+// { realized_usd, unrealized_usd, best_trade_usd, worst_trade_usd }
+
+console.log('Execution:', analytics.execution);
+// { avg_latency_ms, p95_latency_ms, success_rate }
+
+console.log('Risk:', analytics.risk);
+// { win_rate, avg_win_usd, avg_loss_usd, profit_factor }
+
+// Get latency stats
+const latency = trader.getLatencyStats();
+console.log(\`Avg: \${latency.avg_ms}ms, P95: \${latency.p95_ms}ms\`);</pre>
+
     <h2>Alpha Detection</h2>
     <p>Detect trading opportunities with momentum and reversal signals:</p>
     <pre class="code-block">// Detect alpha signals

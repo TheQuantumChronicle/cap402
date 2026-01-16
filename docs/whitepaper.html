@@ -576,6 +576,41 @@
     <p><strong>Problem:</strong> 5 separate API calls, any can fail, no rollback.</p>
     <p><strong>Solution:</strong> Intent graphs with atomic execution and single receipt.</p>
 
+    <h3>12.5 Automated Trading Bot</h3>
+    <p><strong>Problem:</strong> Manual trading is slow, emotional, and misses opportunities.</p>
+    <p><strong>Solution:</strong> CAP-402 Trading Agent with:</p>
+    <ul>
+      <li><strong>Instant Execution</strong> — Sub-second trades with <code>instantSwap()</code> and <code>smartTrade()</code></li>
+      <li><strong>Risk Management</strong> — Automated stop-loss, take-profit, trailing stops</li>
+      <li><strong>DCA Scheduling</strong> — Recurring buys at hourly/daily/weekly intervals</li>
+      <li><strong>Limit Orders</strong> — Buy/sell at specific price targets</li>
+      <li><strong>Portfolio Rebalancing</strong> — Auto-rebalance to target allocations</li>
+      <li><strong>Trade Journal</strong> — Notes, tags, strategy tracking, CSV export</li>
+      <li><strong>Performance Analytics</strong> — Win rate, profit factor, latency stats</li>
+    </ul>
+
+    <h3>12.6 Professional Trading Desk</h3>
+    <p><strong>Problem:</strong> Institutional traders need advanced order types and analytics.</p>
+    <p><strong>Solution:</strong> Full-featured trading infrastructure:</p>
+    <pre class="code-block">// Smart execution - auto-selects best method
+await trader.smartTrade('SOL', 'USDC', 10000);
+// < $100: instant | $100-$10K: protected | > $10K: stealth
+
+// Risk management
+trader.setStopLoss('SOL', 140, 10);
+trader.setTakeProfit('SOL', 200, 10);
+trader.setTrailingStop('SOL', 5, 10);
+
+// DCA automation
+trader.startDCA('SOL', 'USDC', 100, 'daily', 30);
+
+// Portfolio rebalancing
+await trader.rebalance({ SOL: 60, ETH: 30, USDC: 10 });
+
+// Performance tracking
+const analytics = trader.getPerformanceAnalytics();
+console.log(analytics.risk.profit_factor);</pre>
+
     <h2 id="market">13. Market Opportunity</h2>
     <h3>13.1 Total Addressable Market</h3>
     <table>
@@ -598,10 +633,11 @@
     <h2 id="implementation">11. Implementation</h2>
     <table>
       <tr><th>Metric</th><th>Value</th></tr>
-      <tr><td>TypeScript files</td><td>60+</td></tr>
-      <tr><td>Tests</td><td>387 passing (19 test suites)</td></tr>
+      <tr><td>TypeScript files</td><td>70+</td></tr>
+      <tr><td>Tests</td><td>399 passing (19 test suites)</td></tr>
       <tr><td>API endpoints</td><td>100+</td></tr>
       <tr><td>Capabilities</td><td>13</td></tr>
+      <tr><td>Trading Agent Methods</td><td>40+ (instant, stealth, DCA, limits, etc.)</td></tr>
       <tr><td>Sponsor integrations</td><td>4 (Arcium, Noir, Helius, Inco)</td></tr>
     </table>
     
