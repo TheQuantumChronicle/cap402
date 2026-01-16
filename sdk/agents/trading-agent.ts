@@ -3148,6 +3148,127 @@ export class TradingAgent extends EventEmitter {
   }
 
   /**
+   * Get detailed performance analytics for the trading session
+   * Includes metrics traders actually care about
+   */
+  getPerformanceAnalytics(): {
+    session: {
+      start_time: number;
+      duration_hours: number;
+      trades_executed: number;
+      trades_per_hour: number;
+    };
+    pnl: {
+      realized_usd: number;
+      unrealized_usd: number;
+      total_usd: number;
+      best_trade_usd: number;
+      worst_trade_usd: number;
+    };
+    execution: {
+      avg_latency_ms: number;
+      p95_latency_ms: number;
+      success_rate: number;
+      mev_savings_total_usd: number;
+    };
+    risk: {
+      max_drawdown_percent: number;
+      sharpe_ratio: number;
+      win_rate: number;
+      avg_win_usd: number;
+      avg_loss_usd: number;
+      profit_factor: number;
+    };
+  } {
+    const trades = this.trades.filter(t => t.status === 'executed');
+    const startTime = trades[0]?.timestamp || Date.now();
+    const durationMs = Date.now() - startTime;
+    const durationHours = durationMs / 3600000;
+
+    // Calculate PnL from trades
+    let realizedPnl = 0;
+    let bestTrade = 0;
+    let worstTrade = 0;
+    let totalWins = 0;
+    let totalLosses = 0;
+    let winCount = 0;
+    let lossCount = 0;
+
+    trades.forEach(trade => {
+      const pnl = (trade.amount_out - trade.amount_in) * (trade.price || 1);
+      realizedPnl += pnl;
+      
+      if (pnl > bestTrade) bestTrade = pnl;
+      if (pnl < worstTrade) worstTrade = pnl;
+      
+      if (pnl > 0) {
+        totalWins += pnl;
+        winCount++;
+      } else {
+        totalLosses += Math.abs(pnl);
+        lossCount++;
+      }
+    });
+
+    const unrealizedPnl = this.getTotalPnL().unrealized;
+    const latencyStats = this.getLatencyStats();
+    const winRate = trades.length > 0 ? winCount / trades.length : 0;
+    const avgWin = winCount > 0 ? totalWins / winCount : 0;
+    const avgLoss = lossCount > 0 ? totalLosses / lossCount : 0;
+    const profitFactor = totalLosses > 0 ? totalWins / totalLosses : totalWins > 0 ? Infinity : 0;
+
+    return {
+      session: {
+        start_time: startTime,
+        duration_hours: Math.round(durationHours * 100) / 100,
+        trades_executed: trades.length,
+        trades_per_hour: durationHours > 0 ? Math.round(trades.length / durationHours * 10) / 10 : 0
+      },
+      pnl: {
+        realized_usd: Math.round(realizedPnl * 100) / 100,
+        unrealized_usd: Math.round(unrealizedPnl * 100) / 100,
+        total_usd: Math.round((realizedPnl + unrealizedPnl) * 100) / 100,
+        best_trade_usd: Math.round(bestTrade * 100) / 100,
+        worst_trade_usd: Math.round(worstTrade * 100) / 100
+      },
+      execution: {
+        avg_latency_ms: latencyStats.avg_ms,
+        p95_latency_ms: latencyStats.p95_ms,
+        success_rate: trades.length > 0 ? Math.round(winRate * 1000) / 10 : 0,
+        mev_savings_total_usd: 0 // Would track from stealth trades
+      },
+      risk: {
+        max_drawdown_percent: 0, // Would need equity curve tracking
+        sharpe_ratio: 0, // Would need daily returns
+        win_rate: Math.round(winRate * 1000) / 10,
+        avg_win_usd: Math.round(avgWin * 100) / 100,
+        avg_loss_usd: Math.round(avgLoss * 100) / 100,
+        profit_factor: profitFactor === Infinity ? 999 : Math.round(profitFactor * 100) / 100
+      }
+    };
+  }
+
+  /**
+   * Export trade history as CSV for analysis
+   */
+  exportTradesCSV(): string {
+    const headers = ['timestamp', 'token_in', 'token_out', 'amount_in', 'amount_out', 'price', 'slippage', 'status', 'tx_hash'];
+    const rows = this.trades.map(t => [
+      new Date(t.timestamp).toISOString(),
+      t.token_in,
+      t.token_out,
+      t.amount_in,
+      t.amount_out,
+      t.price || '',
+      t.slippage || '',
+      t.status,
+      t.tx_hash || ''
+    ].join(','));
+    
+    return [headers.join(','), ...rows].join('\n');
+  }
+
+  /**
    * Print formatted trading statistics to console
    */
   printStats(): void {
