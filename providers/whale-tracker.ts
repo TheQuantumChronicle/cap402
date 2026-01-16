@@ -211,25 +211,28 @@ class WhaleTrackerService {
     const transactions: any[] = [];
 
     // Query recent transactions for known whale wallets
-    for (const wallet of KNOWN_WHALE_WALLETS.slice(0, 3)) {
+    // Don't filter by type - get all transactions and filter by value
+    for (const wallet of KNOWN_WHALE_WALLETS.slice(0, 5)) {
       try {
         const response = await axios.get(
           `https://api.helius.xyz/v0/addresses/${wallet}/transactions`,
           {
             params: {
               'api-key': heliusKey,
-              limit: 10,
-              type: 'SWAP'
+              limit: 20
             },
-            timeout: 5000
+            timeout: 8000
           }
         );
 
         if (response.data && Array.isArray(response.data)) {
           transactions.push(...response.data.map((tx: any) => ({ ...tx, trackedWallet: wallet })));
         }
-      } catch (error) {
-        // Continue with other wallets
+      } catch (error: any) {
+        // Handle Helius errors gracefully
+        if (error?.response?.data?.error) {
+          console.log(`Helius: ${error.response.data.error.slice(0, 50)}...`);
+        }
       }
     }
 
