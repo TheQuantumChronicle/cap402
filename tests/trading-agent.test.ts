@@ -807,6 +807,40 @@ describe('Instant Execution Mode', () => {
 });
 
 // ============================================
+// SMART TRADE TESTS
+// ============================================
+
+describe('Smart Trade', () => {
+  let trader: TradingAgent;
+
+  beforeEach(() => {
+    trader = createTradingAgent({
+      agent_id: 'smart-trader',
+      name: 'Smart Trader',
+      watched_tokens: ['SOL', 'USDC'],
+      router_url: 'http://localhost:3001'
+    });
+  });
+
+  afterEach(async () => {
+    try {
+      await trader.stop();
+    } catch {
+      // Ignore
+    }
+  });
+
+  test('should auto-select execution method based on trade size', async () => {
+    const result = await trader.smartTrade('SOL', 'USDC', 1);
+    
+    expect(result).toBeDefined();
+    expect(result.method).toBeDefined();
+    expect(result.latency_ms).toBeGreaterThan(0);
+    expect(['instant', 'protected', 'stealth']).toContain(result.method);
+  }, 15000);
+});
+
+// ============================================
 // QUICK FACTORY TESTS
 // ============================================
 

@@ -219,6 +219,33 @@ class RealTradingBot {
       console.error('Trade failed:', error);
     }
   }
+
+  // ============================================
+  // INSTANT EXECUTION METHODS
+  // ============================================
+
+  // Quick swap - fastest execution, skip MEV for small trades
+  async quickSwap(tokenIn: string, tokenOut: string, amount: number): Promise<void> {
+    console.log(`\n⚡ Quick swap: ${amount} ${tokenIn} → ${tokenOut}`);
+    const result = await this.agent.instantSwap(tokenIn, tokenOut, amount);
+    console.log(`   Received: ${result.amount_out} ${tokenOut} in ${result.latency_ms}ms`);
+  }
+
+  // Smart swap - auto-selects best method based on trade size
+  async smartSwap(tokenIn: string, tokenOut: string, amount: number): Promise<void> {
+    console.log(`\n🎯 Smart swap: ${amount} ${tokenIn} → ${tokenOut}`);
+    const result = await this.agent.smartTrade(tokenIn, tokenOut, amount);
+    console.log(`   Method: ${result.method}, Latency: ${result.latency_ms}ms`);
+  }
+
+  // Stealth swap - maximum privacy for large trades
+  async stealthSwap(tokenIn: string, tokenOut: string, amount: number): Promise<void> {
+    console.log(`\n🥷 Stealth swap: ${amount} ${tokenIn} → ${tokenOut}`);
+    const result = await this.agent.stealthTrade(tokenIn, tokenOut, amount, {
+      privacy_level: 'maximum'
+    });
+    console.log(`   Chunks: ${result.chunks.length}, MEV Savings: $${result.mev_savings_usd.toFixed(2)}`);
+  }
 }
 
 // ============================================
