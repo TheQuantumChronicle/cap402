@@ -591,6 +591,17 @@ export class TradingAgent extends EventEmitter {
   }
 
   // ============================================
+  // UTILITY HELPERS
+  // ============================================
+
+  /**
+   * Generate a unique ID with prefix
+   */
+  private generateId(prefix: string, length: number = 6): string {
+    return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, length)}`;
+  }
+
+  // ============================================
   // VALIDATION & SECURITY
   // ============================================
 
@@ -741,7 +752,7 @@ export class TradingAgent extends EventEmitter {
    * Request confirmation for large trade
    */
   requestTradeConfirmation(tokenIn: string, tokenOut: string, amount: number): string {
-    const confirmationId = `confirm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const confirmationId = this.generateId('confirm', 9);
     this.pendingConfirmations.set(confirmationId, {
       amount,
       token: tokenIn,
@@ -1260,7 +1271,7 @@ export class TradingAgent extends EventEmitter {
     const maxSlippage = options?.max_slippage_percent ?? this.config.trading_limits?.max_slippage_percent ?? 1;
 
     const trade: TradeExecution = {
-      trade_id: `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      trade_id: this.generateId('trade', 9),
       token_in: tokenIn,
       token_out: tokenOut,
       amount_in: amountIn,
@@ -1444,7 +1455,7 @@ export class TradingAgent extends EventEmitter {
     };
 
     const prepared: PreparedTransaction = {
-      instruction_id: `prep_${now}_${Math.random().toString(36).substr(2, 9)}`,
+      instruction_id: this.generateId('prep', 9),
       type: 'swap',
       status: 'ready',
       created_at: now,
@@ -1582,7 +1593,7 @@ export class TradingAgent extends EventEmitter {
     const escalatedPrivacy = usdValue > privacyThreshold ? 'maximum' : privacyLevel;
     
     const result: StealthTradeResult = {
-      stealth_id: `stealth_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      stealth_id: this.generateId('stealth', 9),
       status: 'pending',
       privacy_level: escalatedPrivacy,
       total_amount: amount,
@@ -1910,7 +1921,7 @@ export class TradingAgent extends EventEmitter {
     const pairKey = `${tokenIn}-${tokenOut}`;
     
     const result: InstantSwapResult = {
-      swap_id: `instant_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      swap_id: this.generateId('instant'),
       status: 'pending',
       token_in: tokenIn,
       token_out: tokenOut,
@@ -2242,7 +2253,7 @@ export class TradingAgent extends EventEmitter {
       this.trackLatency(latencyMs);
 
       const result: InstantSwapResult & { winning_method: string } = {
-        swap_id: `race_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        swap_id: this.generateId('race'),
         status: 'executed',
         token_in: tokenIn,
         token_out: tokenOut,
@@ -2332,7 +2343,7 @@ export class TradingAgent extends EventEmitter {
     this.validateAmount(amount);
     this.checkRateLimit('requestQuote');
 
-    const quoteId = `quote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const quoteId = this.generateId('quote', 9);
     
     try {
       const result = await this.agent.a2aInvoke<{
@@ -2437,7 +2448,7 @@ export class TradingAgent extends EventEmitter {
    * Coordinates the swap between two agents
    */
   async executeA2ATrade(quote: A2AQuote): Promise<A2ATradeResult> {
-    const tradeId = `a2a_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const tradeId = this.generateId('a2a', 9);
 
     // Validate quote is still valid
     if (Date.now() > quote.valid_until) {
@@ -2676,7 +2687,7 @@ export class TradingAgent extends EventEmitter {
     targetAgent: string,
     privacyLevel: A2APrivacyLevel = 'confidential'
   ): Promise<A2AHandshake> {
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sessionId = this.generateId('session', 9);
     
     try {
       const result = await this.agent.a2aInvoke<{
@@ -2733,7 +2744,7 @@ export class TradingAgent extends EventEmitter {
     payload: any,
     privacyLevel: A2APrivacyLevel = 'confidential'
   ): Promise<SecureA2AMessage> {
-    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const messageId = this.generateId('msg', 9);
     
     // Check for existing secure session
     let session = this.secureSessions.get(targetAgent);
@@ -3635,7 +3646,7 @@ export class TradingAgent extends EventEmitter {
     webhookUrl?: string
   ): PriceAlert {
     const alert: PriceAlert = {
-      alert_id: `pa_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      alert_id: this.generateId('pa'),
       token,
       condition,
       target_price: targetPrice,
@@ -3766,7 +3777,7 @@ export class TradingAgent extends EventEmitter {
   ): ConditionalOrder {
     const prefix = type === 'stop_loss' ? 'sl' : type === 'take_profit' ? 'tp' : 'ts';
     const order: ConditionalOrder = {
-      order_id: `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      order_id: this.generateId(prefix),
       type,
       token,
       trigger_price: triggerPrice,
@@ -3891,7 +3902,7 @@ export class TradingAgent extends EventEmitter {
       : 604800000;
 
     const schedule: DCASchedule = {
-      schedule_id: `dca_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      schedule_id: this.generateId('dca'),
       token_to_buy: tokenToBuy,
       token_to_spend: tokenToSpend,
       amount_per_interval: amountPerInterval,
@@ -4061,7 +4072,7 @@ export class TradingAgent extends EventEmitter {
     expiresInHours?: number
   ): LimitOrder {
     const order: LimitOrder = {
-      order_id: `lb_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      order_id: this.generateId('lb'),
       side: 'buy',
       token,
       target_token: payWith,
@@ -4094,7 +4105,7 @@ export class TradingAgent extends EventEmitter {
     expiresInHours?: number
   ): LimitOrder {
     const order: LimitOrder = {
-      order_id: `ls_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      order_id: this.generateId('ls'),
       side: 'sell',
       token,
       target_token: receiveToken,
