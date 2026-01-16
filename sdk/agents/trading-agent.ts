@@ -340,6 +340,9 @@ export class TradingAgent extends EventEmitter {
   constructor(config: TradingConfig) {
     super();
 
+    // Validate required config
+    this.validateConfig(config);
+
     this.config = {
       quote_currency: 'USD',
       price_check_interval_ms: 30000,
@@ -374,6 +377,154 @@ export class TradingAgent extends EventEmitter {
     });
 
     this.setupAgentEvents();
+  }
+
+  // ============================================
+  // VALIDATION & SECURITY
+  // ============================================
+
+  private validateConfig(config: TradingConfig): void {
+    if (!config.agent_id || typeof config.agent_id !== 'string') {
+      throw new Error('Invalid config: agent_id is required and must be a string');
+    }
+    if (!config.name || typeof config.name !== 'string') {
+      throw new Error('Invalid config: name is required and must be a string');
+    }
+    if (!config.watched_tokens || !Array.isArray(config.watched_tokens) || config.watched_tokens.length === 0) {
+      throw new Error('Invalid config: watched_tokens must be a non-empty array');
+    }
+    // Sanitize agent_id
+    if (!/^[a-zA-Z0-9_-]+$/.test(config.agent_id)) {
+      throw new Error('Invalid config: agent_id can only contain alphanumeric characters, underscores, and hyphens');
+    }
+    // Validate token symbols
+    for (const token of config.watched_tokens) {
+      if (typeof token !== 'string' || token.length === 0 || token.length > 20) {
+        throw new Error(`Invalid token symbol: ${token}`);
+      }
+    }
+  }
+
+  private validateToken(token: string): void {
+    if (!token || typeof token !== 'string') {
+      throw new Error('Token symbol is required');
+    }
+    if (token.length === 0 || token.length > 20) {
+      throw new Error(`Invalid token symbol length: ${token}`);
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(token)) {
+      throw new Error(`Invalid token symbol format: ${token}`);
+    }
+  }
+
+  private validateAmount(amount: number, label: string = 'Amount'): void {
+    if (typeof amount !== 'number' || isNaN(amount)) {
+      throw new Error(`${label} must be a valid number`);
+    }
+    if (amount <= 0) {
+      throw new Error(`${label} must be greater than 0`);
+    }
+    if (amount > 1e15) {
+      throw new Error(`${label} exceeds maximum allowed value`);
+    }
+  }
+
+  private validateAgentId(agentId: string): void {
+    if (!agentId || typeof agentId !== 'string') {
+      throw new Error('Agent ID is required');
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(agentId)) {
+      throw new Error('Invalid agent ID format');
+    }
+  }
+
+  /**
+   * Rate limiting for operations
+   */
+  private operationCounts: Map<string, { count: number; resetAt: number }> = new Map();
+  private readonly RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
+    'prepareSwap': { max: 60, windowMs: 60000 },
+    'executeTrade': { max: 20, windowMs: 60000 },
+    'requestQuote': { max: 100, windowMs: 60000 },
+    'a2aInvoke': { max: 50, windowMs: 60000 },
+    'detectAlpha': { max: 30, windowMs: 60000 }
+  };
+
+  private checkRateLimit(operation: string): void {
+    const limit = this.RATE_LIMITS[operation];
+    if (!limit) return;
+
+    const now = Date.now();
+    let opData = this.operationCounts.get(operation);
+
+    if (!opData || now >= opData.resetAt) {
+      opData = { count: 0, resetAt: now + limit.windowMs };
+      this.operationCounts.set(operation, opData);
+    }
+
+    if (opData.count >= limit.max) {
+      const waitMs = opData.resetAt - now;
+      throw new Error(`Rate limit exceeded for ${operation}. Try again in ${Math.ceil(waitMs / 1000)}s`);
+    }
+
+    opData.count++;
+  }
+
+  /**
+   * Spending confirmation for large trades
+   */
+  private pendingConfirmations: Map<string, { amount: number; token: string; expiresAt: number }> = new Map();
+  private readonly LARGE_TRADE_THRESHOLD_USD = 500;
+
+  /**
+   * Check if trade requires confirmation
+   */
+  requiresConfirmation(tokenIn: string, amount: number): boolean {
+    const price = this.prices.get(tokenIn);
+    if (!price) return amount > 100; // Default threshold if no price
+    const usdValue = amount * price.price;
+    return usdValue >= this.LARGE_TRADE_THRESHOLD_USD;
+  }
+
+  /**
+   * Request confirmation for large trade
+   */
+  requestTradeConfirmation(tokenIn: string, tokenOut: string, amount: number): string {
+    const confirmationId = `confirm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.pendingConfirmations.set(confirmationId, {
+      amount,
+      token: tokenIn,
+      expiresAt: Date.now() + 300000 // 5 minutes
+    });
+
+    const price = this.prices.get(tokenIn);
+    const usdValue = price ? amount * price.price : 0;
+
+    this.emit('confirmation_required', {
+      confirmation_id: confirmationId,
+      token_in: tokenIn,
+      token_out: tokenOut,
+      amount,
+      usd_value: usdValue,
+      message: `Large trade detected: ${amount} ${tokenIn} (~$${usdValue.toFixed(2)}). Confirm to proceed.`,
+      expires_at: Date.now() + 300000
+    });
+
+    return confirmationId;
+  }
+
+  /**
+   * Confirm a pending trade
+   */
+  confirmTrade(confirmationId: string): boolean {
+    const pending = this.pendingConfirmations.get(confirmationId);
+    if (!pending) return false;
+    if (Date.now() > pending.expiresAt) {
+      this.pendingConfirmations.delete(confirmationId);
+      return false;
+    }
+    this.pendingConfirmations.delete(confirmationId);
+    return true;
   }
 
   // ============================================
@@ -702,6 +853,12 @@ export class TradingAgent extends EventEmitter {
       mev_protection?: boolean;
     }
   ): Promise<TradeExecution> {
+    // Validate inputs
+    this.validateToken(tokenIn);
+    this.validateToken(tokenOut);
+    this.validateAmount(amountIn);
+    this.checkRateLimit('executeTrade');
+
     // Check daily trade limit
     this.resetDailyCounterIfNeeded();
     const maxDailyTrades = this.config.trading_limits?.max_daily_trades ?? 50;
@@ -834,6 +991,12 @@ export class TradingAgent extends EventEmitter {
       user_wallet?: string;
     }
   ): Promise<PreparedTransaction> {
+    // Validate inputs
+    this.validateToken(tokenIn);
+    this.validateToken(tokenOut);
+    this.validateAmount(amount);
+    this.checkRateLimit('prepareSwap');
+
     const slippageBps = options?.slippage_bps ?? 50; // 0.5% default
     const now = Date.now();
     const expiresAt = now + 60000; // 1 minute expiry
@@ -1000,6 +1163,13 @@ export class TradingAgent extends EventEmitter {
     tokenOut: string,
     amount: number
   ): Promise<A2AQuote> {
+    // Validate inputs
+    this.validateAgentId(targetAgent);
+    this.validateToken(tokenIn);
+    this.validateToken(tokenOut);
+    this.validateAmount(amount);
+    this.checkRateLimit('requestQuote');
+
     const quoteId = `quote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     try {
