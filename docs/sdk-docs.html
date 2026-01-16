@@ -364,6 +364,90 @@ npm run cli invoke cap.price.lookup.v1 '{"base_token":"SOL"}'
 npm run example:trading
 npm run example:monitor</pre>
     
+    <h2>Zero-Config One-Liners</h2>
+    <p>No setup required for common operations:</p>
+    <pre class="code-block">import { prepareSwap, bestSwap, findAlpha, findPartners, autoTrader } from '@cap402/sdk';
+
+// Prepare swap without agent setup
+const tx = await prepareSwap('SOL', 'USDC', 10);
+console.log(tx.summary.headline); // "Swap 10 SOL → ~1,433 USDC"
+
+// Get best execution route (DEX vs A2A)
+const result = await bestSwap('SOL', 'USDC', 100);
+console.log(result.route, result.execution_summary);
+
+// Detect alpha signals
+const signals = await findAlpha(['SOL', 'ETH', 'BTC']);
+signals.forEach(s => console.log(s.token, s.direction));
+
+// Find A2A trading partners
+const partners = await findPartners('SOL', 'USDC', 100);
+
+// Auto-starting agent with event handlers
+const agent = await autoTrader(['SOL', 'ETH'], {
+  onSignal: console.log,
+  onAlpha: console.log
+});</pre>
+
+    <h2>Error Handling</h2>
+    <p>Actionable errors with suggestions and documentation links:</p>
+    <pre class="code-block">import { CAP402Error, wrapError, isRetryable, getRetryDelay } from '@cap402/sdk';
+
+try {
+  await trader.prepareSwap('SOL', 'USDC', 1000000);
+} catch (error) {
+  if (error instanceof CAP402Error) {
+    console.log(error.code);       // 'SPENDING_LIMIT_EXCEEDED'
+    console.log(error.suggestion); // 'Adjust limits or use emergencyStop()'
+    console.log(error.docs_url);   // 'https://cap402.com/docs/...'
+  }
+  
+  // Check if retryable
+  if (isRetryable(error)) {
+    const delay = getRetryDelay(error, attempt);
+    await sleep(delay);
+    // Retry...
+  }
+}</pre>
+
+    <h3>Error Types</h3>
+    <table>
+      <tr><th>Error</th><th>Code</th><th>When</th></tr>
+      <tr><td>NetworkError</td><td>NETWORK_ERROR</td><td>Connection issues</td></tr>
+      <tr><td>TimeoutError</td><td>TIMEOUT_ERROR</td><td>Operation timed out</td></tr>
+      <tr><td>RateLimitError</td><td>RATE_LIMIT_ERROR</td><td>Too many requests</td></tr>
+      <tr><td>SlippageExceededError</td><td>SLIPPAGE_EXCEEDED</td><td>Price moved too much</td></tr>
+      <tr><td>MEVRiskError</td><td>MEV_RISK_HIGH</td><td>High MEV risk detected</td></tr>
+      <tr><td>QuoteExpiredError</td><td>QUOTE_EXPIRED</td><td>A2A quote expired</td></tr>
+      <tr><td>SpendingLimitError</td><td>SPENDING_LIMIT_EXCEEDED</td><td>Safety limit hit</td></tr>
+    </table>
+
+    <h2>Logging & Debugging</h2>
+    <pre class="code-block">import { createLogger, setLogLevel } from '@cap402/sdk';
+
+// Create agent-specific logger
+const log = createLogger('my-trader', 'debug');
+
+// Log with categories
+log.info('trade', 'Preparing swap', { token: 'SOL', amount: 10 });
+log.warn('mev', 'High risk detected', { risk: 'HIGH' });
+
+// Specialized logging
+log.trade('execute', { token_in: 'SOL', token_out: 'USDC', amount: 10 });
+log.a2a('quote_received', { from_agent: 'agent-xyz', price: 143.34 });
+log.signal('buy', 'SOL', { confidence: 85 });
+
+// Timer for performance
+log.time('swap');
+await trader.prepareSwap('SOL', 'USDC', 10);
+log.timeEnd('swap', 'trade', 'Swap prepared');
+
+// Get recent logs
+const errors = log.getLogs({ level: 'error', limit: 10 });
+
+// Set global log level
+setLogLevel('warn'); // Only warn and error</pre>
+
     <h2>Key Principles</h2>
     <ul>
       <li><strong>Autonomous Decision-Making</strong> — Agents monitor, analyze, and prepare transactions 24/7</li>
@@ -371,6 +455,8 @@ npm run example:monitor</pre>
       <li><strong>Safety First</strong> — Spending limits, rate controls, and emergency stop built-in</li>
       <li><strong>MEV Protection</strong> — Risk analysis before every trade</li>
       <li><strong>Zero Configuration</strong> — Sensible defaults, one-liner APIs</li>
+      <li><strong>Actionable Errors</strong> — Every error includes suggestions and docs links</li>
+      <li><strong>Structured Logging</strong> — Debug with context, categories, and timers</li>
     </ul>
   </div>
 </body>
