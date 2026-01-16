@@ -28,6 +28,12 @@
    - Request/response schemas
    - Authentication details
 
+5. **[Agent SDK](sdk-docs.html)** | [Reference](SDK_REFERENCE.md)
+   - Production agent development
+   - Safety guardrails
+   - Agent templates (Trading, Monitoring, Analytics)
+   - Multi-agent orchestration
+
 ### Understanding CAP-402
 5. **[README.md](../README.md)**
    - Comprehensive overview

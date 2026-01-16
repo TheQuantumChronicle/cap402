@@ -230,6 +230,51 @@
       transform: translateY(-1px);
     }
     
+    /* Docs Dropdown */
+    .nav-dropdown {
+      position: relative;
+    }
+    
+    .nav-dropdown-trigger {
+      cursor: pointer;
+    }
+    
+    .nav-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 10, 12, 0.95);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.5rem 0;
+      min-width: 160px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      margin-top: 0.5rem;
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+    
+    .nav-dropdown:hover .nav-dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .nav-dropdown-menu a {
+      display: block;
+      padding: 0.6rem 1rem;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    
+    .nav-dropdown-menu a:hover {
+      background: rgba(108, 68, 252, 0.1);
+      color: var(--arcium-purple);
+    }
+    
     /* Hero - Noir elegance */
     .hero {
       min-height: 100vh;
@@ -674,7 +719,14 @@
       <a href="#capabilities">Capabilities</a>
       <a href="#sdk">SDK</a>
       <a href="#infrastructure">Infrastructure</a>
-      <a href="/docs">Docs</a>
+      <div class="nav-dropdown">
+        <a href="/docs" class="nav-dropdown-trigger">Docs ▾</a>
+        <div class="nav-dropdown-menu">
+          <a href="/docs/sdk-docs.html">SDK Reference</a>
+          <a href="/docs/api-docs.html">API Reference</a>
+          <a href="/docs/WHITEPAPER.md">Whitepaper</a>
+        </div>
+      </div>
       <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" rel="noopener noreferrer" class="nav-cta" style="display: flex; align-items: center; padding: 0.5rem;" title="GitHub">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
       </a>

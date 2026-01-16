@@ -60,7 +60,10 @@ export {
   MonitoringAgent,
   createMonitoringAgent,
   AnalyticsAgent,
-  createAnalyticsAgent
+  createAnalyticsAgent,
+  quickTrader,
+  quickMonitor,
+  quickAnalytics
 } from './agents';
 
 // Orchestration
@@ -89,6 +92,19 @@ export {
   SAFETY_PRESETS,
   DEFAULT_SAFETY_CONFIG
 } from './safety';
+
+// Quick SDK - Zero friction API
+export {
+  cap402,
+  getPrice,
+  getPrices,
+  getWallet,
+  swap,
+  mevRisk,
+  discover,
+  invoke,
+  health
+} from './quick';
 
 // Re-export capability types from spec
 export type { Capability } from '../spec/capabilities';
