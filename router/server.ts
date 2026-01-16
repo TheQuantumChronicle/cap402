@@ -3385,9 +3385,12 @@ app.post('/a2a/auction', async (req: Request, res: Response) => {
       });
     }
 
-    // Simulate auction (in production, this would be async with real bids)
+    // Calculate bid prices based on agent reputation and capability
     const bids = providers.map(agent => {
-      const bid_price = Math.random() * (max_price || 100);
+      // Price based on reputation - higher trust = can charge more
+      const baseBid = (max_price || 100) * 0.5;
+      const reputationMultiplier = agent.trust_score / 100;
+      const bid_price = baseBid * (0.5 + reputationMultiplier);
       const estimated_latency_ms = agent.reputation?.average_response_time_ms || 50;
       const trust_score = agent.trust_score;
       const success_rate = agent.reputation?.total_invocations > 0
@@ -3724,45 +3727,46 @@ app.get('/alpha/arbitrage', async (req: Request, res: Response) => {
   }
 });
 
-// Gas Optimizer - Find optimal execution timing
+// Gas Optimizer - Find optimal execution timing using real Solana RPC
 app.get('/alpha/gas-optimizer', async (req: Request, res: Response) => {
   try {
-    // Simulated gas/priority fee data
-    const currentSlot = Date.now();
-    const historicalFees = [
-      { slot: currentSlot - 60000, priority_fee: 0.00025, congestion: 'low' },
-      { slot: currentSlot - 30000, priority_fee: 0.00035, congestion: 'medium' },
-      { slot: currentSlot, priority_fee: 0.00030, congestion: 'low' }
-    ];
-
-    const currentFee = historicalFees[historicalFees.length - 1];
+    // Fetch real recent prioritization fees from Solana RPC
+    const rpcUrl = process.env.HELIUS_RPC_URL || process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+    const response = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getRecentPrioritizationFees',
+        params: []
+      })
+    });
     
-    // Predict optimal timing
-    const predictions = [
-      { time: 'now', fee: currentFee.priority_fee, confidence: 'high' },
-      { time: '+5min', fee: currentFee.priority_fee * 0.9, confidence: 'medium' },
-      { time: '+15min', fee: currentFee.priority_fee * 0.85, confidence: 'low' },
-      { time: '+1hr', fee: currentFee.priority_fee * 0.75, confidence: 'low' }
-    ];
-
-    // Calculate savings
-    const avgTxSize = 0.001; // SOL
-    const savingsPerTx = (currentFee.priority_fee - predictions[2].fee) * 1000;
+    const data = await response.json() as { result?: Array<{ prioritizationFee: number }> };
+    const fees = data.result || [];
+    
+    // Calculate average fee from recent slots
+    const avgFee = fees.length > 0 
+      ? fees.reduce((sum: number, f: any) => sum + f.prioritizationFee, 0) / fees.length / 1e9
+      : 0.00025;
+    
+    const congestion = avgFee > 0.0005 ? 'high' : avgFee > 0.0003 ? 'medium' : 'low';
 
     res.json({
       success: true,
       gas_optimization: {
         current: {
-          priority_fee_sol: currentFee.priority_fee,
-          congestion_level: currentFee.congestion,
-          recommended_fee: currentFee.priority_fee * 1.1
+          priority_fee_sol: avgFee,
+          congestion_level: congestion,
+          recommended_fee: avgFee * 1.2,
+          samples: fees.length
         },
-        predictions,
-        recommendation: currentFee.congestion === 'high' 
+        recommendation: congestion === 'high' 
           ? 'WAIT - High congestion, delay 15-30 minutes'
           : 'EXECUTE NOW - Low congestion, optimal timing',
-        potential_savings_per_100_txs: `${(savingsPerTx * 100).toFixed(4)} SOL`,
-        optimal_execution_window: '2-6 AM UTC (lowest fees)'
+        optimal_execution_window: '2-6 AM UTC (historically lowest fees)',
+        data_source: 'solana_rpc_getRecentPrioritizationFees'
       }
     });
   } catch (error) {

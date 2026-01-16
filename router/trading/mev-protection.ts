@@ -413,7 +413,7 @@ class MEVProtectionService {
     return {
       probability: Math.round(Math.min(85, baseProbability)),
       estimated_loss_usd: Math.round(estimatedLoss * 100) / 100,
-      pending_similar_trades: Math.floor(Math.random() * 5),
+      pending_similar_trades: 0, // Would come from mempool analysis in production
       gas_price_premium_percent: Math.round(gasPremium)
     };
   }
@@ -678,8 +678,8 @@ class MEVProtectionService {
         exec.savings.savings_percent = (savedAmount / analysis.trade.amount_in_usd) * 100;
         
         exec.transaction = {
-          signature: crypto.randomBytes(32).toString('base64'),
-          block: 250000000 + Math.floor(Math.random() * 1000),
+          signature: `pending_${exec.execution_id}`, // Real signature would come from on-chain execution
+          block: 0, // Real block would come from transaction confirmation
           timestamp: Date.now()
         };
         

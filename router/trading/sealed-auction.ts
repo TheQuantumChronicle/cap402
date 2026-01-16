@@ -435,7 +435,7 @@ class SealedAuctionService {
       finalPrice = highestBid.amount_usd;
     }
     
-    // Simulate market price (would come from real price feeds)
+    // Market price from auction asset value (set at creation time)
     const marketPrice = auction.asset.amount_usd;
     const priceImprovement = ((finalPrice - marketPrice) / marketPrice) * 100;
     
@@ -449,7 +449,7 @@ class SealedAuctionService {
       completed_at: Date.now(),
       market_price_usd: marketPrice,
       price_improvement_percent: Math.round(priceImprovement * 100) / 100,
-      transaction_signature: crypto.randomBytes(32).toString('base64')
+      transaction_signature: `auction_${auction.auction_id}_completed`
     };
     
     // Move to completed history
@@ -476,7 +476,7 @@ class SealedAuctionService {
       completed_at: Date.now(),
       market_price_usd: marketPrice,
       price_improvement_percent: Math.round(priceImprovement * 100) / 100,
-      transaction_signature: crypto.randomBytes(32).toString('base64')
+      transaction_signature: `auction_${auction.auction_id}_completed`
     };
     
     this.completedAuctions.push(auction);
