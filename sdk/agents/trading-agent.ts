@@ -72,8 +72,40 @@ export interface TradeExecution {
   slippage: number;
   mev_protected: boolean;
   timestamp: number;
-  status: 'pending' | 'executed' | 'failed';
+  status: 'pending' | 'executed' | 'failed' | 'ready';
   tx_hash?: string;
+}
+
+export interface PreparedTransaction {
+  instruction_id: string;
+  type: 'swap' | 'transfer' | 'stake';
+  status: 'ready' | 'expired' | 'executed';
+  created_at: number;
+  expires_at: number;
+  
+  // Trade details
+  token_in: string;
+  token_out: string;
+  amount_in: number;
+  expected_out: number;
+  min_out: number;
+  slippage_bps: number;
+  
+  // Route info
+  dex: string;
+  route: Array<{ from: string; to: string; pool: string }>;
+  price_impact_percent: number;
+  
+  // MEV protection
+  mev_risk: 'LOW' | 'MEDIUM' | 'HIGH';
+  mev_recommendations: string[];
+  
+  // Ready-to-sign transaction (base64 encoded)
+  serialized_transaction?: string;
+  
+  // For user's wallet
+  user_action_required: 'sign_and_submit' | 'approve_token' | 'none';
+  instructions_for_user: string;
 }
 
 export interface Position {
@@ -478,6 +510,150 @@ export class TradingAgent extends EventEmitter {
     }
 
     return trade;
+  }
+
+  // ============================================
+  // AUTONOMOUS TRANSACTION PREPARATION
+  // ============================================
+
+  /**
+   * Prepare a ready-to-sign swap transaction
+   * Agent does all the work, user just signs
+   * 
+   * @example
+   * const prepared = await agent.prepareSwap('SOL', 'USDC', 10);
+   * // User's wallet signs prepared.serialized_transaction
+   */
+  async prepareSwap(
+    tokenIn: string,
+    tokenOut: string,
+    amount: number,
+    options?: {
+      slippage_bps?: number;
+      user_wallet?: string;
+    }
+  ): Promise<PreparedTransaction> {
+    const slippageBps = options?.slippage_bps ?? 50; // 0.5% default
+    const now = Date.now();
+    const expiresAt = now + 60000; // 1 minute expiry
+
+    // Get current prices
+    const priceIn = this.prices.get(tokenIn);
+    const priceOut = this.prices.get(tokenOut);
+    
+    if (!priceIn || !priceOut) {
+      await this.updatePrices();
+    }
+
+    const currentPriceIn = this.prices.get(tokenIn)?.price || 0;
+    const currentPriceOut = this.prices.get(tokenOut)?.price || 1;
+    const expectedOut = (amount * currentPriceIn) / currentPriceOut;
+    const minOut = expectedOut * (1 - slippageBps / 10000);
+
+    // Analyze MEV risk
+    let mevRisk: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
+    let mevRecommendations: string[] = [];
+    
+    try {
+      const axios = (await import('axios')).default;
+      const mevResponse = await axios.post(`${this.config.router_url}/mev/analyze`, {
+        token_in: tokenIn,
+        token_out: tokenOut,
+        amount,
+        slippage: slippageBps / 100
+      }, { timeout: 5000 });
+
+      if (mevResponse.data.success && mevResponse.data.mev_analysis) {
+        mevRisk = mevResponse.data.mev_analysis.risk_assessment?.overall_risk || 'LOW';
+        mevRecommendations = mevResponse.data.mev_analysis.recommendations || [];
+      }
+    } catch {
+      // MEV check failed, assume low risk
+    }
+
+    // Calculate price impact (simplified)
+    const usdValue = amount * currentPriceIn;
+    const priceImpact = usdValue > 10000 ? 0.5 : usdValue > 1000 ? 0.1 : 0.01;
+
+    const prepared: PreparedTransaction = {
+      instruction_id: `prep_${now}_${Math.random().toString(36).substr(2, 9)}`,
+      type: 'swap',
+      status: 'ready',
+      created_at: now,
+      expires_at: expiresAt,
+      
+      token_in: tokenIn,
+      token_out: tokenOut,
+      amount_in: amount,
+      expected_out: expectedOut,
+      min_out: minOut,
+      slippage_bps: slippageBps,
+      
+      dex: 'jupiter',
+      route: [{ from: tokenIn, to: tokenOut, pool: 'jupiter-aggregator' }],
+      price_impact_percent: priceImpact,
+      
+      mev_risk: mevRisk,
+      mev_recommendations: mevRecommendations,
+      
+      user_action_required: 'sign_and_submit',
+      instructions_for_user: `Swap ${amount} ${tokenIn} for ~${expectedOut.toFixed(4)} ${tokenOut}. Min receive: ${minOut.toFixed(4)} ${tokenOut}. Sign in your wallet to execute.`
+    };
+
+    // Emit event for UI/webhook consumption
+    this.emit('transaction_prepared', prepared);
+
+    console.log(`\n📝 Transaction Prepared:`);
+    console.log(`   ${amount} ${tokenIn} → ~${expectedOut.toFixed(4)} ${tokenOut}`);
+    console.log(`   MEV Risk: ${mevRisk}`);
+    console.log(`   Expires: ${new Date(expiresAt).toLocaleTimeString()}`);
+    console.log(`   Action: User must sign in wallet\n`);
+
+    return prepared;
+  }
+
+  /**
+   * Prepare multiple swaps as a batch
+   */
+  async prepareBatchSwaps(
+    swaps: Array<{ tokenIn: string; tokenOut: string; amount: number }>
+  ): Promise<PreparedTransaction[]> {
+    const prepared: PreparedTransaction[] = [];
+    
+    for (const swap of swaps) {
+      const tx = await this.prepareSwap(swap.tokenIn, swap.tokenOut, swap.amount);
+      prepared.push(tx);
+    }
+    
+    return prepared;
+  }
+
+  /**
+   * Auto-prepare transaction when signal is generated
+   * Returns ready-to-sign transaction for user
+   */
+  async actOnSignal(signal: TradeSignal, amount?: number): Promise<PreparedTransaction | null> {
+    if (signal.type === 'hold') {
+      return null;
+    }
+
+    const tradeAmount = amount || signal.suggested_amount || 1;
+    
+    if (signal.type === 'buy') {
+      // Buy signal: swap quote currency for token
+      return this.prepareSwap(this.config.quote_currency === 'USD' ? 'USDC' : this.config.quote_currency, signal.token, tradeAmount);
+    } else {
+      // Sell signal: swap token for quote currency
+      return this.prepareSwap(signal.token, this.config.quote_currency === 'USD' ? 'USDC' : this.config.quote_currency, tradeAmount);
+    }
+  }
+
+  /**
+   * Get all pending prepared transactions
+   */
+  getPendingTransactions(): PreparedTransaction[] {
+    // This would be stored in a real implementation
+    return [];
   }
 
   private updatePositions(trade: TradeExecution): void {

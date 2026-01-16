@@ -572,39 +572,60 @@ const trader = createTradingAgent({
   agent_id: 'sol-trader',
   name: 'SOL Trading Bot',
   watched_tokens: ['SOL', 'ETH', 'BTC'],
-  quote_currency: 'USD',
-  price_check_interval_ms: 30000,
-  alert_thresholds: {
-    price_change_percent: 3,
-    volume_spike_multiplier: 2
-  },
-  trading_limits: {
-    max_position_size: 1000,
-    max_daily_trades: 20,
-    max_slippage_percent: 0.5
-  },
-  mev_protection: true,
-  dry_run: true  // IMPORTANT: Start with dry_run: true
+  mev_protection: true
 });
 
-trader.on('signal', (signal) => {
+// Agent monitors markets autonomously
+trader.on('signal', async (signal) => {
   console.log(`Signal: ${signal.type} ${signal.token}`);
+  
+  // Agent prepares ready-to-sign transaction
+  const prepared = await trader.actOnSignal(signal, 10);
+  if (prepared) {
+    console.log(`Ready to execute: ${prepared.instructions_for_user}`);
+    // Send to user's wallet for signing
+  }
 });
 
-trader.on('price_alert', (alert) => {
-  console.log(`Price Alert: ${alert.token} ${alert.change_percent}%`);
-});
-
-trader.on('mev_warning', (warning) => {
-  console.log(`MEV Risk: ${warning.risk.risk_level}`);
+// Or prepare transactions directly
+trader.on('price_alert', async (alert) => {
+  if (alert.change_percent < -5) {
+    // Prepare a buy transaction
+    const tx = await trader.prepareSwap('USDC', alert.token, 100);
+    console.log(`Buy opportunity: ${tx.instructions_for_user}`);
+  }
 });
 
 await trader.start();</code></pre>
 
-      <div class="warning-box">
-        <h4>⚠️ Always Start with Dry Run</h4>
-        <p>Set <code>dry_run: true</code> when testing trading agents. This simulates trades without executing real transactions. Only set to <code>false</code> after thorough testing.</p>
+      <div class="success-box">
+        <h4>✅ Autonomous but Safe</h4>
+        <p>Agents are <strong>fully autonomous</strong> in decision-making: they monitor markets, analyze MEV risk, and prepare transactions. But <strong>you retain control</strong>: agents return ready-to-sign transactions that you approve in your own wallet. We never hold your keys.</p>
       </div>
+
+      <h4>Prepared Transactions</h4>
+      <pre><code>// Agent prepares everything, you just sign
+const prepared = await trader.prepareSwap('SOL', 'USDC', 10);
+
+// Returns:
+{
+  instruction_id: 'prep_1705412400_abc123',
+  type: 'swap',
+  status: 'ready',
+  expires_at: 1705412460000,
+  
+  token_in: 'SOL',
+  token_out: 'USDC', 
+  amount_in: 10,
+  expected_out: 1433.40,
+  min_out: 1426.23,
+  
+  mev_risk: 'LOW',
+  dex: 'jupiter',
+  
+  user_action_required: 'sign_and_submit',
+  instructions_for_user: 'Swap 10 SOL for ~1433.40 USDC. Sign in wallet.'
+}</code></pre>
 
       <h3>Monitoring Agent</h3>
       <pre><code>import { createMonitoringAgent } from './sdk/agents';

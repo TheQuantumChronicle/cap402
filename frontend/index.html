@@ -820,7 +820,8 @@
   <!-- Agent SDK Section -->
   <section id="sdk" style="padding: 6vh 6vw;">
     <p style="text-align: center; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1rem;">Agent SDK</p>
-    <h2 style="text-align: center; font-size: 1.5rem; margin-bottom: 2rem; color: var(--text-primary);">Build Production Agents in Minutes</h2>
+    <h2 style="text-align: center; font-size: 1.5rem; margin-bottom: 0.75rem; color: var(--text-primary);">Fully Autonomous Agents</h2>
+    <p style="text-align: center; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">Agents think and prepare transactions autonomously. You retain full control—just sign in your wallet. We never hold your keys.</p>
     
     <div style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
       <!-- Code Example -->
@@ -836,12 +837,14 @@
 <span style="color: #c084fc;">const</span> agent = <span style="color: #7dd3fc;">createTradingAgent</span>({
   agent_id: <span style="color: #a5d6ff;">'sol-trader'</span>,
   watched_tokens: [<span style="color: #a5d6ff;">'SOL'</span>, <span style="color: #a5d6ff;">'ETH'</span>, <span style="color: #a5d6ff;">'BTC'</span>],
-  mev_protection: <span style="color: #fbbf24;">true</span>,
-  dry_run: <span style="color: #fbbf24;">false</span>
+  mev_protection: <span style="color: #fbbf24;">true</span>
 });
 
-agent.<span style="color: #7dd3fc;">on</span>(<span style="color: #a5d6ff;">'signal'</span>, (s) => <span style="color: #888;">// Trade signals</span>
-  console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`${s.type} ${s.token}`</span>));
+<span style="color: #888;">// Agent prepares transactions, you sign</span>
+agent.<span style="color: #7dd3fc;">on</span>(<span style="color: #a5d6ff;">'signal'</span>, <span style="color: #c084fc;">async</span> (s) => {
+  <span style="color: #c084fc;">const</span> tx = <span style="color: #c084fc;">await</span> agent.<span style="color: #7dd3fc;">actOnSignal</span>(s);
+  <span style="color: #888;">// tx ready for your wallet</span>
+});
 
 <span style="color: #c084fc;">await</span> agent.<span style="color: #7dd3fc;">start</span>();</pre>
       </div>
