@@ -106,6 +106,63 @@ export interface PreparedTransaction {
   // For user's wallet
   user_action_required: 'sign_and_submit' | 'approve_token' | 'none';
   instructions_for_user: string;
+  
+  // Human-readable summary
+  summary: TransactionSummary;
+}
+
+/**
+ * Human-readable transaction summary for UI display
+ */
+export interface TransactionSummary {
+  /** One-line description: "Swap 10 SOL → ~1,433 USDC" */
+  headline: string;
+  /** Detailed breakdown for confirmation dialogs */
+  details: {
+    action: string;
+    you_send: string;
+    you_receive: string;
+    exchange_rate: string;
+    fees_estimate: string;
+    time_to_confirm: string;
+  };
+  /** Risk warnings if any */
+  warnings: string[];
+  /** Confidence score 0-100 */
+  confidence_score: number;
+  /** Why this trade was suggested */
+  rationale: string;
+}
+
+/**
+ * Alpha signal with actionable insights
+ */
+export interface AlphaSignal {
+  type: 'momentum' | 'reversal' | 'breakout' | 'whale_activity' | 'volume_spike';
+  token: string;
+  direction: 'bullish' | 'bearish' | 'neutral';
+  strength: 'weak' | 'moderate' | 'strong';
+  confidence: number;
+  
+  // Actionable insights
+  suggested_action: 'buy' | 'sell' | 'hold' | 'watch';
+  entry_price?: number;
+  target_price?: number;
+  stop_loss?: number;
+  
+  // Context
+  reason: string;
+  supporting_data: {
+    price_change_1h?: number;
+    price_change_24h?: number;
+    volume_change?: number;
+    rsi?: number;
+    momentum_score?: number;
+  };
+  
+  // Timing
+  detected_at: number;
+  valid_until: number;
 }
 
 export interface Position {
@@ -338,6 +395,103 @@ export class TradingAgent extends EventEmitter {
     }
 
     return signals;
+  }
+
+  /**
+   * Detect alpha signals - actionable trading opportunities
+   * More sophisticated than basic signals, includes momentum, reversals, breakouts
+   */
+  async detectAlpha(): Promise<AlphaSignal[]> {
+    const alphaSignals: AlphaSignal[] = [];
+    const now = Date.now();
+
+    for (const token of this.config.watched_tokens) {
+      const price = this.prices.get(token);
+      const history = this.priceHistory.get(token) || [];
+
+      if (!price || history.length < 10) continue;
+
+      const recentPrices = history.slice(-20).map(p => p.price);
+      const avgPrice = recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length;
+      const priceDeviation = ((price.price - avgPrice) / avgPrice) * 100;
+      const change24h = price.change_24h || 0;
+      const volume24h = price.volume_24h || 0;
+
+      // Calculate momentum score
+      const shortTermPrices = history.slice(-5).map(p => p.price);
+      const shortTermAvg = shortTermPrices.reduce((a, b) => a + b, 0) / shortTermPrices.length;
+      const momentumScore = ((price.price - shortTermAvg) / shortTermAvg) * 100;
+
+      // Detect momentum signal
+      if (Math.abs(momentumScore) > 2) {
+        const isBullish = momentumScore > 0;
+        alphaSignals.push({
+          type: 'momentum',
+          token,
+          direction: isBullish ? 'bullish' : 'bearish',
+          strength: Math.abs(momentumScore) > 5 ? 'strong' : Math.abs(momentumScore) > 3 ? 'moderate' : 'weak',
+          confidence: Math.min(85, 50 + Math.abs(momentumScore) * 5),
+          suggested_action: isBullish ? 'buy' : 'sell',
+          entry_price: price.price,
+          target_price: isBullish ? price.price * 1.05 : price.price * 0.95,
+          stop_loss: isBullish ? price.price * 0.97 : price.price * 1.03,
+          reason: `${isBullish ? 'Bullish' : 'Bearish'} momentum: ${momentumScore.toFixed(2)}% short-term move`,
+          supporting_data: {
+            price_change_24h: change24h,
+            momentum_score: momentumScore
+          },
+          detected_at: now,
+          valid_until: now + 300000 // 5 minutes
+        });
+      }
+
+      // Detect reversal signal (oversold/overbought)
+      if (priceDeviation < -5 && change24h < -8) {
+        alphaSignals.push({
+          type: 'reversal',
+          token,
+          direction: 'bullish',
+          strength: priceDeviation < -10 ? 'strong' : 'moderate',
+          confidence: Math.min(80, 40 + Math.abs(priceDeviation) * 3),
+          suggested_action: 'buy',
+          entry_price: price.price,
+          target_price: avgPrice,
+          stop_loss: price.price * 0.93,
+          reason: `Potential reversal: ${priceDeviation.toFixed(2)}% below avg after ${change24h.toFixed(2)}% 24h drop`,
+          supporting_data: {
+            price_change_24h: change24h,
+            momentum_score: momentumScore
+          },
+          detected_at: now,
+          valid_until: now + 600000 // 10 minutes
+        });
+      } else if (priceDeviation > 8 && change24h > 15) {
+        alphaSignals.push({
+          type: 'reversal',
+          token,
+          direction: 'bearish',
+          strength: priceDeviation > 15 ? 'strong' : 'moderate',
+          confidence: Math.min(75, 35 + priceDeviation * 2),
+          suggested_action: 'sell',
+          entry_price: price.price,
+          target_price: avgPrice * 1.02,
+          reason: `Potential reversal: ${priceDeviation.toFixed(2)}% above avg after ${change24h.toFixed(2)}% 24h pump`,
+          supporting_data: {
+            price_change_24h: change24h,
+            momentum_score: momentumScore
+          },
+          detected_at: now,
+          valid_until: now + 600000
+        });
+      }
+    }
+
+    // Emit alpha signals
+    for (const signal of alphaSignals) {
+      this.emit('alpha', signal);
+    }
+
+    return alphaSignals;
   }
 
   private async generateSignal(token: string): Promise<TradeSignal | null> {
@@ -575,6 +729,27 @@ export class TradingAgent extends EventEmitter {
     const usdValue = amount * currentPriceIn;
     const priceImpact = usdValue > 10000 ? 0.5 : usdValue > 1000 ? 0.1 : 0.01;
 
+    // Build human-readable summary
+    const warnings: string[] = [];
+    if (mevRisk === 'HIGH') warnings.push('⚠️ High MEV risk - consider smaller trade size');
+    if (priceImpact > 0.3) warnings.push('⚠️ High price impact - may get worse execution');
+    if (usdValue > 1000) warnings.push('💰 Large trade - double-check before signing');
+    
+    const summary: TransactionSummary = {
+      headline: `Swap ${amount} ${tokenIn} → ~${expectedOut.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${tokenOut}`,
+      details: {
+        action: 'Token Swap',
+        you_send: `${amount} ${tokenIn} (~$${usdValue.toFixed(2)})`,
+        you_receive: `~${expectedOut.toFixed(4)} ${tokenOut}`,
+        exchange_rate: `1 ${tokenIn} = ${(expectedOut / amount).toFixed(4)} ${tokenOut}`,
+        fees_estimate: '~$0.01 (network) + 0.3% (DEX)',
+        time_to_confirm: '~15 seconds'
+      },
+      warnings,
+      confidence_score: mevRisk === 'LOW' ? 90 : mevRisk === 'MEDIUM' ? 70 : 50,
+      rationale: `Best route via Jupiter aggregator with ${slippageBps / 100}% slippage protection`
+    };
+
     const prepared: PreparedTransaction = {
       instruction_id: `prep_${now}_${Math.random().toString(36).substr(2, 9)}`,
       type: 'swap',
@@ -597,7 +772,9 @@ export class TradingAgent extends EventEmitter {
       mev_recommendations: mevRecommendations,
       
       user_action_required: 'sign_and_submit',
-      instructions_for_user: `Swap ${amount} ${tokenIn} for ~${expectedOut.toFixed(4)} ${tokenOut}. Min receive: ${minOut.toFixed(4)} ${tokenOut}. Sign in your wallet to execute.`
+      instructions_for_user: `Swap ${amount} ${tokenIn} for ~${expectedOut.toFixed(4)} ${tokenOut}. Min receive: ${minOut.toFixed(4)} ${tokenOut}. Sign in your wallet to execute.`,
+      
+      summary
     };
 
     // Emit event for UI/webhook consumption
