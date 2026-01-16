@@ -22,6 +22,8 @@ interface RateLimitState {
   agent_id: string;
   requests: number[];
   blocked_until?: number;
+  block_count: number; // Track repeat offenders
+  last_block_time?: number;
 }
 
 const RATE_LIMITS: Record<TrustLevel, RateLimitConfig> = {
@@ -77,7 +79,7 @@ class AgentRateLimiter {
 
     let state = this.states.get(agent_id);
     if (!state) {
-      state = { agent_id, requests: [] };
+      state = { agent_id, requests: [], block_count: 0 };
       this.states.set(agent_id, state);
     }
 
@@ -97,14 +99,28 @@ class AgentRateLimiter {
 
     // Check rate limit
     if (state.requests.length >= config.requests_per_minute) {
-      // Block for 1 minute
-      state.blocked_until = now + 60000;
+      // Progressive blocking: increase block duration for repeat offenders
+      state.block_count++;
+      state.last_block_time = now;
+      const blockDuration = Math.min(60000 * Math.pow(2, state.block_count - 1), 3600000); // Max 1 hour
+      state.blocked_until = now + blockDuration;
+      
+      // Log repeat offenders
+      if (state.block_count >= 3) {
+        const { securityAuditLog } = require('./security/audit-log');
+        securityAuditLog.log('rate_limit_exceeded', agent_id, {
+          block_count: state.block_count,
+          block_duration_ms: blockDuration,
+          trust_level
+        }, { severity: state.block_count >= 5 ? 'critical' : 'warning' });
+      }
+      
       return {
         allowed: false,
         remaining: 0,
         reset_at: state.blocked_until,
         cost_multiplier: config.cost_multiplier,
-        reason: `Rate limit exceeded: ${config.requests_per_minute} requests/minute for ${trust_level} agents`
+        reason: `Rate limit exceeded: ${config.requests_per_minute} requests/minute for ${trust_level} agents (block #${state.block_count})`
       };
     }
 

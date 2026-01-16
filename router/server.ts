@@ -336,9 +336,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Request context middleware (adds request ID and timing)
 app.use(requestContext);
 
-// Security middleware - sanitize request bodies
-import { sanitizeRequestBody, verifyRequestSignature } from './middleware/security';
+// Security middleware - sanitize request bodies and detect injection attempts
+import { sanitizeRequestBody, verifyRequestSignature, detectInjectionAttempts } from './middleware/security';
 app.use(sanitizeRequestBody);
+app.use(detectInjectionAttempts);
 
 // Rate limiting middleware with adaptive load factor
 app.use((req: Request, res: Response, next: NextFunction) => {

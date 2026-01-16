@@ -170,6 +170,48 @@ export function getErrorMessage(error: unknown, fallback = 'Unknown error'): str
 }
 
 /**
+ * Sanitize error message for production to prevent information leakage
+ * In production, internal errors are replaced with generic messages
+ */
+export function getSafeErrorMessage(error: unknown, fallback = 'An error occurred'): string {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const message = getErrorMessage(error, fallback);
+  
+  if (!isProduction) {
+    return message;
+  }
+  
+  // In production, sanitize potentially sensitive error messages
+  const sensitivePatterns = [
+    /password/i,
+    /secret/i,
+    /key/i,
+    /token/i,
+    /credential/i,
+    /database/i,
+    /connection/i,
+    /internal/i,
+    /stack/i,
+    /at\s+\w+\s+\(/i, // Stack trace patterns
+    /node_modules/i,
+    /\/.*\.ts:/i, // File paths
+    /\/.*\.js:/i
+  ];
+  
+  // Check if message contains sensitive information
+  if (sensitivePatterns.some(pattern => pattern.test(message))) {
+    return fallback;
+  }
+  
+  // Truncate long messages
+  if (message.length > 200) {
+    return message.substring(0, 200) + '...';
+  }
+  
+  return message;
+}
+
+/**
  * HTTP status code mapping
  */
 export function getHttpStatus(code: ErrorCode): number {

@@ -78,7 +78,52 @@ export function sanitizeInput(input: string): string {
     .replace(/[<>]/g, '') // Remove HTML brackets
     .replace(/javascript:/gi, '') // Remove javascript: protocol
     .replace(/on\w+=/gi, '') // Remove event handlers
+    .replace(/data:/gi, '') // Remove data: protocol
+    .replace(/vbscript:/gi, '') // Remove vbscript: protocol
+    .replace(/&#/g, '') // Remove HTML entities
+    .replace(/\x00/g, '') // Remove null bytes
     .trim();
+}
+
+/**
+ * Validate string length to prevent DoS via large payloads
+ */
+export function validateStringLength(input: string, maxLength: number = 10000): boolean {
+  return typeof input === 'string' && input.length <= maxLength;
+}
+
+/**
+ * Check for common SQL injection patterns
+ */
+export function detectSQLInjection(input: string): boolean {
+  if (typeof input !== 'string') return false;
+  
+  const sqlPatterns = [
+    /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|TRUNCATE)\b)/i,
+    /(--|;|\/\*|\*\/)/,
+    /(\bOR\b|\bAND\b)\s*\d+\s*=\s*\d+/i,
+    /'\s*(OR|AND)\s*'?\d/i
+  ];
+  
+  return sqlPatterns.some(pattern => pattern.test(input));
+}
+
+/**
+ * Check for path traversal attempts
+ */
+export function detectPathTraversal(input: string): boolean {
+  if (typeof input !== 'string') return false;
+  
+  const traversalPatterns = [
+    /\.\.\//,
+    /\.\.\\/, 
+    /%2e%2e%2f/i,
+    /%2e%2e\//i,
+    /\.\.%2f/i,
+    /%252e%252e%252f/i
+  ];
+  
+  return traversalPatterns.some(pattern => pattern.test(input));
 }
 
 /**
@@ -178,6 +223,101 @@ export function validateFieldTypes(schema: Record<string, 'string' | 'number' | 
     
     next();
   };
+}
+
+/**
+ * Middleware to detect and block injection attempts
+ */
+export function detectInjectionAttempts(req: Request, res: Response, next: NextFunction): void {
+  const checkValue = (value: unknown, path: string): string | null => {
+    if (typeof value === 'string') {
+      if (detectSQLInjection(value)) {
+        return `SQL injection attempt detected in ${path}`;
+      }
+      if (detectPathTraversal(value)) {
+        return `Path traversal attempt detected in ${path}`;
+      }
+      if (!validateStringLength(value, 50000)) {
+        return `Payload too large in ${path}`;
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      for (const [key, val] of Object.entries(value)) {
+        const result = checkValue(val, `${path}.${key}`);
+        if (result) return result;
+      }
+    }
+    return null;
+  };
+
+  const threat = checkValue(req.body, 'body');
+  if (threat) {
+    // Log suspicious activity
+    const { securityAuditLog } = require('../security/audit-log');
+    securityAuditLog.log('suspicious_activity', null, {
+      threat,
+      ip: req.ip,
+      path: req.path,
+      method: req.method
+    }, { severity: 'critical', ipAddress: req.ip });
+
+    res.status(400).json({
+      success: false,
+      error: 'Request blocked due to suspicious content'
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Rate limit by IP for unauthenticated requests
+ */
+const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
+
+export function ipRateLimit(maxRequests: number = 100, windowMs: number = 60000) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    const now = Date.now();
+    
+    let record = ipRequestCounts.get(ip);
+    if (!record || now > record.resetAt) {
+      record = { count: 0, resetAt: now + windowMs };
+      ipRequestCounts.set(ip, record);
+    }
+    
+    record.count++;
+    
+    if (record.count > maxRequests) {
+      res.status(429).json({
+        success: false,
+        error: 'Too many requests',
+        retry_after_ms: record.resetAt - now
+      });
+      return;
+    }
+    
+    res.setHeader('X-RateLimit-Remaining', (maxRequests - record.count).toString());
+    res.setHeader('X-RateLimit-Reset', record.resetAt.toString());
+    next();
+  };
+}
+
+/**
+ * Validate Content-Type header for POST/PUT/PATCH requests
+ */
+export function validateContentType(req: Request, res: Response, next: NextFunction): void {
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    const contentType = req.headers['content-type'];
+    if (!contentType || !contentType.includes('application/json')) {
+      res.status(415).json({
+        success: false,
+        error: 'Content-Type must be application/json'
+      });
+      return;
+    }
+  }
+  next();
 }
 
 /**
