@@ -40,6 +40,18 @@ function ensureInitialized(): void {
 export const cap402 = {
   /**
    * Configure the SDK (optional - sensible defaults are used)
+   * 
+   * @param options - Configuration options
+   * @param options.router - Custom router URL (default: https://cap402.com)
+   * @param options.safety - Safety preset: 'conservative' | 'standard' | 'aggressive' | 'none'
+   * 
+   * @example
+   * // Use conservative limits for testing
+   * cap402.configure({ safety: 'conservative' });
+   * 
+   * @example
+   * // Use custom router
+   * cap402.configure({ router: 'https://my-router.com' });
    */
   configure(options: {
     router?: string;
@@ -60,8 +72,19 @@ export const cap402 = {
   },
 
   /**
-   * Get token price - one liner
-   * @example const price = await cap402.price('SOL');
+   * Get the current price of a token
+   * 
+   * @param token - Token symbol (e.g., 'SOL', 'ETH', 'BTC')
+   * @param quote - Quote currency (default: 'USD')
+   * @returns Current price as a number
+   * @throws Error if token not found or network issues
+   * 
+   * @example
+   * const solPrice = await cap402.price('SOL');
+   * console.log(`SOL: $${solPrice}`); // SOL: $143.34
+   * 
+   * @example
+   * const ethInBtc = await cap402.price('ETH', 'BTC');
    */
   async price(token: string, quote: string = 'USD'): Promise<number> {
     ensureInitialized();
@@ -89,8 +112,15 @@ export const cap402 = {
   },
 
   /**
-   * Get multiple token prices at once
-   * @example const prices = await cap402.prices(['SOL', 'ETH', 'BTC']);
+   * Get multiple token prices in a single batch request
+   * 
+   * @param tokens - Array of token symbols
+   * @param quote - Quote currency (default: 'USD')
+   * @returns Object mapping token symbols to prices
+   * 
+   * @example
+   * const prices = await cap402.prices(['SOL', 'ETH', 'BTC']);
+   * console.log(prices); // { SOL: 143.34, ETH: 3301.50, BTC: 95423.00 }
    */
   async prices(tokens: string[], quote: string = 'USD'): Promise<Record<string, number>> {
     ensureInitialized();
@@ -113,8 +143,16 @@ export const cap402 = {
   },
 
   /**
-   * Get wallet snapshot
-   * @example const wallet = await cap402.wallet('82MfBW...');
+   * Get a snapshot of wallet balances and total value
+   * 
+   * @param address - Solana wallet address (base58 encoded)
+   * @returns Wallet snapshot with balances and USD values
+   * @throws Error if address is invalid or wallet not found
+   * 
+   * @example
+   * const wallet = await cap402.wallet('82MfBW...');
+   * console.log(`Total: $${wallet.total_usd}`);
+   * wallet.balances.forEach(b => console.log(`${b.token}: ${b.amount}`));
    */
   async wallet(address: string): Promise<{
     address: string;
@@ -148,8 +186,28 @@ export const cap402 = {
   },
 
   /**
-   * Execute a token swap (with built-in safety checks)
-   * @example const result = await cap402.swap('SOL', 'USDC', 10);
+   * Execute a token swap with built-in safety checks
+   * 
+   * By default, swaps run in dry-run mode (simulated). Set dryRun: false for real execution.
+   * Safety guardrails automatically check spending limits and rate limits.
+   * 
+   * @param tokenIn - Token to sell (e.g., 'SOL')
+   * @param tokenOut - Token to buy (e.g., 'USDC')
+   * @param amount - Amount of tokenIn to swap
+   * @param options - Swap options
+   * @param options.slippage - Max slippage percent (default: 0.5)
+   * @param options.mevProtection - Enable MEV protection (default: true)
+   * @param options.dryRun - Simulate without executing (default: true)
+   * @returns Swap result with amount_out and execution details
+   * 
+   * @example
+   * // Dry run (simulation)
+   * const sim = await cap402.swap('SOL', 'USDC', 10);
+   * console.log(`Would receive: ${sim.amount_out} USDC`);
+   * 
+   * @example
+   * // Real swap (requires wallet signing)
+   * const real = await cap402.swap('SOL', 'USDC', 10, { dryRun: false });
    */
   async swap(
     tokenIn: string,
@@ -276,8 +334,20 @@ export const cap402 = {
   },
 
   /**
-   * Analyze MEV risk for a trade
-   * @example const risk = await cap402.mevRisk('SOL', 'USDC', 1000);
+   * Analyze MEV (Maximal Extractable Value) risk for a potential trade
+   * 
+   * Checks for sandwich attack probability, front-running risk, and provides recommendations.
+   * 
+   * @param tokenIn - Token to sell
+   * @param tokenOut - Token to buy
+   * @param amount - Trade amount
+   * @returns MEV risk assessment with recommendations
+   * 
+   * @example
+   * const risk = await cap402.mevRisk('SOL', 'USDC', 1000);
+   * if (risk.risk === 'HIGH') {
+   *   console.log('Consider splitting into smaller trades');
+   * }
    */
   async mevRisk(tokenIn: string, tokenOut: string, amount: number): Promise<{
     risk: 'LOW' | 'MEDIUM' | 'HIGH';
@@ -303,8 +373,14 @@ export const cap402 = {
   },
 
   /**
-   * Discover capabilities
-   * @example const caps = await cap402.discover('swap tokens');
+   * Discover capabilities using natural language search
+   * 
+   * @param query - Natural language query (e.g., 'swap tokens privately')
+   * @returns Array of matching capabilities with descriptions
+   * 
+   * @example
+   * const caps = await cap402.discover('get token prices');
+   * caps.forEach(c => console.log(`${c.id}: ${c.description}`));
    */
   async discover(query: string): Promise<Array<{
     id: string;
@@ -325,8 +401,19 @@ export const cap402 = {
   },
 
   /**
-   * Invoke any capability
-   * @example const result = await cap402.invoke('cap.price.lookup.v1', { base_token: 'SOL' });
+   * Invoke any capability by ID
+   * 
+   * Low-level method for invoking capabilities directly. For common operations,
+   * prefer the convenience methods (price, wallet, swap).
+   * 
+   * @param capabilityId - Full capability ID (e.g., 'cap.price.lookup.v1')
+   * @param inputs - Capability-specific input parameters
+   * @returns Capability outputs (type varies by capability)
+   * @throws Error if capability fails or is blocked by safety guardrails
+   * 
+   * @example
+   * const result = await cap402.invoke('cap.price.lookup.v1', { base_token: 'SOL' });
+   * console.log(result.price);
    */
   async invoke<T = any>(capabilityId: string, inputs: Record<string, any>): Promise<T> {
     ensureInitialized();
@@ -354,8 +441,14 @@ export const cap402 = {
   },
 
   /**
-   * Check router health
-   * @example const healthy = await cap402.health();
+   * Check if the CAP-402 router is healthy and responding
+   * 
+   * @returns true if router is healthy, false otherwise
+   * 
+   * @example
+   * if (await cap402.health()) {
+   *   console.log('Router is online');
+   * }
    */
   async health(): Promise<boolean> {
     try {
@@ -367,8 +460,13 @@ export const cap402 = {
   },
 
   /**
-   * Get available capabilities
-   * @example const caps = await cap402.capabilities();
+   * Get all available capabilities from the router
+   * 
+   * @returns Array of all registered capabilities
+   * 
+   * @example
+   * const caps = await cap402.capabilities();
+   * console.log(`${caps.length} capabilities available`);
    */
   async capabilities(): Promise<Array<{ id: string; name: string; description: string }>> {
     const response = await axios.get(`${routerUrl}/capabilities`);
@@ -376,7 +474,15 @@ export const cap402 = {
   },
 
   /**
-   * Get safety status
+   * Get current safety guardrail status
+   * 
+   * @returns Safety status including spending totals, or null if safety is disabled
+   * 
+   * @example
+   * const status = cap402.safetyStatus();
+   * if (status) {
+   *   console.log(`Spent this hour: $${status.hourly_spending}`);
+   * }
    */
   safetyStatus(): {
     enabled: boolean;
@@ -395,7 +501,14 @@ export const cap402 = {
   },
 
   /**
-   * Emergency stop - pause all operations
+   * Emergency stop - immediately pause all operations
+   * 
+   * Use this if you detect anomalous behavior. All subsequent operations
+   * will be blocked until resume() is called.
+   * 
+   * @example
+   * cap402.emergencyStop();
+   * // All operations now blocked
    */
   emergencyStop(): void {
     if (safety) {
@@ -405,13 +518,98 @@ export const cap402 = {
   },
 
   /**
-   * Resume after pause
+   * Resume operations after an emergency stop or pause
+   * 
+   * @example
+   * cap402.resume();
+   * // Operations now allowed again
    */
   resume(): void {
     if (safety) {
       safety.resume();
     }
     console.log('✅ Operations resumed');
+  },
+
+  /**
+   * Track a transaction status by hash
+   * 
+   * Poll this to check if a submitted transaction has been confirmed.
+   * 
+   * @param txHash - Transaction hash/signature
+   * @returns Transaction status and details
+   * 
+   * @example
+   * const status = await cap402.trackTransaction('5abc123...');
+   * if (status.confirmed) {
+   *   console.log(`Confirmed in slot ${status.slot}`);
+   * }
+   */
+  async trackTransaction(txHash: string): Promise<{
+    found: boolean;
+    confirmed: boolean;
+    slot?: number;
+    block_time?: number;
+    error?: string;
+  }> {
+    try {
+      const response = await axios.get(`${routerUrl}/tx/${txHash}`, { timeout: 10000 });
+      return {
+        found: true,
+        confirmed: response.data.confirmed || false,
+        slot: response.data.slot,
+        block_time: response.data.block_time
+      };
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return { found: false, confirmed: false };
+      }
+      return { found: false, confirmed: false, error: error.message };
+    }
+  },
+
+  /**
+   * Wait for a transaction to be confirmed
+   * 
+   * Polls the transaction status until confirmed or timeout.
+   * 
+   * @param txHash - Transaction hash/signature
+   * @param timeoutMs - Maximum time to wait (default: 60000ms)
+   * @returns Final transaction status
+   * @throws Error if transaction fails or times out
+   * 
+   * @example
+   * const result = await cap402.waitForConfirmation('5abc123...');
+   * console.log(`Confirmed in slot ${result.slot}`);
+   */
+  async waitForConfirmation(txHash: string, timeoutMs: number = 60000): Promise<{
+    confirmed: boolean;
+    slot?: number;
+    block_time?: number;
+  }> {
+    const startTime = Date.now();
+    const pollInterval = 2000; // 2 seconds
+    
+    while (Date.now() - startTime < timeoutMs) {
+      const status = await this.trackTransaction(txHash);
+      
+      if (status.confirmed) {
+        return {
+          confirmed: true,
+          slot: status.slot,
+          block_time: status.block_time
+        };
+      }
+      
+      if (status.error) {
+        throw new Error(`Transaction tracking failed: ${status.error}`);
+      }
+      
+      // Wait before next poll
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
+    }
+    
+    throw new Error(`Transaction confirmation timed out after ${timeoutMs}ms`);
   }
 };
 
