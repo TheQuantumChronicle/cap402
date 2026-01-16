@@ -19,6 +19,18 @@
 
 import { CAP402Agent, createAgent, AgentConfig, InvokeResult } from '../agent';
 import { EventEmitter } from 'events';
+import {
+  DEFAULT_ROUTER_URL,
+  DEFAULT_SLIPPAGE_BPS,
+  DEFAULT_MAX_POSITION_SIZE,
+  DEFAULT_MAX_DAILY_TRADES,
+  DEFAULT_MAX_SLIPPAGE_PERCENT,
+  DEFAULT_PRICE_CHECK_INTERVAL_MS,
+  DEFAULT_QUOTE_EXPIRY_MS,
+  DEFAULT_CONFIRMATION_EXPIRY_MS,
+  RATE_LIMITS,
+  LARGE_TRADE_THRESHOLD_USD
+} from '../constants';
 
 // ============================================
 // TYPES
@@ -345,21 +357,21 @@ export class TradingAgent extends EventEmitter {
 
     this.config = {
       quote_currency: 'USD',
-      price_check_interval_ms: 30000,
+      price_check_interval_ms: DEFAULT_PRICE_CHECK_INTERVAL_MS,
       alert_thresholds: {
         price_change_percent: 5,
         volume_spike_multiplier: 3,
         ...config.alert_thresholds
       },
       trading_limits: {
-        max_position_size: 10000,
-        max_daily_trades: 50,
-        max_slippage_percent: 1,
+        max_position_size: DEFAULT_MAX_POSITION_SIZE,
+        max_daily_trades: DEFAULT_MAX_DAILY_TRADES,
+        max_slippage_percent: DEFAULT_MAX_SLIPPAGE_PERCENT,
         ...config.trading_limits
       },
       mev_protection: true,
       dry_run: true,
-      router_url: 'https://cap402.com',
+      router_url: DEFAULT_ROUTER_URL,
       description: 'Trading agent for price monitoring and trade execution',
       capabilities_provided: ['trading.signals', 'trading.execute'],
       capabilities_required: ['cap.price.lookup.v1', 'cap.swap.execute.v1'],
@@ -442,16 +454,9 @@ export class TradingAgent extends EventEmitter {
    * Rate limiting for operations
    */
   private operationCounts: Map<string, { count: number; resetAt: number }> = new Map();
-  private readonly RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
-    'prepareSwap': { max: 60, windowMs: 60000 },
-    'executeTrade': { max: 20, windowMs: 60000 },
-    'requestQuote': { max: 100, windowMs: 60000 },
-    'a2aInvoke': { max: 50, windowMs: 60000 },
-    'detectAlpha': { max: 30, windowMs: 60000 }
-  };
 
   private checkRateLimit(operation: string): void {
-    const limit = this.RATE_LIMITS[operation];
+    const limit = RATE_LIMITS[operation as keyof typeof RATE_LIMITS];
     if (!limit) return;
 
     const now = Date.now();
@@ -474,7 +479,6 @@ export class TradingAgent extends EventEmitter {
    * Spending confirmation for large trades
    */
   private pendingConfirmations: Map<string, { amount: number; token: string; expiresAt: number }> = new Map();
-  private readonly LARGE_TRADE_THRESHOLD_USD = 500;
 
   /**
    * Check if trade requires confirmation
@@ -483,7 +487,7 @@ export class TradingAgent extends EventEmitter {
     const price = this.prices.get(tokenIn);
     if (!price) return amount > 100; // Default threshold if no price
     const usdValue = amount * price.price;
-    return usdValue >= this.LARGE_TRADE_THRESHOLD_USD;
+    return usdValue >= LARGE_TRADE_THRESHOLD_USD;
   }
 
   /**
@@ -494,7 +498,7 @@ export class TradingAgent extends EventEmitter {
     this.pendingConfirmations.set(confirmationId, {
       amount,
       token: tokenIn,
-      expiresAt: Date.now() + 300000 // 5 minutes
+      expiresAt: Date.now() + DEFAULT_CONFIRMATION_EXPIRY_MS
     });
 
     const price = this.prices.get(tokenIn);
@@ -507,7 +511,7 @@ export class TradingAgent extends EventEmitter {
       amount,
       usd_value: usdValue,
       message: `Large trade detected: ${amount} ${tokenIn} (~$${usdValue.toFixed(2)}). Confirm to proceed.`,
-      expires_at: Date.now() + 300000
+      expires_at: Date.now() + DEFAULT_CONFIRMATION_EXPIRY_MS
     });
 
     return confirmationId;

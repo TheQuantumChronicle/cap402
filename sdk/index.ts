@@ -154,5 +154,18 @@ export {
   type LoggerConfig
 } from './logger';
 
+// Constants
+export {
+  DEFAULT_ROUTER_URL,
+  DOCS_BASE_URL,
+  DOCS_SDK_URL,
+  DOCS_API_URL,
+  DEFAULT_TIMEOUT,
+  DEFAULT_RETRY_ATTEMPTS,
+  RATE_LIMITS,
+  LARGE_TRADE_THRESHOLD_USD,
+  getRouterUrl
+} from './constants';
+
 // Re-export capability types from spec
 export type { Capability } from '../spec/capabilities';
