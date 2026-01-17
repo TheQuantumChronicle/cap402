@@ -6613,15 +6613,8 @@ app.post('/system/maintenance', (req: Request, res: Response) => {
 // DISTRIBUTED TRACING
 // ============================================
 
-app.post('/trace/start', (req: Request, res: Response) => {
-  const traceId = router.startDistributedTrace(req.body.trace_id);
-  res.json({ success: true, trace_id: traceId });
-});
-
-app.get('/trace/:trace_id', (req: Request, res: Response) => {
-  const trace = router.getDistributedTrace(req.params.trace_id);
-  res.json({ success: true, trace });
-});
+// NOTE: /trace/start is defined earlier in the file (line ~5572)
+// NOTE: /trace/:trace_id is defined earlier in the file (line ~5582)
 
 app.post('/invoke/traced', async (req: Request, res: Response) => {
   const { capability_id, inputs, trace_id } = req.body;
