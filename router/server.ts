@@ -2096,6 +2096,45 @@ app.get('/templates/:template_id', async (req: Request, res: Response) => {
   }
 });
 
+// Execute a composition template
+app.post('/templates/:template_id/execute', async (req: Request, res: Response) => {
+  try {
+    const { compositionTemplateEngine } = await import('./composition-templates');
+    const { executeComposition } = await import('./composition');
+    const { inputs } = req.body;
+    const template = compositionTemplateEngine.getTemplate(req.params.template_id);
+    if (!template) {
+      return res.status(404).json({ success: false, error: 'Template not found' });
+    }
+    
+    // Validate inputs
+    const validation = compositionTemplateEngine.validateInputs(req.params.template_id, inputs || {});
+    if (!validation.valid) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing required inputs',
+        missing: validation.missing
+      });
+    }
+    
+    // Execute via composition engine
+    const result = await executeComposition({
+      name: template.name,
+      steps: template.capabilities.map(cap => ({
+        capability_id: cap.capability_id,
+        inputs: cap.input_mapping
+      }))
+    });
+    
+    res.json({ ...result, template_id: req.params.template_id });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to execute template'
+    });
+  }
+});
+
 // ============================================
 // AGENT REGISTRY & COORDINATION ENDPOINTS
 // ============================================
