@@ -114,9 +114,9 @@ class IncoFHEProvider {
         console.log('⚠️  Inco FHE test mode - simulation enabled for tests');
         this.useLiveMode = false;
       } else {
-        // Local Docker or testnet unreachable - use simulation with chain-derived entropy
-        console.log('⚠️  Inco FHE using simulation mode with local chain entropy');
-        this.useLiveMode = false;
+        // NO SIMULATION IN PRODUCTION - fail hard if Inco is unreachable
+        console.error('❌ Inco FHE connection failed - Docker or testnet unreachable');
+        throw new Error('Inco FHE initialization failed: Connection required for production');
       }
       this.initialized = true;
     } catch (error) {
@@ -126,10 +126,9 @@ class IncoFHEProvider {
         this.useLiveMode = false;
         this.initialized = true;
       } else {
-        // Allow simulation mode in production when Inco is unreachable
-        console.warn('⚠️  Inco FHE initialization failed, using simulation mode');
-        this.useLiveMode = false;
-        this.initialized = true;
+        // NO SIMULATION IN PRODUCTION - fail hard
+        console.error('❌ Inco FHE initialization failed:', error);
+        throw new Error(`Inco FHE initialization failed: ${error instanceof Error ? error.message : 'Connection required'}`);
       }
     }
   }
@@ -174,7 +173,11 @@ class IncoFHEProvider {
       }
     }
 
-    // Simulation mode - use local crypto for FHE-like encryption
+    // Simulation mode - only allowed in test environment
+    if (!IS_TEST_ENV) {
+      throw new Error('Inco FHE encryption failed: Live mode required for production');
+    }
+    
     const nonce = crypto.randomBytes(12);
     const key = crypto.randomBytes(32);
     const cipher = crypto.createCipheriv('aes-256-gcm', key, nonce);
@@ -199,6 +202,10 @@ class IncoFHEProvider {
   ): Promise<FHEComputationResult> {
     await this.initialize();
     const isLive = this.useLiveMode && incoProvider;
+    
+    if (!isLive && !IS_TEST_ENV) {
+      throw new Error('Inco FHE fheAdd failed: Live mode required for production');
+    }
     
     // Generate computation proof using chain data if live
     let proof = `proof_add_${Date.now()}`;
@@ -226,6 +233,10 @@ class IncoFHEProvider {
     await this.initialize();
     const isLive = this.useLiveMode && incoProvider;
     
+    if (!isLive && !IS_TEST_ENV) {
+      throw new Error('Inco FHE fheSub failed: Live mode required for production');
+    }
+    
     let proof = `proof_sub_${Date.now()}`;
     if (isLive) {
       const blockNumber = await incoProvider!.getBlockNumber();
@@ -250,6 +261,10 @@ class IncoFHEProvider {
   ): Promise<FHEComputationResult> {
     await this.initialize();
     const isLive = this.useLiveMode && incoProvider;
+    
+    if (!isLive && !IS_TEST_ENV) {
+      throw new Error('Inco FHE fheMul failed: Live mode required for production');
+    }
     
     let proof = `proof_mul_${Date.now()}`;
     if (isLive) {
@@ -276,6 +291,10 @@ class IncoFHEProvider {
     await this.initialize();
     const isLive = this.useLiveMode && incoProvider;
     
+    if (!isLive && !IS_TEST_ENV) {
+      throw new Error('Inco FHE fheLt failed: Live mode required for production');
+    }
+    
     let proof = `proof_lt_${Date.now()}`;
     if (isLive) {
       const blockNumber = await incoProvider!.getBlockNumber();
@@ -301,6 +320,10 @@ class IncoFHEProvider {
   ): Promise<FHEComputationResult> {
     await this.initialize();
     const isLive = this.useLiveMode && incoProvider;
+    
+    if (!isLive && !IS_TEST_ENV) {
+      throw new Error('Inco FHE fheSelect failed: Live mode required for production');
+    }
     
     let proof = `proof_select_${Date.now()}`;
     if (isLive) {
@@ -368,12 +391,25 @@ class IncoFHEProvider {
     computation: string,
     inputs: FHECiphertext[]
   ): Promise<FHEComputationResult> {
+    await this.initialize();
+    const isLive = this.useLiveMode && incoProvider;
+    
+    if (!isLive && !IS_TEST_ENV) {
+      throw new Error('Inco FHE computeOnState failed: Live mode required for production');
+    }
+    
+    let proof = `proof_compute_${Date.now()}`;
+    if (isLive) {
+      const blockNumber = await incoProvider!.getBlockNumber();
+      proof = `inco_proof_compute_block${blockNumber}_${Date.now()}`;
+    }
+    
     return {
       success: true,
       encrypted_result: `fhe_compute_${stateId}_${computation}`,
-      computation_proof: `proof_compute_${Date.now()}`,
+      computation_proof: proof,
       gas_used: 150000,
-      mode: 'simulation'
+      mode: isLive ? 'live' : 'simulation'
     };
   }
 

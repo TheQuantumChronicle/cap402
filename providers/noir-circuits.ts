@@ -300,10 +300,18 @@ class NoirCircuitsProvider {
       }
     }
 
-    // Simulation mode (no compiled circuit available)
+    // Simulation mode - only allowed in test environment
+    const IS_TEST_ENV = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
+    if (!IS_TEST_ENV) {
+      throw new Error(`Noir circuit ${circuitName} not compiled - run 'nargo compile' in circuits/${circuitName}`);
+    }
+    
     const crypto = require('crypto');
     const proofBytes = crypto.randomBytes(256);
     const vkBytes = crypto.randomBytes(64);
+
+    this.stats.proofsGenerated++;
+    this.stats.circuitUsage.set(circuitName, (this.stats.circuitUsage.get(circuitName) || 0) + 1);
 
     return {
       proof: '0x' + proofBytes.toString('hex'),
@@ -311,7 +319,7 @@ class NoirCircuitsProvider {
       public_outputs: {
         ...this.computePublicOutputs(circuitName, publicInputs, privateInputs),
         mode: 'simulation',
-        note: 'Circuit not compiled - run nargo compile'
+        note: 'Test mode - circuit not compiled'
       },
       circuit_hash: `noir_${circuitName}_v1_sim`,
       proving_time_ms: Date.now() - startTime + Math.floor(circuitMeta.constraints / 10)
