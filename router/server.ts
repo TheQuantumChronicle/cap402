@@ -7748,7 +7748,7 @@ app.post('/reputation/record-execution', async (req: Request, res: Response) => 
 app.post('/reputation/generate-proof', async (req: Request, res: Response) => {
   try {
     const { agentReputationManager } = await import('./monetization/agent-reputation');
-    const { executionFeeManager, FEE_RATES } = await import('./monetization/execution-fees');
+    const { executionFeeManager } = await import('./monetization/execution-fees');
     const { agent_id, proof_type, threshold } = req.body;
     if (!agent_id || !proof_type || threshold === undefined) {
       return res.status(400).json({ success: false, error: 'agent_id, proof_type, threshold required' });
