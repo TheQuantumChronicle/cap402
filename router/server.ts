@@ -5750,6 +5750,43 @@ app.get('/health/score/:id', (req: Request, res: Response) => {
   res.json({ success: true, capability_id: req.params.id, score });
 });
 
+// Quote endpoint - get swap quote for a token pair
+app.get('/quote', async (req: Request, res: Response) => {
+  try {
+    const { input, output, amount } = req.query;
+    
+    if (!input || !output) {
+      return res.status(400).json({ success: false, error: 'input and output tokens required' });
+    }
+    
+    const amountNum = Number(amount) || 1;
+    const { swapProvider } = await import('../providers/swap');
+    
+    const quote = await swapProvider.getQuote(
+      input as string,
+      output as string,
+      amountNum
+    );
+    
+    res.json({
+      success: true,
+      input_token: input,
+      output_token: output,
+      input_amount: amountNum,
+      output_amount: quote.output_amount,
+      price: quote.output_amount / amountNum,
+      route: quote.route_plan,
+      price_impact: quote.price_impact_pct,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Quote failed'
+    });
+  }
+});
+
 // Batch price lookup - efficient multi-token pricing
 app.post('/batch/prices', async (req: Request, res: Response) => {
   const { tokens, quote } = req.body;
