@@ -27,7 +27,7 @@ class IntegrationManager {
   private readonly BATCH_DELAY = 50; // ms to wait for batch accumulation
 
   constructor() {
-    setInterval(() => this.healthCheck(), 60000);
+    setInterval(() => this.healthCheck(), 60000).unref();
     setInterval(() => this.gc(), 30000).unref();
     this.healthCheck();
   }
