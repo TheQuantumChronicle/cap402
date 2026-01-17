@@ -665,6 +665,22 @@ app.get('/capabilities/:id/example', (req: Request, res: Response) => {
   });
 });
 
+// GET invoke for quick capability lookups (used by SDK for price caching)
+app.get('/invoke/:capability_id', async (req: Request, res: Response) => {
+  try {
+    const { capability_id } = req.params;
+    const inputs = req.query as Record<string, any>;
+    
+    const result = await router.invoke({ capability_id, inputs });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Invoke failed'
+    });
+  }
+});
+
 app.post('/invoke', async (req: Request, res: Response) => {
   const invokeRequest: InvokeRequest = req.body;
   const startTime = Date.now();
