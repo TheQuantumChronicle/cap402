@@ -10,8 +10,8 @@
  * This is the core value prop - agents save real money on every trade.
  */
 
-import * as crypto from 'crypto';
 import { signalService } from './realtime-signals';
+import { generateShortId } from '../../utils';
 
 export type MEVAttackType = 'sandwich' | 'frontrun' | 'backrun' | 'jit_liquidity' | 'time_bandit' | 'uncle_bandit';
 
@@ -259,7 +259,7 @@ class MEVProtectionService {
     expectedOut: number,
     slippageTolerance: number = 0.5
   ): Promise<MEVRiskAnalysis> {
-    const analysisId = `mev_${crypto.randomBytes(8).toString('hex')}`;
+    const analysisId = generateShortId('mev', 8);
     
     // Fetch real market data first (with timeout to prevent hanging)
     try {
@@ -650,7 +650,7 @@ class MEVProtectionService {
       throw new Error('Invalid execution option');
     }
     
-    const executionId = `exec_${crypto.randomBytes(8).toString('hex')}`;
+    const executionId = generateShortId('exec', 8);
     
     // Simulate execution
     const execution: ProtectedExecution = {

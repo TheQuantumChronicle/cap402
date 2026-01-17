@@ -12,7 +12,7 @@
  */
 
 import { EventEmitter } from 'events';
-import * as crypto from 'crypto';
+import { generateShortId } from '../../utils';
 
 export type SignalType = 
   | 'price_movement'      // Significant price change
@@ -181,7 +181,7 @@ class RealTimeSignalService extends EventEmitter {
       min_priority?: SignalPriority;
     }
   ): string {
-    const subscriptionId = `sig_sub_${crypto.randomBytes(8).toString('hex')}`;
+    const subscriptionId = generateShortId('sig_sub', 8);
     
     const subscription: SignalSubscription = {
       subscription_id: subscriptionId,
@@ -214,7 +214,7 @@ class RealTimeSignalService extends EventEmitter {
   emitSignal(signal: Omit<TradingSignal, 'signal_id' | 'timestamp'>): TradingSignal {
     const fullSignal: TradingSignal = {
       ...signal,
-      signal_id: `sig_${crypto.randomBytes(8).toString('hex')}`,
+      signal_id: generateShortId('sig', 8),
       timestamp: Date.now()
     };
     

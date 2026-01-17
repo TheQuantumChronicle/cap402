@@ -8,8 +8,8 @@
  * - Track usage and earnings
  */
 
-import * as crypto from 'crypto';
 import { agentRegistry } from './agent-registry';
+import { generateShortId } from '../utils';
 
 export interface CapabilityListing {
   listing_id: string;
@@ -95,7 +95,7 @@ class CapabilityMarketplace {
     pricing: PricingModel,
     terms: ListingTerms = {}
   ): CapabilityListing {
-    const listingId = `lst_${crypto.randomBytes(12).toString('hex')}`;
+    const listingId = generateShortId('lst', 12);
 
     const listing: CapabilityListing = {
       listing_id: listingId,
@@ -214,7 +214,7 @@ class CapabilityMarketplace {
         break;
     }
 
-    const purchaseId = `pur_${crypto.randomBytes(12).toString('hex')}`;
+    const purchaseId = generateShortId('pur', 12);
 
     const purchase: CapabilityPurchase = {
       purchase_id: purchaseId,
@@ -315,7 +315,7 @@ class CapabilityMarketplace {
     );
     if (!hasPurchased) return null;
 
-    const reviewId = `rev_${crypto.randomBytes(8).toString('hex')}`;
+    const reviewId = generateShortId('rev', 8);
     const review: MarketplaceReview = {
       review_id: reviewId,
       listing_id: listingId,
