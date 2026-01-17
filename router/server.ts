@@ -2100,44 +2100,7 @@ app.get('/templates/:template_id', async (req: Request, res: Response) => {
 // AGENT REGISTRY & COORDINATION ENDPOINTS
 // ============================================
 
-// Discover agents by capability
-app.get('/agents/discover', async (req: Request, res: Response) => {
-  try {
-    const { agentRegistry } = await import('./agent-registry');
-    const { capability, min_trust_score, min_success_rate, limit } = req.query;
-
-    const agents = agentRegistry.discoverAgents({
-      capability: capability as string,
-      min_trust_score: min_trust_score ? parseInt(min_trust_score as string) : undefined,
-      min_success_rate: min_success_rate ? parseFloat(min_success_rate as string) : undefined,
-      limit: limit ? parseInt(limit as string) : 10
-    });
-
-    res.json({
-      success: true,
-      count: agents.length,
-      agents: agents.map(a => ({
-        agent_id: a.agent_id,
-        name: a.name,
-        description: a.description,
-        capabilities_provided: a.capabilities_provided,
-        trust_score: a.trust_score,
-        reputation: {
-          success_rate: a.reputation.total_invocations > 0 
-            ? (a.reputation.successful_invocations / a.reputation.total_invocations * 100).toFixed(1) + '%'
-            : 'N/A',
-          avg_response_time_ms: Math.round(a.reputation.average_response_time_ms)
-        },
-        status: a.status
-      }))
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Discovery failed'
-    });
-  }
-});
+// NOTE: /agents/discover is defined earlier in the file (line ~1591)
 
 // Get agent details
 app.get('/agents/:agent_id', async (req: Request, res: Response) => {
@@ -6500,13 +6463,7 @@ app.put('/agents/:agent_id/availability', (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-app.get('/agents/discover', (req: Request, res: Response) => {
-  const capability = req.query.capability as string;
-  const tag = req.query.tag as string;
-  const min_reputation = req.query.min_reputation ? parseInt(req.query.min_reputation as string) : undefined;
-  const agents = router.discoverAgents({ capability, tag, min_reputation });
-  res.json({ success: true, agents, count: agents.length });
-});
+// NOTE: /agents/discover is defined earlier in the file with more complete implementation
 
 // ============================================
 // MULTI-PARTY TRANSACTIONS
