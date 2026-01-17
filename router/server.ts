@@ -7623,6 +7623,408 @@ app.post('/privacy/execute', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// MONETIZATION LAYER
+// Execution Fees, Reputation, Dark Coordination
+// ============================================
+
+// Check if trade requires confidential execution
+app.post('/monetization/check-threshold', async (req: Request, res: Response) => {
+  try {
+    const { executionFeeManager } = await import('./monetization/execution-fees');
+    const { trade_size_usd } = req.body;
+    if (trade_size_usd === undefined) {
+      return res.status(400).json({ success: false, error: 'trade_size_usd required' });
+    }
+    const result = executionFeeManager.requiresConfidentialExecution(trade_size_usd);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Check failed' });
+  }
+});
+
+// Calculate execution fee
+app.post('/monetization/calculate-fee', async (req: Request, res: Response) => {
+  try {
+    const { executionFeeManager } = await import('./monetization/execution-fees');
+    const { trade_size_usd, expected_slippage_bps, actual_slippage_bps } = req.body;
+    if (trade_size_usd === undefined || expected_slippage_bps === undefined) {
+      return res.status(400).json({ success: false, error: 'trade_size_usd and expected_slippage_bps required' });
+    }
+    const result = executionFeeManager.calculateExecutionFee(
+      trade_size_usd,
+      expected_slippage_bps,
+      actual_slippage_bps || 0
+    );
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Calculation failed' });
+  }
+});
+
+// Record execution fee
+app.post('/monetization/record-fee', async (req: Request, res: Response) => {
+  try {
+    const { executionFeeManager } = await import('./monetization/execution-fees');
+    const { agent_id, fee_type, amount_usd, basis } = req.body;
+    if (!agent_id || !fee_type || amount_usd === undefined || !basis) {
+      return res.status(400).json({ success: false, error: 'agent_id, fee_type, amount_usd, basis required' });
+    }
+    const fee = executionFeeManager.recordFee(agent_id, fee_type, amount_usd, basis);
+    res.json({ success: true, fee });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Recording failed' });
+  }
+});
+
+// Get agent fee stats
+app.get('/monetization/agent/:agent_id/fees', async (req: Request, res: Response) => {
+  try {
+    const { executionFeeManager } = await import('./monetization/execution-fees');
+    const stats = executionFeeManager.getAgentFeeStats(req.params.agent_id);
+    res.json({ success: true, ...stats });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get fees' });
+  }
+});
+
+// Get protocol stats
+app.get('/monetization/stats', async (req: Request, res: Response) => {
+  try {
+    const { executionFeeManager } = await import('./monetization/execution-fees');
+    const stats = executionFeeManager.getProtocolStats();
+    res.json({ success: true, ...stats });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get stats' });
+  }
+});
+
+// Create/update subscription
+app.post('/monetization/subscription', async (req: Request, res: Response) => {
+  try {
+    const { executionFeeManager } = await import('./monetization/execution-fees');
+    const { agent_id, tier } = req.body;
+    if (!agent_id || !tier) {
+      return res.status(400).json({ success: false, error: 'agent_id and tier required' });
+    }
+    const subscription = executionFeeManager.createSubscription(agent_id, tier);
+    res.json({ success: true, subscription });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Subscription failed' });
+  }
+});
+
+// Get subscription
+app.get('/monetization/subscription/:agent_id', async (req: Request, res: Response) => {
+  try {
+    const { executionFeeManager } = await import('./monetization/execution-fees');
+    const subscription = executionFeeManager.getSubscription(req.params.agent_id);
+    res.json({ success: true, subscription });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get subscription' });
+  }
+});
+
+// ============================================
+// AGENT REPUTATION SYSTEM
+// ============================================
+
+// Record execution for track record
+app.post('/reputation/record-execution', async (req: Request, res: Response) => {
+  try {
+    const { agentReputationManager } = await import('./monetization/agent-reputation');
+    const { agent_id, volume_usd, pnl_usd, return_bps } = req.body;
+    if (!agent_id || volume_usd === undefined || pnl_usd === undefined) {
+      return res.status(400).json({ success: false, error: 'agent_id, volume_usd, pnl_usd required' });
+    }
+    const record = agentReputationManager.recordExecution(agent_id, volume_usd, pnl_usd, return_bps || 0);
+    res.json({ success: true, record });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Recording failed' });
+  }
+});
+
+// Generate reputation proof
+app.post('/reputation/generate-proof', async (req: Request, res: Response) => {
+  try {
+    const { agentReputationManager } = await import('./monetization/agent-reputation');
+    const { executionFeeManager, FEE_RATES } = await import('./monetization/execution-fees');
+    const { agent_id, proof_type, threshold } = req.body;
+    if (!agent_id || !proof_type || threshold === undefined) {
+      return res.status(400).json({ success: false, error: 'agent_id, proof_type, threshold required' });
+    }
+    
+    const proof = await agentReputationManager.generateReputationProof(agent_id, proof_type, threshold);
+    
+    // Record proof fee
+    const feeUsd = executionFeeManager.calculateProofFee(proof_type);
+    executionFeeManager.recordFee(agent_id, 'proof', feeUsd, `${proof_type} reputation proof`);
+    
+    res.json({ success: true, proof, fee_usd: feeUsd });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Proof generation failed' });
+  }
+});
+
+// Verify reputation proof
+app.get('/reputation/verify/:proof_id', async (req: Request, res: Response) => {
+  try {
+    const { agentReputationManager } = await import('./monetization/agent-reputation');
+    const result = agentReputationManager.verifyProof(req.params.proof_id);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Verification failed' });
+  }
+});
+
+// Get agent's proofs
+app.get('/reputation/agent/:agent_id/proofs', async (req: Request, res: Response) => {
+  try {
+    const { agentReputationManager } = await import('./monetization/agent-reputation');
+    const proofs = agentReputationManager.getAgentProofs(req.params.agent_id);
+    res.json({ success: true, count: proofs.length, proofs });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get proofs' });
+  }
+});
+
+// Get public reputation
+app.get('/reputation/agent/:agent_id', async (req: Request, res: Response) => {
+  try {
+    const { agentReputationManager } = await import('./monetization/agent-reputation');
+    const reputation = agentReputationManager.getPublicReputation(req.params.agent_id);
+    res.json({ success: true, ...reputation });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get reputation' });
+  }
+});
+
+// Get reputation leaderboard
+app.get('/reputation/leaderboard', async (req: Request, res: Response) => {
+  try {
+    const { agentReputationManager } = await import('./monetization/agent-reputation');
+    const limit = parseInt(req.query.limit as string) || 10;
+    const leaderboard = agentReputationManager.getReputationLeaderboard(limit);
+    res.json({ success: true, leaderboard });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get leaderboard' });
+  }
+});
+
+// Create capital delegation
+app.post('/reputation/delegation', async (req: Request, res: Response) => {
+  try {
+    const { agentReputationManager } = await import('./monetization/agent-reputation');
+    const { delegator, agent_id, amount_usd, terms, required_proofs } = req.body;
+    if (!delegator || !agent_id || !amount_usd || !terms) {
+      return res.status(400).json({ success: false, error: 'delegator, agent_id, amount_usd, terms required' });
+    }
+    const delegation = agentReputationManager.createDelegation(
+      delegator, agent_id, amount_usd, terms, required_proofs || []
+    );
+    res.json({ success: true, delegation });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Delegation failed' });
+  }
+});
+
+// Get agent AUM
+app.get('/reputation/agent/:agent_id/aum', async (req: Request, res: Response) => {
+  try {
+    const { agentReputationManager } = await import('./monetization/agent-reputation');
+    const aum = agentReputationManager.getAgentAUM(req.params.agent_id);
+    const delegations = agentReputationManager.getAgentDelegations(req.params.agent_id);
+    res.json({ success: true, aum_usd: aum, delegation_count: delegations.length });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get AUM' });
+  }
+});
+
+// ============================================
+// DARK COORDINATION NETWORK
+// ============================================
+
+// Create dark pool
+app.post('/coordination/dark-pool', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const { creator_agent_id, asset, side, min_size_usd, max_size_usd, duration_ms } = req.body;
+    if (!creator_agent_id || !asset || !side || !min_size_usd) {
+      return res.status(400).json({ success: false, error: 'creator_agent_id, asset, side, min_size_usd required' });
+    }
+    const pool = darkCoordinationManager.createDarkPool(
+      creator_agent_id, asset, side, min_size_usd, max_size_usd || min_size_usd * 10, duration_ms
+    );
+    res.json({ success: true, pool });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Pool creation failed' });
+  }
+});
+
+// Submit bid to dark pool
+app.post('/coordination/dark-pool/:pool_id/bid', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const { bidder_agent_id, encrypted_amount, side } = req.body;
+    if (!bidder_agent_id || !encrypted_amount || !side) {
+      return res.status(400).json({ success: false, error: 'bidder_agent_id, encrypted_amount, side required' });
+    }
+    const bid = darkCoordinationManager.submitPoolBid(req.params.pool_id, bidder_agent_id, encrypted_amount, side);
+    if (!bid) {
+      return res.status(400).json({ success: false, error: 'Pool not open or not found' });
+    }
+    res.json({ success: true, bid });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Bid failed' });
+  }
+});
+
+// Match dark pool
+app.post('/coordination/dark-pool/:pool_id/match', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const result = await darkCoordinationManager.matchDarkPool(req.params.pool_id);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Matching failed' });
+  }
+});
+
+// Get active dark pools
+app.get('/coordination/dark-pools', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const pools = darkCoordinationManager.getActiveDarkPools(req.query.asset as string);
+    res.json({ success: true, count: pools.length, pools });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get pools' });
+  }
+});
+
+// Create flow auction
+app.post('/coordination/auction', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const { auctioneer_agent_id, flow_type, description, min_bid_usd, bidding_duration_ms, reveal_duration_ms } = req.body;
+    if (!auctioneer_agent_id || !flow_type || !description || !min_bid_usd) {
+      return res.status(400).json({ success: false, error: 'auctioneer_agent_id, flow_type, description, min_bid_usd required' });
+    }
+    const auction = darkCoordinationManager.createFlowAuction(
+      auctioneer_agent_id, flow_type, description, min_bid_usd, bidding_duration_ms, reveal_duration_ms
+    );
+    res.json({ success: true, auction });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Auction creation failed' });
+  }
+});
+
+// Submit auction bid
+app.post('/coordination/auction/:auction_id/bid', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const { bidder_agent_id, encrypted_bid } = req.body;
+    if (!bidder_agent_id || !encrypted_bid) {
+      return res.status(400).json({ success: false, error: 'bidder_agent_id, encrypted_bid required' });
+    }
+    const bid = darkCoordinationManager.submitAuctionBid(req.params.auction_id, bidder_agent_id, encrypted_bid);
+    if (!bid) {
+      return res.status(400).json({ success: false, error: 'Auction not accepting bids' });
+    }
+    res.json({ success: true, bid });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Bid failed' });
+  }
+});
+
+// Reveal auction bid
+app.post('/coordination/auction/:auction_id/reveal', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const { bid_id, revealed_amount } = req.body;
+    if (!bid_id || revealed_amount === undefined) {
+      return res.status(400).json({ success: false, error: 'bid_id, revealed_amount required' });
+    }
+    const success = darkCoordinationManager.revealAuctionBid(req.params.auction_id, bid_id, revealed_amount);
+    res.json({ success });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Reveal failed' });
+  }
+});
+
+// Settle auction
+app.post('/coordination/auction/:auction_id/settle', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const result = darkCoordinationManager.settleAuction(req.params.auction_id);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Settlement failed' });
+  }
+});
+
+// Get active auctions
+app.get('/coordination/auctions', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const auctions = darkCoordinationManager.getActiveAuctions();
+    res.json({ success: true, count: auctions.length, auctions });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get auctions' });
+  }
+});
+
+// Create signal listing
+app.post('/coordination/signal', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const { seller_agent_id, signal_type, quality_proof, price_usd } = req.body;
+    if (!seller_agent_id || !signal_type || !quality_proof || !price_usd) {
+      return res.status(400).json({ success: false, error: 'seller_agent_id, signal_type, quality_proof, price_usd required' });
+    }
+    const listing = darkCoordinationManager.createSignalListing(seller_agent_id, signal_type, quality_proof, price_usd);
+    res.json({ success: true, listing });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Listing failed' });
+  }
+});
+
+// Subscribe to signal
+app.post('/coordination/signal/:listing_id/subscribe', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const { subscriber_agent_id } = req.body;
+    if (!subscriber_agent_id) {
+      return res.status(400).json({ success: false, error: 'subscriber_agent_id required' });
+    }
+    const result = darkCoordinationManager.subscribeToSignal(req.params.listing_id, subscriber_agent_id);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Subscription failed' });
+  }
+});
+
+// Get active signals
+app.get('/coordination/signals', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const signals = darkCoordinationManager.getActiveSignals(req.query.type as string);
+    res.json({ success: true, count: signals.length, signals });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get signals' });
+  }
+});
+
+// Get coordination stats
+app.get('/coordination/stats', async (req: Request, res: Response) => {
+  try {
+    const { darkCoordinationManager } = await import('./monetization/dark-coordination');
+    const stats = darkCoordinationManager.getStats();
+    res.json({ success: true, ...stats });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get stats' });
+  }
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 
