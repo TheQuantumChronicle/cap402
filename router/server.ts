@@ -2101,38 +2101,7 @@ app.get('/templates/:template_id', async (req: Request, res: Response) => {
 // ============================================
 
 // NOTE: /agents/discover is defined earlier in the file (line ~1591)
-
-// Get agent details
-app.get('/agents/:agent_id', async (req: Request, res: Response) => {
-  try {
-    const { agentRegistry } = await import('./agent-registry');
-    const agent = agentRegistry.getAgent(req.params.agent_id);
-
-    if (!agent) {
-      return res.status(404).json({ success: false, error: 'Agent not found' });
-    }
-
-    const delegations = agentRegistry.getAgentDelegations(req.params.agent_id);
-
-    res.json({
-      success: true,
-      agent: {
-        ...agent,
-        registered_at: new Date(agent.registered_at).toISOString(),
-        last_active: new Date(agent.last_active).toISOString()
-      },
-      delegations: {
-        granted: delegations.granted.length,
-        received: delegations.received.length
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to get agent'
-    });
-  }
-});
+// NOTE: /agents/:agent_id is defined earlier in the file (line ~1679)
 
 // Create capability delegation
 app.post('/agents/delegate', async (req: Request, res: Response) => {
