@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { generateShortId, sha256 } from '../../utils';
 
 export interface PrivacyCashNote {
   version: string;
@@ -18,7 +19,7 @@ export interface PrivacyCashParams {
 }
 
 export function generatePrivacyCashNote(params: PrivacyCashParams): PrivacyCashNote {
-  const note_id = crypto.randomBytes(16).toString('hex');
+  const note_id = generateShortId('note', 16);
   const amount_commitment = generateCommitment(params.amount);
   const nullifier_hint = generateNullifier(note_id);
   const note_reference = generateNoteReference(note_id);
@@ -43,10 +44,7 @@ function generateCommitment(amount: number): string {
     randomness
   ]);
   
-  return crypto
-    .createHash('sha256')
-    .update(commitment_input)
-    .digest('hex');
+  return sha256(commitment_input.toString());
 }
 
 function generateNullifier(note_id: string): string {

@@ -1,3 +1,4 @@
+import { generateShortId } from '../../utils';
 import * as crypto from 'crypto';
 
 export interface X402Hint {
@@ -20,7 +21,7 @@ export interface X402HintParams {
 
 export function generateX402Hint(params: X402HintParams): X402Hint {
   const ephemeral_payer = generateEphemeralAddress();
-  const hint_id = crypto.randomBytes(16).toString('hex');
+  const hint_id = generateShortId('hint', 16);
 
   return {
     version: '0.1.0',
