@@ -427,9 +427,12 @@ export class CAP402Agent extends EventEmitter {
     this.assertReady();
 
     const response = await this.client.post('/a2a/swarm', {
-      coordinator: this.config.agent_id,
-      capability_id: task.capability_id,
-      inputs: task.inputs,
+      coordinator_agent: this.config.agent_id,
+      task: {
+        capability_id: task.capability_id,
+        inputs: task.inputs
+      },
+      agents: [], // Will be auto-discovered by router
       min_agents: task.min_agents || 2,
       max_agents: task.max_agents || 10,
       strategy: task.strategy || 'parallel'
