@@ -8,8 +8,8 @@
  * - Secure context passing between agents
  */
 
-import * as crypto from 'crypto';
 import { agentRegistry, RegisteredAgent, AgentDelegation } from './agent-registry';
+import { generateShortId, sha256 } from '../utils';
 
 export interface AgentTask {
   task_id: string;
@@ -226,7 +226,7 @@ class AgentCoordinator {
 
     let currentInputs = { ...initialInputs };
     const results: TaskResult[] = [];
-    const chainTaskId = `chain_${crypto.randomBytes(12).toString('hex')}`;
+    const chainTaskId = generateShortId('chain', 12);
 
     for (let i = 0; i < chain.length; i++) {
       const step = chain[i];
@@ -284,7 +284,7 @@ class AgentCoordinator {
    * Create a new task
    */
   private createTask(request: CoordinationRequest, targetAgents: string[]): AgentTask {
-    const taskId = `task_${crypto.randomBytes(12).toString('hex')}`;
+    const taskId = generateShortId('task', 12);
 
     const task: AgentTask = {
       task_id: taskId,
@@ -338,9 +338,7 @@ class AgentCoordinator {
               processed_at: Date.now()
             },
             execution_time_ms: Date.now() - startTime,
-            signature: crypto.createHash('sha256')
-              .update(`${agent.agent_id}:${task.task_id}:${Date.now()}`)
-              .digest('hex'),
+            signature: sha256(`${agent.agent_id}:${task.task_id}:${Date.now()}`),
             timestamp: Date.now()
           } as TaskResult;
         },

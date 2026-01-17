@@ -16,6 +16,7 @@
  */
 
 import * as crypto from 'crypto';
+import { generateId, sha256, hmacSha256 } from '../utils';
 
 export interface CapabilityReceipt {
   receipt_id: string;
@@ -106,7 +107,7 @@ class CapabilityReceiptManager {
       agent_id?: string;
     }
   ): CapabilityReceipt {
-    const receiptId = `rcpt_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+    const receiptId = generateId('rcpt', 8);
     const timestamp = Date.now();
 
     // Create commitments (hashes that prove content without revealing it)
@@ -250,7 +251,7 @@ class CapabilityReceiptManager {
    */
   private createCommitment(data: Record<string, any>): string {
     const serialized = JSON.stringify(data, Object.keys(data).sort());
-    return '0x' + crypto.createHash('sha256').update(serialized).digest('hex');
+    return '0x' + sha256(serialized);
   }
 
   /**
@@ -258,7 +259,7 @@ class CapabilityReceiptManager {
    */
   private signReceipt(receipt: Omit<CapabilityReceipt, 'signature'>): string {
     const serialized = JSON.stringify(receipt, Object.keys(receipt).sort());
-    return crypto.createHmac('sha256', this.signingKey).update(serialized).digest('hex');
+    return hmacSha256(serialized, this.signingKey);
   }
 
   /**
