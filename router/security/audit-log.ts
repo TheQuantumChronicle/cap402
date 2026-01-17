@@ -5,7 +5,7 @@
  * Events are timestamped and include context for investigation.
  */
 
-import * as crypto from 'crypto';
+import { generateShortId } from '../../utils';
 
 export type AuditEventType = 
   | 'token_issued'
@@ -62,7 +62,7 @@ class SecurityAuditLog {
     } = {}
   ): AuditEvent {
     const event: AuditEvent = {
-      event_id: `audit_${crypto.randomBytes(8).toString('hex')}`,
+      event_id: generateShortId('audit', 8),
       timestamp: Date.now(),
       event_type: eventType,
       agent_id: agentId,

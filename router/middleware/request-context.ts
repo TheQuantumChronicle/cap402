@@ -6,7 +6,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import * as crypto from 'crypto';
+import { generateId } from '../../utils';
 
 declare global {
   namespace Express {
@@ -61,7 +61,7 @@ export function requestContext(req: Request, res: Response, next: NextFunction) 
   if (providedId && /^[a-zA-Z0-9_-]{1,64}$/.test(providedId)) {
     req.requestId = providedId;
   } else {
-    req.requestId = `req_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    req.requestId = generateId('req');
   }
   req.startTime = Date.now();
 
