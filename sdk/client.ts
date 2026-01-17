@@ -220,7 +220,7 @@ export class CAP402Client {
     min_trust_score?: number;
     limit?: number;
   }): Promise<any> {
-    const response = await this.client.get('/discover', { params: query });
+    const response = await this.client.get('/agents/discover', { params: query });
     return response.data;
   }
 
