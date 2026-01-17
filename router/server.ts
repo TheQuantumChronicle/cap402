@@ -6665,16 +6665,8 @@ app.post('/invoke/smart-batch', async (req: Request, res: Response) => {
 // REQUEST LOG & REPLAY
 // ============================================
 
-app.get('/debug/request-log', (req: Request, res: Response) => {
-  const limit = parseInt(req.query.limit as string) || 20;
-  const log = router.getRequestLog(limit);
-  res.json({ success: true, log, count: log.length });
-});
-
-app.post('/debug/replay-failed', async (req: Request, res: Response) => {
-  const result = await router.replayLastFailedRequest();
-  res.json({ success: result !== null, result });
-});
+// NOTE: /debug/requests is defined earlier in the file (line ~5810)
+// NOTE: /debug/replay/:request_id is defined earlier in the file (line ~5815)
 
 // Batch invoke - group multiple requests
 app.post('/batch/invoke', async (req: Request, res: Response) => {
