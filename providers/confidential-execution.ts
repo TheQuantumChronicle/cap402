@@ -11,11 +11,11 @@
  * 4. Noir: Generate proof of correct execution
  */
 
-import * as crypto from 'crypto';
 import { arciumProvider, ArciumComputationResult } from './arcium-client';
 import { incoFHEProvider, FHECiphertext, FHEComputationResult } from './inco-fhe';
 import { noirCircuitsProvider, NoirProof } from './noir-circuits';
 import { CAPITAL_THRESHOLDS, FEE_RATES } from '../router/monetization/execution-fees';
+import { generateId, sha256Hex, now, safeDivide, isNonEmptyString, isPositiveNumber, hasMinLength } from '../utils';
 
 // Execution tiers based on capital thresholds
 export type ExecutionTier = 'public' | 'protected' | 'confidential' | 'maximum';
@@ -159,7 +159,7 @@ class ConfidentialExecutionPipeline {
     request: ConfidentialExecutionRequest
   ): Promise<ConfidentialExecutionResult> {
     const startTime = Date.now();
-    const executionId = `exec_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const executionId = generateId('exec');
     const stageTimes: Record<string, number> = {};
     const stagesCompleted: string[] = [];
     
@@ -326,13 +326,11 @@ class ConfidentialExecutionPipeline {
     });
     
     // Generate combined signature
-    const combinedSig = crypto.createHash('sha256')
-      .update(message_hash + signers.slice(0, threshold).join(''))
-      .digest('hex');
+    const combinedSig = sha256Hex(message_hash + signers.slice(0, threshold).join('')).slice(2);
     
     return {
       success: mpcResult.success,
-      signature: `0x${combinedSig}${crypto.randomBytes(32).toString('hex')}`,
+      signature: `0x${combinedSig}`,
       signers_participated: signers.slice(0, threshold),
       threshold_met: true,
       proof: mpcResult.proof
@@ -345,7 +343,7 @@ class ConfidentialExecutionPipeline {
   async multiPartySwap(
     request: MultiPartySwapRequest
   ): Promise<MultiPartySwapResult> {
-    const swapId = `mswap_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const swapId = generateId('mswap');
     const settlements: MultiPartySwapResult['settlements'] = [];
     
     // Input validation
@@ -399,7 +397,7 @@ class ConfidentialExecutionPipeline {
     // Input validation
     if (!assetPair || assetPair.trim().length === 0) return null;
     
-    const orderbookId = `ob_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const orderbookId = generateId('ob');
     
     const orderbook: EncryptedOrderbook = {
       orderbook_id: orderbookId,
@@ -434,12 +432,10 @@ class ConfidentialExecutionPipeline {
     const encryptedSize = await incoFHEProvider.encrypt(size, 'euint64');
     
     // Create commitment
-    const commitment = crypto.createHash('sha256')
-      .update(agentId + price.toString() + size.toString() + Date.now())
-      .digest('hex');
+    const commitment = sha256Hex(agentId + price.toString() + size.toString() + now());
     
     const order = {
-      order_id: `order_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      order_id: generateId('order'),
       agent_id: agentId,
       encrypted_price: encryptedPrice.ciphertext,
       encrypted_size: encryptedSize.ciphertext,
@@ -511,7 +507,7 @@ class ConfidentialExecutionPipeline {
     if (!auctioneer || !asset) return null;
     if (reservePrice !== undefined && reservePrice < 0) return null;
     
-    const auctionId = `auction_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const auctionId = generateId('auction');
     
     let encryptedReserve: string | undefined;
     if (reservePrice !== undefined) {
@@ -551,9 +547,7 @@ class ConfidentialExecutionPipeline {
     const encryptedBid = await incoFHEProvider.encrypt(bidAmount, 'euint64');
     
     // Create commitment
-    const commitment = crypto.createHash('sha256')
-      .update(bidder + bidAmount.toString() + auctionId)
-      .digest('hex');
+    const commitment = sha256Hex(bidder + bidAmount.toString() + auctionId);
     
     auction.bids.push({
       bidder,
