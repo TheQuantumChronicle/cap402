@@ -348,8 +348,8 @@ export class CAP402Client {
   }
 
   async verifyToken(token: string, capabilityId: string): Promise<any> {
-    const response = await this.client.post('/security/tokens/verify', {
-      token,
+    const response = await this.client.post('/security/tokens/validate', {
+      token_id: token,
       capability_id: capabilityId
     });
     return response.data;
