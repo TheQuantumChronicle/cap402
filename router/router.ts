@@ -775,11 +775,13 @@ export class Router {
     const pairs = this.capabilityPairs.get(capability_id);
     if (pairs) {
       const totalPairs = Array.from(pairs.values()).reduce((a, b) => a + b, 0);
-      for (const [nextCap, count] of pairs) {
-        recommendations.push({
-          id: nextCap,
-          confidence: Math.round(count / totalPairs * 100)
-        });
+      if (totalPairs > 0) {
+        for (const [nextCap, count] of pairs) {
+          recommendations.push({
+            id: nextCap,
+            confidence: Math.round(count / totalPairs * 100)
+          });
+        }
       }
       recommendations.sort((a, b) => b.confidence - a.confidence);
     }
@@ -1027,6 +1029,7 @@ export class Router {
     if (!deps) return [];
     
     const total = [...deps.values()].reduce((s, d) => s + d.weight, 0);
+    if (total === 0) return [];
     return [...deps.entries()]
       .sort((a, b) => b[1].weight - a[1].weight)
       .slice(0, topN)
