@@ -3148,27 +3148,7 @@ app.post('/agents/chain', async (req: Request, res: Response) => {
   }
 });
 
-// Agent registry stats
-app.get('/agents/stats/overview', async (req: Request, res: Response) => {
-  try {
-    const { agentRegistry } = await import('./agent-registry');
-    const { agentCoordinator } = await import('./agent-coordination');
-    
-    const registryStats = agentRegistry.getStats();
-    const coordStats = agentCoordinator.getStats();
-
-    res.json({
-      success: true,
-      registry: registryStats,
-      coordination: coordStats
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Stats failed'
-    });
-  }
-});
+// NOTE: /agents/stats/overview is defined earlier in the file (line ~1657)
 
 // ============================================
 // KILLER FEATURES: Agent-to-Agent Protocol
