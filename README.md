@@ -1,6 +1,6 @@
-# CAP-402: High-Assurance Execution Layer
+# CAP-402: Execution Monetization Layer for Autonomous Agents
 
-**Version 1.0.0** | Confidential Infrastructure for Serious Capital
+**Version 1.0.0** | Confidential execution infrastructure that agents must use once they scale.
 
 🌐 **Website**: [cap402.com](https://cap402.com) | 📄 [Whitepaper](docs/WHITEPAPER.md) | 🔌 [API Docs](docs/api-docs.html)
 
@@ -8,54 +8,121 @@
 
 ## What CAP-402 Is
 
-CAP-402 is a **high-assurance execution layer** for operations where stakes are high and privacy is non-negotiable.
+**CAP-402 takes a cut of agent execution once they make money.**
 
-It is **not** a general-purpose agent router. It is **not** trying to be the standard for all applications.
+We are not selling privacy. We are taxing successful autonomy.
 
-CAP-402 exists for the edges of the system—where:
-- A $500K treasury operation cannot afford MEV extraction
-- A DAO vote must be private until tallied
-- An OTC desk needs encrypted negotiation
-- Institutional capital requires compliance proofs without data exposure
+Agents don't pay for privacy. They pay for:
+- **Edge** — strategies that work
+- **Profit** — repeatable alpha
+- **Survivability** — avoiding MEV, censorship, regulation
+- **Scale** — handling size without leaking intent
 
-### The Privacy Stack
+Privacy is the *means*, not the product. CAP-402 is **profit-enabling**, not privacy-enabling.
 
-Three cryptographic technologies, unified:
+### The Execution Stack
 
-| Technology | Role | What It Does |
-|------------|------|--------------|
-| **Noir** | Proves privately | ZK proofs verify conditions without revealing data |
-| **Arcium** | Computes privately | MPC on encrypted data—amounts, logic hidden |
-| **Inco** | Stores privately | Confidential on-chain state and execution |
+Three cryptographic technologies that become **mandatory above capital thresholds**:
+
+| Technology | Economic Choke Point | Why Agents Pay |
+|------------|---------------------|----------------|
+| **Arcium** | Large-size execution, sealed auctions, OTC matching | Public execution = death above $100K |
+| **Inco** | Encrypted PnL computation, strategy scoring, agent ranking | Visible strategies get copied/front-run |
+| **Noir** | Onboarding proofs, capital delegation, compliance checks | Prove credibility without revealing data |
+
+---
+
+## The Money Path
+
+Agents that make money today:
+1. **Trading / arbitrage agents** — need hidden execution
+2. **Market making agents** — need protected order flow
+3. **Sniper / launch agents** — need speed + stealth
+4. **Capital allocator agents** — need verifiable track records
+5. **OTC execution agents** — need dark coordination
+6. **Signal / data agents** — need to sell without revealing
+
+**Every one has the same pain: "If my strategy becomes visible, I lose money."**
+
+CAP-402 sits on that pain by force, not choice.
+
+---
+
+## Three Revenue Layers
+
+### LAYER 1 — Confidential Execution-as-a-Service (EaaS)
+
+A paid execution rail agents **must use** once they cross size/profitability thresholds.
+
+```
+Agent Request: "Execute this intent only if conditions are met"
+CAP-402: "Hide size, route optimally, verify outcome"
+Pricing: % of volume, % of saved slippage, or subscription tier
+```
+
+**Why agents pay**: Once an agent handles size, handles other people's capital, or runs continuously — public execution = death.
+
+### LAYER 2 — Agent-to-Agent Dark Coordination Network
+
+Private coordination fabric where agents negotiate, auction, share flow, split execution — all without revealing strategies.
+
+```
+Use Cases:
+- MEV-resistant order flow auctions
+- OTC block matching between agents  
+- Signal marketplaces (buyers prove payment, sellers prove quality)
+```
+
+**Why agents pay**: Coordination increases PnL. Solo agents lose to coalitions. Public coordination is impossible.
+
+**Pricing**: Take-rate on matched volume / auctions.
+
+### LAYER 3 — Agent Reputation & Capital Firewalls
+
+ZK-verified agent reputation without revealing wallet history, exact PnL, or identity.
+
+```
+Noir proofs: "This agent has >X profitable executions"
+Inco: Encrypted PnL computation
+Arcium: MPC verification without disclosure
+```
+
+**Why agents pay**: Unlocks capital delegation, copy trading, agent marketplaces — without becoming public targets.
+
+**Pricing**: Verification fees, reputation minting, capital onboarding fees.
 
 ---
 
 ## Where CAP-402 Is Non-Optional
 
-CAP-402 is not for everyone. It is essential for:
+CAP-402 becomes **mandatory** when agents:
 
-### 1. Treasury Execution
+### 1. Cross Size Thresholds
 ```
-Problem: A protocol treasury needs to rebalance $2M without moving markets.
-Solution: Arcium C-SPL wraps tokens → confidential swap → zero information leakage.
-```
-
-### 2. DAO Operations
-```
-Problem: Governance votes reveal whale positions, enabling front-running of outcomes.
-Solution: ZK proofs confirm voting eligibility. FHE encrypts votes until tally.
+Problem: A $500K+ trade leaks intent, gets front-run, loses 2-5% to MEV.
+Solution: Arcium MPC execution. CAP-402 takes 0.1% of saved slippage.
+Result: Agent saves $5K-25K per trade. Pays $500. No-brainer.
 ```
 
-### 3. Private OTC
+### 2. Need Dark Coordination
 ```
-Problem: Two parties negotiating a large trade leak intent to the entire market.
-Solution: Encrypted agent-to-agent messaging. Terms hidden until execution.
+Problem: Two agents want to match OTC flow but can't reveal size/price.
+Solution: Sealed-bid MPC auction via Arcium. Winner determined without revealing bids.
+Pricing: 0.05% of matched volume.
 ```
 
-### 4. Institutional DeFi
+### 3. Attract External Capital
 ```
-Problem: Compliance requires proving KYC/AML without exposing client data.
+Problem: Agent wants to manage other people's money but can't reveal strategy.
+Solution: Noir proofs verify track record. Inco computes encrypted PnL.
+Pricing: Verification fee per proof, subscription for continuous attestation.
+```
+
+### 4. Prove Compliance Without Exposure
+```
+Problem: Institutional capital requires KYC/AML proof but data exposure = liability.
 Solution: Noir circuits prove compliance level without revealing underlying data.
+Pricing: Per-proof fee or enterprise subscription.
 ```
 
 ---
@@ -291,62 +358,66 @@ npm run example:swarm           # Run multi-agent demo
 
 ---
 
-## Who This Is For
+## Who Pays (and Why)
 
-| Audience | Use Case |
-|----------|----------|
-| **Protocol Treasuries** | MEV-protected rebalancing, private liquidity operations |
-| **DAOs** | Anonymous voting, private proposal discussions |
-| **OTC Desks** | Encrypted negotiation, hidden order flow |
-| **Institutional DeFi** | Compliance proofs, audit trails without data exposure |
-| **Agent Marketplaces** | Trust verification, capability routing |
+| Agent Type | Pain Point | CAP-402 Solution | Revenue Model |
+|------------|-----------|------------------|---------------|
+| **Trading/Arbitrage Agents** | Strategies get copied, front-run | Hidden execution via Arcium MPC | % of saved slippage |
+| **Market Makers** | Order flow leaks, gets sniped | Protected order flow, dark coordination | Take-rate on volume |
+| **Capital Allocators** | Can't prove track record without revealing strategy | ZK-verified reputation via Noir | Verification fees |
+| **OTC Desks** | Negotiation leaks intent to market | Sealed-bid auctions, encrypted messaging | % of matched volume |
+| **Signal Sellers** | Buyers can't verify quality without seeing signal | Prove quality without revealing content | Per-proof fees |
 
 ## Who This Is NOT For
 
-- Consumer apps that don't need privacy
-- Low-stakes operations where MEV doesn't matter
+- Agents below $50K AUM (use public rails, it's fine)
+- Strategies that don't have edge (nothing to protect)
 - Projects that want "agent router for everything"
 
-CAP-402 is infrastructure for the edges—where stakes are high and privacy is non-negotiable.
+**CAP-402 is for agents that make money and need to keep making it.**
 
 ---
 
-## Sponsor Integrations
+## Economic Choke Points (Sponsor Integration)
 
-CAP-402 is built on sponsor technologies as core infrastructure:
+Sponsors are not optional features. They are **structural requirements** above capital thresholds.
 
-| Sponsor | Integration | What It Powers |
-|---------|-------------|----------------|
-| **Arcium** | C-SPL Confidential Tokens | MEV-protected swaps, hidden amounts |
-| **Noir/Aztec** | 7 ZK Circuits | Compliance proofs, voting eligibility, balance thresholds |
-| **Inco** | FHE Compute | Encrypted messaging, private state |
-| **Helius** | DAS API + Webhooks | Real-time wallet data, transaction monitoring |
+| Sponsor | Mandatory For | Threshold | Why It's Required |
+|---------|--------------|-----------|-------------------|
+| **Arcium** | Large-size execution, sealed auctions, OTC matching | >$100K trades | Public execution = 2-5% MEV loss |
+| **Inco** | Encrypted PnL computation, strategy scoring, agent ranking | Any competitive strategy | Visible strategies get copied in <24h |
+| **Noir** | Onboarding proofs, capital delegation, compliance | Institutional capital | Can't attract AUM without verifiable track record |
+| **Helius** | Real-time wallet data, transaction monitoring | All agents | Need accurate state for execution |
 
-### Arcium (Confidential Execution)
+### Arcium — The Execution Rail
 ```
-cap.cspl.wrap.v1         - Convert public → confidential tokens
-cap.cspl.transfer.v1     - Transfer with hidden amounts
-cap.confidential.swap.v1 - Private swaps via MPC
-```
-
-### Noir (Zero-Knowledge Proofs)
-```
-balance_threshold   - Prove balance > X without revealing amount
-kyc_compliance      - Prove compliance without exposing data
-voting_eligibility  - Prove voting rights without revealing stake
-credential_ownership - Prove credentials without revealing details
+MANDATORY above $100K:
+- cap.cspl.wrap.v1         → Wrap to confidential tokens
+- cap.confidential.swap.v1 → Execute without leaking size
+- /arcium/private-bid      → Sealed auctions
 ```
 
-### Inco (Encrypted Compute)
+### Inco — The Computation Rail  
 ```
-cap.fhe.compute.v1       - Compute on encrypted data
-cap.lightning.message.v1 - Encrypted agent-to-agent messaging
+MANDATORY for competitive agents:
+- /inco/compute            → FHE operations on encrypted data
+- /inco/private-vote       → Hidden governance participation
+- Encrypted PnL tracking   → Strategy scoring without exposure
 ```
 
-### Helius (Real-Time Data)
+### Noir — The Proof Rail
 ```
-cap.wallet.snapshot.v1   - Complete wallet state via DAS API
-Real-time webhooks       - Balance changes, transaction confirmations
+MANDATORY for capital attraction:
+- balance_threshold        → Prove AUM without revealing
+- kyc_compliance          → Institutional onboarding
+- track_record            → Verifiable performance history
+```
+
+### Helius — The Data Rail
+```
+MANDATORY for all agents:
+- cap.wallet.snapshot.v1   → Accurate wallet state
+- Real-time webhooks       → Transaction confirmations
 ```
 
 ---

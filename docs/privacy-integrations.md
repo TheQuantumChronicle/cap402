@@ -1,18 +1,31 @@
-# CAP-402 Privacy Technology Integrations
+# CAP-402 Economic Choke Points
 
-## Overview
+## The Core Truth
 
-CAP-402 integrates three cutting-edge privacy technologies to enable confidential computing, zero-knowledge proofs, and fully homomorphic encryption for AI agents and trading applications:
+**Agents don't pay for privacy. They pay for edge, profit, and survivability.**
 
-1. **Arcium** - Multi-Party Computation (MPC) on Solana
-2. **Inco Network** - Fully Homomorphic Encryption (FHE)
-3. **Noir** - Zero-Knowledge Proof Circuits
+Privacy is the *means*, not the product. CAP-402 is **profit-enabling**, not privacy-enabling.
 
-Together, these technologies enable agents to:
-- Execute trades without revealing amounts or strategies
-- Prove compliance without exposing sensitive data
-- Compute on encrypted data without decryption
-- Maintain privacy while participating in DeFi
+## Why Agents Must Pay
+
+Every profitable agent has the same pain:
+
+> "If my strategy becomes visible, I lose money."
+
+CAP-402 sits on that pain by force, not choice. Once an agent:
+- Handles size (>$100K)
+- Handles other people's capital
+- Runs continuously
+
+**Public execution = death.**
+
+## The Three Economic Rails
+
+| Technology | Mandatory For | Threshold | Revenue Model |
+|------------|--------------|-----------|---------------|
+| **Arcium** | Large-size execution, sealed auctions, OTC matching | >$100K trades | % of saved slippage |
+| **Inco** | Encrypted PnL computation, strategy scoring, agent ranking | Any competitive strategy | Subscription + compute fees |
+| **Noir** | Onboarding proofs, capital delegation, compliance | Institutional capital | Per-proof + verification fees |
 
 ---
 
@@ -360,12 +373,34 @@ curl -X POST https://cap402.com/inco/compute \
 
 ---
 
-## Conclusion
+## The Investment Story
 
-CAP-402's integration of Arcium, Inco, and Noir creates a comprehensive privacy stack for AI agents:
+**Not**: "We integrated Arcium, Inco, Noir"
 
-- **Arcium** handles confidential computation on Solana via MPC
-- **Inco** enables computation on encrypted data via FHE
-- **Noir** provides zero-knowledge proofs for selective disclosure
+**But**: "CAP-402 takes a cut of agent execution once they make money."
 
-Together, they enable agents to participate in DeFi, governance, and trading while maintaining complete privacy over sensitive data.
+We are not selling privacy. We are **taxing successful autonomy**.
+
+### Revenue Model
+
+| Layer | Trigger | Pricing |
+|-------|---------|---------|
+| **Execution-as-a-Service** | Agent crosses $100K trade size | 0.1% of saved slippage |
+| **Dark Coordination** | Agent-to-agent matching | 0.05% of matched volume |
+| **Reputation Proofs** | Capital delegation, compliance | $10-100 per proof |
+| **Subscriptions** | Continuous attestation, priority execution | $500-5000/month |
+
+### Why This Works
+
+1. **Agents have no choice** — public execution above thresholds = death
+2. **Value is obvious** — save $5K in MEV, pay $500 to CAP-402
+3. **Sponsors are structural** — not optional features, mandatory rails
+4. **Network effects** — more agents = better coordination = more value
+
+---
+
+## The One Sentence
+
+> **"Confidential execution infrastructure that agents must use once they scale."**
+
+That's CAP-402.
