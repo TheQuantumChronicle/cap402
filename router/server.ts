@@ -5946,10 +5946,7 @@ app.get('/providers/stats', (req: Request, res: Response) => {
 // AGENT LEARNING & PROFILES
 // ============================================
 
-app.get('/agents/:agent_id/profile', (req: Request, res: Response) => {
-  const profile = router.getAgentProfile(req.params.agent_id);
-  res.json({ success: true, profile });
-});
+// NOTE: /agents/:agent_id/profile is defined earlier in the file (line ~1763)
 
 app.post('/agents/:agent_id/tags', (req: Request, res: Response) => {
   const { tags } = req.body;
