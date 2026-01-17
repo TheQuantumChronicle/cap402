@@ -13,6 +13,7 @@
  */
 
 import * as crypto from 'crypto';
+import { generateShortId } from '../../utils';
 
 export interface CapabilityToken {
   token_id: string;
@@ -111,8 +112,8 @@ class CapabilityTokenManager {
     permissions: Partial<TokenPermissions> = {},
     expiresInMs: number = 24 * 60 * 60 * 1000 // 24 hours default
   ): CapabilityToken {
-    const tokenId = `ctkn_${crypto.randomBytes(16).toString('hex')}`;
-    const nonce = crypto.randomBytes(12).toString('hex');
+    const tokenId = generateShortId('ctkn', 16);
+    const nonce = crypto.randomBytes(12).toString('hex'); // Keep crypto for security-critical nonce
     const issuedAt = Date.now();
     const expiresAt = issuedAt + expiresInMs;
 

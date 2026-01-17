@@ -10,7 +10,7 @@
  * - Subscriptions: $500-5000/month for priority execution
  */
 
-import * as crypto from 'crypto';
+import { generateId } from '../../utils';
 
 // Capital thresholds that trigger mandatory confidential execution
 export const CAPITAL_THRESHOLDS = {
@@ -172,7 +172,7 @@ class ExecutionFeeManager {
     basis: string
   ): ExecutionFee {
     const fee: ExecutionFee = {
-      fee_id: `fee_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      fee_id: generateId('fee'),
       agent_id: agentId,
       fee_type: feeType,
       amount_usd: amountUsd,

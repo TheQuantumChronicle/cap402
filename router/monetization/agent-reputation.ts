@@ -9,7 +9,7 @@
  * Agents prove credibility, not data.
  */
 
-import * as crypto from 'crypto';
+import { generateId, sha256Hex } from '../../utils';
 
 export interface TrackRecord {
   agent_id: string;
@@ -168,16 +168,14 @@ class AgentReputationManager {
       timestamp: Date.now()
     };
     
-    const proofHash = crypto.createHash('sha256')
-      .update(JSON.stringify(proofData))
-      .digest('hex');
+    const proofHash = sha256Hex(JSON.stringify(proofData)).slice(2);
     
     const proof: ReputationProof = {
-      proof_id: `rep_proof_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      proof_id: generateId('rep_proof'),
       agent_id: agentId,
       proof_type: proofType,
       public_claim: publicClaim,
-      proof: `0x${proofHash}${crypto.randomBytes(128).toString('hex')}`,
+      proof: `0x${proofHash}`,
       verification_key: `vk_reputation_${proofType}_v1`,
       created_at: Date.now(),
       expires_at: Date.now() + (30 * 24 * 60 * 60 * 1000), // 30 days
@@ -238,7 +236,7 @@ class AgentReputationManager {
     );
     
     const delegation: CapitalDelegation = {
-      delegation_id: `del_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      delegation_id: generateId('del'),
       delegator,
       agent_id: agentId,
       amount_usd: amountUsd,

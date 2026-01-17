@@ -12,6 +12,7 @@
 
 import * as crypto from 'crypto';
 import { signalService } from './realtime-signals';
+import { generateShortId } from '../../utils';
 
 export type AuctionType = 'first_price' | 'second_price' | 'dutch' | 'reverse';
 export type AuctionStatus = 'open' | 'sealed' | 'revealing' | 'completed' | 'cancelled';
@@ -127,7 +128,7 @@ class SealedAuctionService {
       max_participants?: number;
     } = {}
   ): Auction {
-    const auctionId = `auc_${crypto.randomBytes(8).toString('hex')}`;
+    const auctionId = generateShortId('auc', 8);
     const now = Date.now();
     
     const biddingDuration = (options.bidding_duration_seconds || 300) * 1000; // 5 min default
@@ -232,7 +233,7 @@ class SealedAuctionService {
     // Generate commitment (hash of bid + nonce)
     const nonce = crypto.randomBytes(16).toString('hex');
     const commitment = this.generateCommitment(amountUsd, nonce);
-    const bidId = `bid_${crypto.randomBytes(8).toString('hex')}`;
+    const bidId = generateShortId('bid', 8);
     
     // Store sealed bid
     auction.sealed_bids.push({

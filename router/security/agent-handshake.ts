@@ -12,6 +12,7 @@
  * Copycats cannot function without the exact context/history.
  */
 
+import { generateShortId, sha256 } from '../../utils';
 import * as crypto from 'crypto';
 
 export interface HandshakeChallenge {
@@ -77,7 +78,7 @@ class AgentHandshakeProtocol {
     context: HandshakeContext,
     requestedAccess: string[]
   ): { session: HandshakeSession; challenge: HandshakeChallenge } {
-    const sessionId = `hs_${crypto.randomBytes(16).toString('hex')}`;
+    const sessionId = generateShortId('hs', 16);
     
     // Determine number of steps based on requested access level
     const totalSteps = this.calculateRequiredSteps(requestedAccess, context);
@@ -180,7 +181,7 @@ class AgentHandshakeProtocol {
     totalSteps: number,
     context: HandshakeContext
   ): HandshakeChallenge {
-    const challengeId = `ch_${crypto.randomBytes(12).toString('hex')}`;
+    const challengeId = generateShortId('ch', 12);
     
     // Challenge data depends on step and context
     const challengeData = this.createChallengeData(step, context);
@@ -239,10 +240,7 @@ class AgentHandshakeProtocol {
         // Step 5: Final attestation
         return JSON.stringify({
           type: 'attestation',
-          context_hash: crypto.createHash('sha256')
-            .update(JSON.stringify(context))
-            .digest('hex')
-            .slice(0, 16)
+          context_hash: sha256(JSON.stringify(context)).slice(0, 16)
         });
       }
     };
@@ -274,10 +272,7 @@ class AgentHandshakeProtocol {
     context: HandshakeContext
   ): boolean {
     // Verify context hash matches
-    const expectedContextHash = crypto.createHash('sha256')
-      .update(JSON.stringify(context))
-      .digest('hex')
-      .slice(0, 16);
+    const expectedContextHash = sha256(JSON.stringify(context)).slice(0, 16);
 
     if (response.context_hash !== expectedContextHash) {
       return false;

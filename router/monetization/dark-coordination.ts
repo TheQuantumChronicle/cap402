@@ -10,8 +10,8 @@
  * This is Flashbots energy, but agent-native and privacy-first.
  */
 
-import * as crypto from 'crypto';
 import { FEE_RATES } from './execution-fees';
+import { generateId, sha256Hex, now } from '../../utils';
 
 export type CoordinationType = 'otc_match' | 'flow_auction' | 'signal_market' | 'execution_split';
 
@@ -120,7 +120,7 @@ class DarkCoordinationManager {
     if (maxSizeUsd < minSizeUsd) return null;
     if (durationMs <= 0 || durationMs > 86400000) return null; // Max 24 hours
     const pool: DarkPool = {
-      pool_id: `pool_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      pool_id: generateId('pool'),
       coordination_type: 'otc_match',
       creator_agent_id: creatorAgentId,
       asset,
@@ -162,12 +162,10 @@ class DarkCoordinationManager {
     }
     
     // Create commitment hash
-    const commitment = crypto.createHash('sha256')
-      .update(encryptedAmount + bidderAgentId + Date.now())
-      .digest('hex');
+    const commitment = sha256Hex(encryptedAmount + bidderAgentId + now()).slice(2);
     
     const bid: SealedBid = {
-      bid_id: `bid_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      bid_id: generateId('bid'),
       bidder_agent_id: bidderAgentId,
       encrypted_amount: encryptedAmount,
       commitment: `0x${commitment}`,
@@ -245,7 +243,7 @@ class DarkCoordinationManager {
     revealDurationMs: number = 60000    // 1 min reveal
   ): FlowAuction {
     const auction: FlowAuction = {
-      auction_id: `auction_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      auction_id: generateId('auction'),
       auctioneer_agent_id: auctioneerAgentId,
       flow_type: flowType,
       description,
@@ -273,12 +271,10 @@ class DarkCoordinationManager {
     if (!auction || auction.status !== 'bidding') return null;
     if (Date.now() > auction.bidding_ends_at) return null;
     
-    const commitment = crypto.createHash('sha256')
-      .update(encryptedBid + bidderAgentId + auctionId)
-      .digest('hex');
+    const commitment = sha256Hex(encryptedBid + bidderAgentId + auctionId).slice(2);
     
     const bid: SealedBid = {
-      bid_id: `abid_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      bid_id: generateId('abid'),
       bidder_agent_id: bidderAgentId,
       encrypted_amount: encryptedBid,
       commitment: `0x${commitment}`,
@@ -377,7 +373,7 @@ class DarkCoordinationManager {
     if (priceUsd <= 0) return null;
     
     const listing: SignalListing = {
-      listing_id: `signal_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      listing_id: generateId('signal'),
       seller_agent_id: sellerAgentId,
       signal_type: signalType,
       quality_proof: qualityProof,
@@ -437,7 +433,7 @@ class DarkCoordinationManager {
     if (totalSizeUsd <= 0) return null;
     
     const split: ExecutionSplit = {
-      split_id: `split_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      split_id: generateId('split'),
       coordinator_agent_id: coordinatorAgentId,
       total_size_usd: totalSizeUsd,
       asset,
