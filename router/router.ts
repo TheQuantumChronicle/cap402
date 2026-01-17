@@ -3066,7 +3066,7 @@ curl -X POST https://cap402.com/invoke \\
     // Record workflow completion
     this.updateReputation(agentId, true, 2);
 
-    return { success: true, steps_completed: workflow.steps.length, results, final_output: results[results.length - 1] };
+    return { success: true, steps_completed: workflow.steps.length, results, final_output: results.length > 0 ? results[results.length - 1] : null };
   }
 
   private evaluateCondition(condition: string, data: any): boolean {
