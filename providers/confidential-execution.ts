@@ -348,6 +348,17 @@ class ConfidentialExecutionPipeline {
     const swapId = `mswap_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const settlements: MultiPartySwapResult['settlements'] = [];
     
+    // Input validation
+    if (!request.parties || request.parties.length < 2) {
+      return {
+        success: false,
+        swap_id: swapId,
+        settlements: [],
+        total_volume_usd: 0,
+        fee_usd: 0
+      };
+    }
+    
     // Process each party's swap via MPC
     for (const party of request.parties) {
       const mpcResult = await arciumProvider.confidentialSwap(
@@ -621,7 +632,9 @@ class ConfidentialExecutionPipeline {
         circuit = 'balance_threshold';
         publicInputs = { threshold: 50, claim: 'win_rate_above_50_pct' };
         privateInputs = { 
-          actual_balance: (metrics.profitable_trades / metrics.total_trades) * 100,
+          actual_balance: metrics.total_trades > 0 
+            ? (metrics.profitable_trades / metrics.total_trades) * 100 
+            : 0,
           wallet_signature: agentId
         };
         break;
