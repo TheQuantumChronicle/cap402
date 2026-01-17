@@ -753,12 +753,80 @@ const errors = log.getLogs({ level: 'error', limit: 10 });
 // Set global log level
 setLogLevel('warn'); // Only warn and error</pre>
 
+    <h2>🔒 Confidential Execution</h2>
+    <p>For trades >$100K, use the confidential execution pipeline (Arcium MPC + Inco FHE + Noir ZK):</p>
+    <pre class="code-block">// Check if confidential execution is required
+const tier = await trader.getExecutionTier(150000);
+// { tier: 'confidential', recommendation: 'MANDATORY: Use confidential for MEV protection' }
+
+// Execute with full confidential pipeline
+const result = await trader.executeConfidential({
+  operation: 'swap',
+  amount_usd: 150000,
+  inputs: { token_in: 'SOL', token_out: 'USDC' },
+  required_proofs: ['balance_threshold']
+});
+
+console.log(result.stages_completed);
+// ['noir_eligibility', 'inco_encrypt', 'arcium_mpc', 'noir_execution_proof']
+console.log(\`Slippage saved: \${result.slippage_saved_bps} bps\`);
+console.log(\`Fee: $\${result.fee_usd}\`);</pre>
+
+    <h3>Encrypted Orderbooks (Dark Pools)</h3>
+    <pre class="code-block">// Create encrypted orderbook
+const orderbook = await trader.createEncryptedOrderbook('SOL/USDC');
+
+// Submit encrypted order (price/size hidden via FHE)
+const order = await trader.submitEncryptedOrder(
+  orderbook.orderbook_id,
+  'bid',
+  145.50,  // price - will be encrypted
+  100      // size - will be encrypted
+);
+
+// Match orders using FHE comparison (no one sees prices)
+const matches = await trader.matchEncryptedOrders(orderbook.orderbook_id);</pre>
+
+    <h3>Private Auctions</h3>
+    <pre class="code-block">// Create sealed-bid auction
+const auction = await trader.createPrivateAuction('NFT-123', 1000);
+
+// Submit encrypted bid
+const bid = await trader.submitAuctionBid(auction.auction_id, 1500);
+
+// Settle - winner determined without revealing losing bids
+const result = await trader.settleAuction(auction.auction_id);
+console.log(\`Winner: \${result.winner}\`);</pre>
+
+    <h3>Threshold Signatures</h3>
+    <pre class="code-block">// Multi-party signing (2-of-3)
+const signature = await trader.thresholdSign({
+  signers: ['agent-1', 'agent-2', 'agent-3'],
+  threshold: 2,
+  message_hash: '0x...'
+});
+// No single party sees the full key</pre>
+
+    <h3>Performance Proofs</h3>
+    <pre class="code-block">// Prove performance without revealing strategy
+const proof = await trader.provePerformance({
+  claim_type: 'win_rate',  // or 'volume', 'profitability'
+  metrics: {
+    total_trades: 1000,
+    profitable_trades: 650,
+    total_volume_usd: 5000000,
+    total_pnl_usd: 125000
+  }
+});
+// Proof shows win_rate > 50% without revealing exact numbers</pre>
+
     <h2>Key Principles</h2>
     <ul>
       <li><strong>Autonomous Decision-Making</strong> — Agents monitor, analyze, and prepare transactions 24/7</li>
       <li><strong>User Control</strong> — You sign transactions in your own wallet. We never hold keys.</li>
       <li><strong>Safety First</strong> — Spending limits, rate controls, and emergency stop built-in</li>
       <li><strong>MEV Protection</strong> — Risk analysis before every trade</li>
+      <li><strong>Confidential Execution</strong> — Mandatory privacy for large trades via Arcium/Inco/Noir</li>
       <li><strong>Zero Configuration</strong> — Sensible defaults, one-liner APIs</li>
       <li><strong>Actionable Errors</strong> — Every error includes suggestions and docs links</li>
       <li><strong>Structured Logging</strong> — Debug with context, categories, and timers</li>

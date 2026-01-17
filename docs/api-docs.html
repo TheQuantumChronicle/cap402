@@ -1033,6 +1033,249 @@
           </div>
         </div>
       </div>
+      
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Confidential Execution Pipeline</div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/confidential</span>
+            <span class="endpoint-desc">Full confidential pipeline (Noir→Inco→Arcium→Noir)</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Execute with full confidential pipeline. Chains ZK eligibility proof → FHE encryption → MPC execution → execution proof. <strong>Mandatory for trades >$100K.</strong></p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Request Body</div>
+              <table class="params-table">
+                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                <tr><td class="param-name">agent_id</td><td class="param-type">string</td><td class="param-required">required</td><td>Agent identifier</td></tr>
+                <tr><td class="param-name">operation</td><td class="param-type">string</td><td class="param-required">required</td><td>swap | transfer | bid | vote | delegate | prove</td></tr>
+                <tr><td class="param-name">amount_usd</td><td class="param-type">number</td><td class="param-required">required</td><td>Trade size in USD</td></tr>
+                <tr><td class="param-name">inputs</td><td class="param-type">object</td><td class="param-optional">optional</td><td>Operation-specific inputs</td></tr>
+                <tr><td class="param-name">required_proofs</td><td class="param-type">string[]</td><td class="param-optional">optional</td><td>ZK proofs to generate (e.g., balance_threshold)</td></tr>
+                <tr><td class="param-name">privacy_level</td><td class="param-type">string</td><td class="param-optional">optional</td><td>public | protected | confidential | maximum</td></tr>
+              </table>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Example Request</div>
+              <div class="code-block">curl -X POST https://cap402.com/execute/confidential \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "my-agent",
+    "operation": "swap",
+    "amount_usd": 150000,
+    "inputs": { "token_in": "SOL", "token_out": "USDC" },
+    "required_proofs": ["balance_threshold"]
+  }'</div>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Response</div>
+              <div class="response-block">{
+  <span class="key">"success"</span>: <span class="boolean">true</span>,
+  <span class="key">"execution_id"</span>: <span class="string">"exec_1705347600_a1b2c3d4"</span>,
+  <span class="key">"tier"</span>: <span class="string">"confidential"</span>,
+  <span class="key">"stages_completed"</span>: [<span class="string">"noir_eligibility"</span>, <span class="string">"inco_encrypt"</span>, <span class="string">"arcium_mpc"</span>, <span class="string">"noir_execution_proof"</span>],
+  <span class="key">"fee_usd"</span>: <span class="number">150</span>,
+  <span class="key">"slippage_saved_bps"</span>: <span class="number">145</span>,
+  <span class="key">"total_time_ms"</span>: <span class="number">3847</span>
+}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/tier</span>
+            <span class="endpoint-desc">Determine required execution tier</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Check what execution tier is required/recommended for a given trade size.</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Request Body</div>
+              <table class="params-table">
+                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                <tr><td class="param-name">amount_usd</td><td class="param-type">number</td><td class="param-required">required</td><td>Trade size in USD</td></tr>
+              </table>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Response</div>
+              <div class="response-block">{
+  <span class="key">"success"</span>: <span class="boolean">true</span>,
+  <span class="key">"amount_usd"</span>: <span class="number">150000</span>,
+  <span class="key">"tier"</span>: <span class="string">"confidential"</span>,
+  <span class="key">"thresholds"</span>: { <span class="key">"ARCIUM_MANDATORY"</span>: <span class="number">100000</span>, <span class="key">"INCO_RECOMMENDED"</span>: <span class="number">50000</span> },
+  <span class="key">"recommendation"</span>: <span class="string">"MANDATORY: Use /execute/confidential for MEV protection"</span>
+}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/threshold-sign</span>
+            <span class="endpoint-desc">Multi-party threshold signature</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Generate a threshold signature where multiple parties sign without revealing individual keys.</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Request Body</div>
+              <table class="params-table">
+                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                <tr><td class="param-name">signers</td><td class="param-type">string[]</td><td class="param-required">required</td><td>Array of signer identifiers</td></tr>
+                <tr><td class="param-name">threshold</td><td class="param-type">number</td><td class="param-required">required</td><td>Minimum signers required (e.g., 2 of 3)</td></tr>
+                <tr><td class="param-name">message_hash</td><td class="param-type">string</td><td class="param-required">required</td><td>Hash of message to sign</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/multi-swap</span>
+            <span class="endpoint-desc">Atomic multi-party swap</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Execute atomic swaps between multiple parties simultaneously without revealing individual amounts.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/orderbook</span>
+            <span class="endpoint-desc">Create encrypted orderbook</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Create a dark pool orderbook where prices and sizes are encrypted with FHE.</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Request Body</div>
+              <table class="params-table">
+                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                <tr><td class="param-name">asset_pair</td><td class="param-type">string</td><td class="param-required">required</td><td>Trading pair (e.g., "SOL/USDC")</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/orderbook/:id/order</span>
+            <span class="endpoint-desc">Submit encrypted order</span>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/orderbook/:id/match</span>
+            <span class="endpoint-desc">Match orders via FHE comparison</span>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/auction</span>
+            <span class="endpoint-desc">Create private auction</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Create a sealed-bid auction where bids are encrypted. Winner determined without revealing losing bids.</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Request Body</div>
+              <table class="params-table">
+                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                <tr><td class="param-name">auctioneer</td><td class="param-type">string</td><td class="param-required">required</td><td>Auctioneer agent ID</td></tr>
+                <tr><td class="param-name">asset</td><td class="param-type">string</td><td class="param-required">required</td><td>Asset being auctioned</td></tr>
+                <tr><td class="param-name">reserve_price</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Encrypted reserve price</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/auction/:id/bid</span>
+            <span class="endpoint-desc">Submit encrypted bid</span>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/auction/:id/settle</span>
+            <span class="endpoint-desc">Settle auction</span>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/prove-performance</span>
+            <span class="endpoint-desc">Generate performance proof</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Prove agent performance metrics (win rate, volume, profitability) without revealing strategy details.</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Request Body</div>
+              <table class="params-table">
+                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                <tr><td class="param-name">agent_id</td><td class="param-type">string</td><td class="param-required">required</td><td>Agent identifier</td></tr>
+                <tr><td class="param-name">metrics</td><td class="param-type">object</td><td class="param-required">required</td><td>{ total_trades, profitable_trades, total_volume_usd, total_pnl_usd }</td></tr>
+                <tr><td class="param-name">claim_type</td><td class="param-type">string</td><td class="param-required">required</td><td>win_rate | volume | profitability</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/execute/stats</span>
+            <span class="endpoint-desc">Pipeline statistics</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Response</div>
+              <div class="response-block">{
+  <span class="key">"success"</span>: <span class="boolean">true</span>,
+  <span class="key">"execution_count"</span>: <span class="number">1234</span>,
+  <span class="key">"total_volume_usd"</span>: <span class="number">45000000</span>,
+  <span class="key">"total_fees_usd"</span>: <span class="number">45000</span>,
+  <span class="key">"active_orderbooks"</span>: <span class="number">12</span>,
+  <span class="key">"active_auctions"</span>: <span class="number">5</span>,
+  <span class="key">"avg_fee_rate_bps"</span>: <span class="number">10</span>
+}</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     
   </div>
