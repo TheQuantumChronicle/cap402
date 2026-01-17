@@ -7855,6 +7855,9 @@ app.post('/coordination/dark-pool', async (req: Request, res: Response) => {
     const pool = darkCoordinationManager.createDarkPool(
       creator_agent_id, asset, side, min_size_usd, max_size_usd || min_size_usd * 10, duration_ms
     );
+    if (!pool) {
+      return res.status(400).json({ success: false, error: 'Invalid pool parameters' });
+    }
     res.json({ success: true, pool });
   } catch (error) {
     res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Pool creation failed' });
@@ -7982,6 +7985,9 @@ app.post('/coordination/signal', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'seller_agent_id, signal_type, quality_proof, price_usd required' });
     }
     const listing = darkCoordinationManager.createSignalListing(seller_agent_id, signal_type, quality_proof, price_usd);
+    if (!listing) {
+      return res.status(400).json({ success: false, error: 'Invalid listing parameters' });
+    }
     res.json({ success: true, listing });
   } catch (error) {
     res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Listing failed' });

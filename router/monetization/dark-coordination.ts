@@ -113,7 +113,12 @@ class DarkCoordinationManager {
     minSizeUsd: number,
     maxSizeUsd: number,
     durationMs: number = 3600000 // 1 hour default
-  ): DarkPool {
+  ): DarkPool | null {
+    // Input validation
+    if (!creatorAgentId || !asset) return null;
+    if (minSizeUsd <= 0 || maxSizeUsd <= 0) return null;
+    if (maxSizeUsd < minSizeUsd) return null;
+    if (durationMs <= 0 || durationMs > 86400000) return null; // Max 24 hours
     const pool: DarkPool = {
       pool_id: `pool_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
       coordination_type: 'otc_match',
@@ -144,8 +149,17 @@ class DarkCoordinationManager {
     encryptedAmount: string,
     side: 'buy' | 'sell'
   ): SealedBid | null {
+    // Input validation
+    if (!poolId || !bidderAgentId || !encryptedAmount) return null;
+    
     const pool = this.darkPools.get(poolId);
     if (!pool || pool.status !== 'open') return null;
+    
+    // Check pool hasn't expired
+    if (pool.expires_at < Date.now()) {
+      pool.status = 'expired';
+      return null;
+    }
     
     // Create commitment hash
     const commitment = crypto.createHash('sha256')
@@ -357,7 +371,11 @@ class DarkCoordinationManager {
     signalType: string,
     qualityProof: string,
     priceUsd: number
-  ): SignalListing {
+  ): SignalListing | null {
+    // Input validation
+    if (!sellerAgentId || !signalType || !qualityProof) return null;
+    if (priceUsd <= 0) return null;
+    
     const listing: SignalListing = {
       listing_id: `signal_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
       seller_agent_id: sellerAgentId,
@@ -413,7 +431,11 @@ class DarkCoordinationManager {
     totalSizeUsd: number,
     asset: string,
     side: 'buy' | 'sell'
-  ): ExecutionSplit {
+  ): ExecutionSplit | null {
+    // Input validation
+    if (!coordinatorAgentId || !asset) return null;
+    if (totalSizeUsd <= 0) return null;
+    
     const split: ExecutionSplit = {
       split_id: `split_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
       coordinator_agent_id: coordinatorAgentId,
@@ -445,9 +467,16 @@ class DarkCoordinationManager {
     const split = this.executionSplits.get(splitId);
     if (!split || split.status !== 'forming') return false;
     
-    // Adjust coordinator share
+    // Validate share percentage
+    if (sharePct <= 0 || sharePct > 100) return false;
+    
+    // Check if agent already participating
+    if (split.participants.some(p => p.agent_id === agentId)) return false;
+    
+    // Adjust coordinator share (ensure it doesn't go negative)
     const coordinator = split.participants.find(p => p.agent_id === split.coordinator_agent_id);
     if (coordinator) {
+      if (coordinator.share_pct < sharePct) return false; // Not enough share available
       coordinator.share_pct -= sharePct;
     }
     

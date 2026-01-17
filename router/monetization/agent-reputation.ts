@@ -104,9 +104,13 @@ class AgentReputationManager {
       record.profitable_executions++;
     }
     
-    // Update derived metrics
-    record.win_rate = record.profitable_executions / record.total_executions;
-    record.avg_return_bps = (record.total_pnl_usd / record.total_volume_usd) * 10000;
+    // Update derived metrics (guard against division by zero)
+    record.win_rate = record.total_executions > 0 
+      ? record.profitable_executions / record.total_executions 
+      : 0;
+    record.avg_return_bps = record.total_volume_usd > 0 
+      ? (record.total_pnl_usd / record.total_volume_usd) * 10000 
+      : 0;
     
     // Track max drawdown (simplified)
     if (returnBps < -record.max_drawdown_bps) {
