@@ -588,20 +588,22 @@ export class CAP402Agent extends EventEmitter {
     expires_at: number;
   }> {
     const response = await this.client.post('/security/handshake/initiate', {
-      initiator: this.config.agent_id,
-      target: target_agent
+      agent_id: this.config.agent_id,
+      requested_access: ['invoke', 'message']
     });
     return response.data;
   }
 
-  async completeHandshake(handshake_id: string, response_data: any): Promise<{
+  async completeHandshake(challenge_id: string, proof: string, signature?: string): Promise<{
     success: boolean;
     session_key?: string;
   }> {
     const response = await this.client.post('/security/handshake/respond', {
-      handshake_id,
-      agent_id: this.config.agent_id,
-      response: response_data
+      challenge_id,
+      step: 1,
+      proof,
+      agent_signature: signature || this.config.agent_id,
+      context_hash: ''
     });
     return response.data;
   }
