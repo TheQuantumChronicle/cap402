@@ -37,7 +37,7 @@ describe('🔵 NOIR ZK DEEP INTEGRATION SUITE', () => {
         console.log(`   • ${c.name} (${c.constraints} constraints)`);
       });
       
-      expect(circuits.length).toBe(10);
+      expect(circuits.length).toBe(20);
       
       const expectedCircuits = [
         'balance_threshold',
@@ -49,7 +49,18 @@ describe('🔵 NOIR ZK DEEP INTEGRATION SUITE', () => {
         'voting_eligibility',
         'credit_score_range',
         'nft_ownership',
-        'income_verification'
+        'income_verification',
+        // Advanced agent-specific circuits
+        'strategy_performance',
+        'capital_adequacy',
+        'execution_quality',
+        'risk_compliance',
+        'delegation_eligibility',
+        'mev_protection_proof',
+        'order_flow_quality',
+        'collateral_proof',
+        'pnl_attestation',
+        'sybil_resistance'
       ];
       
       expectedCircuits.forEach(name => {
