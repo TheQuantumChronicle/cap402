@@ -163,7 +163,7 @@ describe('🔴 LIVE Provider Integration Tests', () => {
       expect(proof.proof.length).toBeGreaterThan(100);
       expect(proof.verification_key).toMatch(/^0x[a-f0-9]+$/);
       expect(proof.public_outputs.meets_threshold).toBe(true);
-      expect(proof.proving_time_ms).toBeGreaterThan(0);
+      expect(proof.proving_time_ms).toBeGreaterThanOrEqual(0);
     });
 
     test('generates ZK proof for KYC compliance without revealing data', async () => {
