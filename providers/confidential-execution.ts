@@ -15,7 +15,7 @@ import { arciumProvider, ArciumComputationResult } from './arcium-client';
 import { incoFHEProvider, FHECiphertext, FHEComputationResult } from './inco-fhe';
 import { noirCircuitsProvider, NoirProof } from './noir-circuits';
 import { CAPITAL_THRESHOLDS, FEE_RATES } from '../router/monetization/execution-fees';
-import { generateId, sha256Hex, now, safeDivide, isNonEmptyString, isPositiveNumber, hasMinLength } from '../utils';
+import { generateId, sha256Hex, now } from '../utils';
 
 // Execution tiers based on capital thresholds
 export type ExecutionTier = 'public' | 'protected' | 'confidential' | 'maximum';
