@@ -7255,6 +7255,374 @@ app.get('/trading/auctions/stats', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// PRIVACY TECHNOLOGY INTEGRATIONS
+// Arcium (MPC), Inco (FHE), Noir (ZK)
+// ============================================
+
+// Arcium MPC Endpoints
+app.get('/arcium/status', async (req: Request, res: Response) => {
+  try {
+    const { arciumProvider } = await import('../providers/arcium-client');
+    const status = arciumProvider.getStatus();
+    res.json({ success: true, ...status });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to get Arcium status' });
+  }
+});
+
+app.post('/arcium/encrypt', async (req: Request, res: Response) => {
+  try {
+    const { arciumProvider } = await import('../providers/arcium-client');
+    const { data } = req.body;
+    if (!data) {
+      return res.status(400).json({ success: false, error: 'data required' });
+    }
+    const encrypted = arciumProvider.encryptForMPC(data);
+    res.json({ success: true, ...encrypted });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Encryption failed' });
+  }
+});
+
+app.post('/arcium/compute', async (req: Request, res: Response) => {
+  try {
+    const { arciumProvider } = await import('../providers/arcium-client');
+    const { program_id, inputs, mxe_id } = req.body;
+    const result = await arciumProvider.submitComputation({
+      programId: program_id || process.env.ARCIUM_PROGRAM_ID || '',
+      inputs: inputs || {},
+      mxeId: mxe_id
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Computation failed' });
+  }
+});
+
+app.post('/arcium/confidential-swap', async (req: Request, res: Response) => {
+  try {
+    const { arciumProvider } = await import('../providers/arcium-client');
+    const { input_token, output_token, encrypted_amount, wallet } = req.body;
+    if (!input_token || !output_token || !encrypted_amount || !wallet) {
+      return res.status(400).json({ success: false, error: 'input_token, output_token, encrypted_amount, wallet required' });
+    }
+    const result = await arciumProvider.confidentialSwap(input_token, output_token, encrypted_amount, wallet);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Confidential swap failed' });
+  }
+});
+
+app.post('/arcium/cspl/wrap', async (req: Request, res: Response) => {
+  try {
+    const { arciumProvider } = await import('../providers/arcium-client');
+    const { owner, mint, amount } = req.body;
+    if (!owner || !mint || amount === undefined) {
+      return res.status(400).json({ success: false, error: 'owner, mint, amount required' });
+    }
+    const result = await arciumProvider.wrapToCSPL(owner, mint, amount);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'C-SPL wrap failed' });
+  }
+});
+
+app.post('/arcium/cspl/transfer', async (req: Request, res: Response) => {
+  try {
+    const { arciumProvider } = await import('../providers/arcium-client');
+    const { from, to, mint, encrypted_amount } = req.body;
+    if (!from || !to || !mint || !encrypted_amount) {
+      return res.status(400).json({ success: false, error: 'from, to, mint, encrypted_amount required' });
+    }
+    const result = await arciumProvider.transferCSPL(from, to, mint, encrypted_amount);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'C-SPL transfer failed' });
+  }
+});
+
+app.post('/arcium/private-bid', async (req: Request, res: Response) => {
+  try {
+    const { arciumProvider } = await import('../providers/arcium-client');
+    const { auction_id, bidder, encrypted_bid, max_slippage } = req.body;
+    if (!auction_id || !bidder || !encrypted_bid) {
+      return res.status(400).json({ success: false, error: 'auction_id, bidder, encrypted_bid required' });
+    }
+    const result = await arciumProvider.submitPrivateBid(auction_id, bidder, encrypted_bid, max_slippage);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Private bid failed' });
+  }
+});
+
+// Inco FHE Endpoints
+app.get('/inco/status', async (req: Request, res: Response) => {
+  try {
+    const { incoFHEProvider } = await import('../providers/inco-fhe');
+    const status = incoFHEProvider.getStatus();
+    res.json({ success: true, ...status });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to get Inco status' });
+  }
+});
+
+app.post('/inco/encrypt', async (req: Request, res: Response) => {
+  try {
+    const { incoFHEProvider } = await import('../providers/inco-fhe');
+    const { value, type } = req.body;
+    if (value === undefined || !type) {
+      return res.status(400).json({ success: false, error: 'value and type required' });
+    }
+    const encrypted = await incoFHEProvider.encrypt(value, type);
+    res.json({ success: true, ...encrypted });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'FHE encryption failed' });
+  }
+});
+
+app.post('/inco/compute', async (req: Request, res: Response) => {
+  try {
+    const { incoFHEProvider } = await import('../providers/inco-fhe');
+    const { operation, operands } = req.body;
+    if (!operation || !operands || !Array.isArray(operands)) {
+      return res.status(400).json({ success: false, error: 'operation and operands array required' });
+    }
+    
+    let result;
+    switch (operation) {
+      case 'fhe_add':
+        result = await incoFHEProvider.fheAdd(operands[0], operands[1]);
+        break;
+      case 'fhe_sub':
+        result = await incoFHEProvider.fheSub(operands[0], operands[1]);
+        break;
+      case 'fhe_mul':
+        result = await incoFHEProvider.fheMul(operands[0], operands[1]);
+        break;
+      case 'fhe_lt':
+        result = await incoFHEProvider.fheLt(operands[0], operands[1]);
+        break;
+      case 'fhe_select':
+        result = await incoFHEProvider.fheSelect(operands[0], operands[1], operands[2]);
+        break;
+      default:
+        return res.status(400).json({ success: false, error: `Unknown operation: ${operation}` });
+    }
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'FHE computation failed' });
+  }
+});
+
+app.post('/inco/message', async (req: Request, res: Response) => {
+  try {
+    const { incoFHEProvider } = await import('../providers/inco-fhe');
+    const { sender, recipient, message, ttl_seconds } = req.body;
+    if (!sender || !recipient || !message) {
+      return res.status(400).json({ success: false, error: 'sender, recipient, message required' });
+    }
+    const result = await incoFHEProvider.sendConfidentialMessage(sender, recipient, message, ttl_seconds);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Confidential message failed' });
+  }
+});
+
+app.post('/inco/state/create', async (req: Request, res: Response) => {
+  try {
+    const { incoFHEProvider } = await import('../providers/inco-fhe');
+    const { owner, state_data } = req.body;
+    if (!owner || !state_data) {
+      return res.status(400).json({ success: false, error: 'owner and state_data required' });
+    }
+    const result = await incoFHEProvider.createEncryptedState(owner, state_data);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'State creation failed' });
+  }
+});
+
+app.post('/inco/private-vote', async (req: Request, res: Response) => {
+  try {
+    const { incoFHEProvider } = await import('../providers/inco-fhe');
+    const { proposal_id, voter, vote, voting_power } = req.body;
+    if (!proposal_id || !voter || vote === undefined || !voting_power) {
+      return res.status(400).json({ success: false, error: 'proposal_id, voter, vote, voting_power required' });
+    }
+    const result = await incoFHEProvider.submitPrivateVote(proposal_id, voter, vote, voting_power);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Private vote failed' });
+  }
+});
+
+app.post('/inco/random', async (req: Request, res: Response) => {
+  try {
+    const { incoFHEProvider } = await import('../providers/inco-fhe');
+    const { requester, min_value, max_value } = req.body;
+    if (!requester || min_value === undefined || max_value === undefined) {
+      return res.status(400).json({ success: false, error: 'requester, min_value, max_value required' });
+    }
+    const result = await incoFHEProvider.generatePrivateRandom(requester, min_value, max_value);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Random generation failed' });
+  }
+});
+
+// Noir ZK Endpoints
+app.get('/noir/circuits', async (req: Request, res: Response) => {
+  try {
+    const { noirCircuitsProvider } = await import('../providers/noir-circuits');
+    const circuits = noirCircuitsProvider.getAvailableCircuits();
+    res.json({ success: true, count: circuits.length, circuits });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to get circuits' });
+  }
+});
+
+app.get('/noir/circuits/:name', async (req: Request, res: Response) => {
+  try {
+    const { noirCircuitsProvider } = await import('../providers/noir-circuits');
+    const circuit = noirCircuitsProvider.getCircuit(req.params.name);
+    if (!circuit) {
+      return res.status(404).json({ success: false, error: `Circuit ${req.params.name} not found` });
+    }
+    res.json({ success: true, circuit });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to get circuit' });
+  }
+});
+
+app.post('/noir/prove', async (req: Request, res: Response) => {
+  try {
+    const { noirCircuitsProvider } = await import('../providers/noir-circuits');
+    const { circuit, public_inputs, private_inputs } = req.body;
+    if (!circuit || !public_inputs || !private_inputs) {
+      return res.status(400).json({ success: false, error: 'circuit, public_inputs, private_inputs required' });
+    }
+    const proof = await noirCircuitsProvider.generateProof(circuit, public_inputs, private_inputs);
+    res.json({ success: true, ...proof });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Proof generation failed' });
+  }
+});
+
+app.post('/noir/verify', async (req: Request, res: Response) => {
+  try {
+    const { noirCircuitsProvider } = await import('../providers/noir-circuits');
+    const { proof, verification_key, public_inputs } = req.body;
+    if (!proof || !verification_key || !public_inputs) {
+      return res.status(400).json({ success: false, error: 'proof, verification_key, public_inputs required' });
+    }
+    const result = await noirCircuitsProvider.verifyProof(proof, verification_key, public_inputs);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Proof verification failed' });
+  }
+});
+
+app.get('/noir/stats', async (req: Request, res: Response) => {
+  try {
+    const { noirCircuitsProvider } = await import('../providers/noir-circuits');
+    const stats = noirCircuitsProvider.getStats();
+    res.json({ success: true, ...stats });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to get Noir stats' });
+  }
+});
+
+// Convenience proofs
+app.post('/noir/prove/balance-threshold', async (req: Request, res: Response) => {
+  try {
+    const { noirCircuitsProvider } = await import('../providers/noir-circuits');
+    const { actual_balance, threshold, token_mint, wallet_signature } = req.body;
+    if (actual_balance === undefined || threshold === undefined || !token_mint) {
+      return res.status(400).json({ success: false, error: 'actual_balance, threshold, token_mint required' });
+    }
+    const proof = await noirCircuitsProvider.proveBalanceThreshold(
+      actual_balance, threshold, token_mint, wallet_signature || 'sig_wallet'
+    );
+    res.json({ success: true, ...proof });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Balance proof failed' });
+  }
+});
+
+app.post('/noir/prove/kyc-compliance', async (req: Request, res: Response) => {
+  try {
+    const { noirCircuitsProvider } = await import('../providers/noir-circuits');
+    const { kyc_data, verifier_attestation, compliance_level, jurisdiction } = req.body;
+    if (!kyc_data || !compliance_level || !jurisdiction) {
+      return res.status(400).json({ success: false, error: 'kyc_data, compliance_level, jurisdiction required' });
+    }
+    const proof = await noirCircuitsProvider.proveKYCCompliance(
+      kyc_data, verifier_attestation || 'att_verifier', compliance_level, jurisdiction
+    );
+    res.json({ success: true, ...proof });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'KYC proof failed' });
+  }
+});
+
+app.post('/noir/prove/credit-score', async (req: Request, res: Response) => {
+  try {
+    const { noirCircuitsProvider } = await import('../providers/noir-circuits');
+    const { actual_score, min_score, max_score, lender_id } = req.body;
+    if (actual_score === undefined || min_score === undefined || max_score === undefined || !lender_id) {
+      return res.status(400).json({ success: false, error: 'actual_score, min_score, max_score, lender_id required' });
+    }
+    const proof = await noirCircuitsProvider.proveCreditScoreRange(actual_score, min_score, max_score, lender_id);
+    res.json({ success: true, ...proof });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Credit score proof failed' });
+  }
+});
+
+// Unified Privacy Endpoint
+app.post('/privacy/execute', async (req: Request, res: Response) => {
+  try {
+    const { operation, technology, inputs, options } = req.body;
+    if (!operation || !technology) {
+      return res.status(400).json({ success: false, error: 'operation and technology required' });
+    }
+    
+    let result;
+    switch (technology) {
+      case 'arcium': {
+        const { arciumProvider } = await import('../providers/arcium-client');
+        result = await arciumProvider.submitComputation({ programId: '', inputs: inputs || {} });
+        break;
+      }
+      case 'inco': {
+        const { incoFHEProvider } = await import('../providers/inco-fhe');
+        if (operation === 'encrypt') {
+          result = await incoFHEProvider.encrypt(inputs.value, inputs.type || 'euint64');
+        } else {
+          result = { success: true, operation, note: 'Use specific /inco/* endpoints' };
+        }
+        break;
+      }
+      case 'noir': {
+        const { noirCircuitsProvider } = await import('../providers/noir-circuits');
+        result = await noirCircuitsProvider.generateProof(
+          inputs.circuit || 'balance_threshold',
+          inputs.public_inputs || {},
+          inputs.private_inputs || {}
+        );
+        break;
+      }
+      default:
+        return res.status(400).json({ success: false, error: `Unknown technology: ${technology}` });
+    }
+    
+    res.json({ success: true, technology, operation, privacy_level: options?.privacy_level || 'standard', ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Privacy operation failed' });
+  }
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 
