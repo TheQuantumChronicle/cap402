@@ -5713,6 +5713,33 @@ app.get('/system/innovations', (req: Request, res: Response) => {
   res.json({ success: true, ...router.getInnovationStats() });
 });
 
+// Transaction status lookup
+app.get('/tx/:tx_hash', async (req: Request, res: Response) => {
+  try {
+    const { tx_hash } = req.params;
+    const { solanaRPC } = await import('../providers/solana-rpc');
+    
+    // Check transaction status on Solana
+    const confirmed = await solanaRPC.confirmTransaction(tx_hash);
+    
+    res.json({
+      success: true,
+      tx_hash,
+      confirmed,
+      status: confirmed ? 'confirmed' : 'pending',
+      checked_at: Date.now()
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      tx_hash: req.params.tx_hash,
+      confirmed: false,
+      status: 'unknown',
+      error: error instanceof Error ? error.message : 'Failed to check transaction'
+    });
+  }
+});
+
 // Capability health scores (router-level)
 app.get('/health/scores', (req: Request, res: Response) => {
   res.json({ success: true, scores: router.getAllHealthScores() });
