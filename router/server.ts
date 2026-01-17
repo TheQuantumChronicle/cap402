@@ -5057,7 +5057,7 @@ app.get('/reputation', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/reputation/:capability_id', async (req: Request, res: Response) => {
+app.get('/reputation/capability/:capability_id', async (req: Request, res: Response) => {
   try {
     const { usageMetadataEmitter } = await import('./usage-metadata');
     const score = usageMetadataEmitter.getCapabilityScore(req.params.capability_id);
@@ -6330,22 +6330,23 @@ app.post('/optimize/composition', (req: Request, res: Response) => {
 });
 
 // ============================================
-// AGENT REPUTATION
+// AGENT REPUTATION (Basic - from router.ts)
+// Note: For ZK-verified reputation, use /reputation/agent/:agent_id
 // ============================================
 
-app.get('/reputation/:agent_id', (req: Request, res: Response) => {
+app.get('/reputation/basic/:agent_id', (req: Request, res: Response) => {
   const rep = router.getReputation(req.params.agent_id);
   res.json({ success: true, agent_id: req.params.agent_id, reputation: rep });
 });
 
-app.post('/reputation/:agent_id', (req: Request, res: Response) => {
+app.post('/reputation/basic/:agent_id', (req: Request, res: Response) => {
   const { success, weight } = req.body;
   router.updateReputation(req.params.agent_id, success !== false, weight || 1);
   const rep = router.getReputation(req.params.agent_id);
   res.json({ success: true, agent_id: req.params.agent_id, reputation: rep });
 });
 
-app.get('/reputation', (req: Request, res: Response) => {
+app.get('/reputation/basic/top', (req: Request, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 10;
   res.json({ success: true, top_agents: router.getTopAgents(limit) });
 });
