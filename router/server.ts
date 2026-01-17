@@ -8031,6 +8031,229 @@ app.get('/coordination/stats', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// CONFIDENTIAL EXECUTION PIPELINE
+// Chains Arcium MPC + Inco FHE + Noir ZK
+// ============================================
+
+// Execute with full confidential pipeline
+app.post('/execute/confidential', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const { agent_id, operation, amount_usd, inputs, required_proofs, privacy_level } = req.body;
+    
+    if (!agent_id || !operation || amount_usd === undefined) {
+      return res.status(400).json({ success: false, error: 'agent_id, operation, amount_usd required' });
+    }
+    
+    const result = await confidentialExecutionPipeline.executeConfidential({
+      agent_id, operation, amount_usd, inputs: inputs || {}, required_proofs, privacy_level
+    });
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Execution failed' });
+  }
+});
+
+// Determine execution tier for amount
+app.post('/execute/tier', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const { amount_usd } = req.body;
+    
+    if (amount_usd === undefined) {
+      return res.status(400).json({ success: false, error: 'amount_usd required' });
+    }
+    
+    const tier = confidentialExecutionPipeline.determineExecutionTier(amount_usd);
+    const { CAPITAL_THRESHOLDS } = await import('./monetization/execution-fees');
+    
+    res.json({
+      success: true,
+      amount_usd,
+      tier,
+      thresholds: CAPITAL_THRESHOLDS,
+      recommendation: tier === 'confidential' 
+        ? 'MANDATORY: Use /execute/confidential for MEV protection'
+        : tier === 'protected'
+          ? 'RECOMMENDED: Use confidential execution to avoid front-running'
+          : 'Public execution acceptable for this size'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed' });
+  }
+});
+
+// Threshold signature (multi-party signing)
+app.post('/execute/threshold-sign', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const { signers, threshold, message_hash, timeout_ms } = req.body;
+    
+    if (!signers || !threshold || !message_hash) {
+      return res.status(400).json({ success: false, error: 'signers, threshold, message_hash required' });
+    }
+    
+    const result = await confidentialExecutionPipeline.thresholdSign({
+      signers, threshold, message_hash, timeout_ms
+    });
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Signing failed' });
+  }
+});
+
+// Multi-party atomic swap
+app.post('/execute/multi-swap', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const { parties, settlement_time_ms } = req.body;
+    
+    if (!parties || !Array.isArray(parties) || parties.length < 2) {
+      return res.status(400).json({ success: false, error: 'parties array with at least 2 participants required' });
+    }
+    
+    const result = await confidentialExecutionPipeline.multiPartySwap({ parties, settlement_time_ms });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Swap failed' });
+  }
+});
+
+// Create encrypted orderbook
+app.post('/execute/orderbook', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const { asset_pair } = req.body;
+    
+    if (!asset_pair) {
+      return res.status(400).json({ success: false, error: 'asset_pair required' });
+    }
+    
+    const orderbook = confidentialExecutionPipeline.createEncryptedOrderbook(asset_pair);
+    res.json({ success: true, orderbook });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Creation failed' });
+  }
+});
+
+// Submit encrypted order
+app.post('/execute/orderbook/:orderbook_id/order', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const { agent_id, side, price, size } = req.body;
+    
+    if (!agent_id || !side || price === undefined || size === undefined) {
+      return res.status(400).json({ success: false, error: 'agent_id, side, price, size required' });
+    }
+    
+    const result = await confidentialExecutionPipeline.submitEncryptedOrder(
+      req.params.orderbook_id, agent_id, side, price, size
+    );
+    
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'Orderbook not found' });
+    }
+    
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Order failed' });
+  }
+});
+
+// Match encrypted orders
+app.post('/execute/orderbook/:orderbook_id/match', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const result = await confidentialExecutionPipeline.matchEncryptedOrders(req.params.orderbook_id);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Matching failed' });
+  }
+});
+
+// Create private auction
+app.post('/execute/auction', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const { auctioneer, asset, reserve_price } = req.body;
+    
+    if (!auctioneer || !asset) {
+      return res.status(400).json({ success: false, error: 'auctioneer, asset required' });
+    }
+    
+    const auction = await confidentialExecutionPipeline.createPrivateAuction(auctioneer, asset, reserve_price);
+    res.json({ success: true, auction });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Creation failed' });
+  }
+});
+
+// Submit auction bid
+app.post('/execute/auction/:auction_id/bid', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const { bidder, amount } = req.body;
+    
+    if (!bidder || amount === undefined) {
+      return res.status(400).json({ success: false, error: 'bidder, amount required' });
+    }
+    
+    const result = await confidentialExecutionPipeline.submitAuctionBid(
+      req.params.auction_id, bidder, amount
+    );
+    
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'Auction not found or not accepting bids' });
+    }
+    
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Bid failed' });
+  }
+});
+
+// Settle private auction
+app.post('/execute/auction/:auction_id/settle', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const result = await confidentialExecutionPipeline.settlePrivateAuction(req.params.auction_id);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Settlement failed' });
+  }
+});
+
+// Prove agent performance
+app.post('/execute/prove-performance', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const { agent_id, metrics, claim_type } = req.body;
+    
+    if (!agent_id || !metrics || !claim_type) {
+      return res.status(400).json({ success: false, error: 'agent_id, metrics, claim_type required' });
+    }
+    
+    const proof = await confidentialExecutionPipeline.provePerformance(agent_id, metrics, claim_type);
+    res.json({ success: true, proof });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Proof failed' });
+  }
+});
+
+// Get pipeline stats
+app.get('/execute/stats', async (req: Request, res: Response) => {
+  try {
+    const { confidentialExecutionPipeline } = await import('../providers/confidential-execution');
+    const stats = confidentialExecutionPipeline.getStats();
+    res.json({ success: true, ...stats });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get stats' });
+  }
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 
