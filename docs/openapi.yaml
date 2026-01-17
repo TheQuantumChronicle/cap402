@@ -754,6 +754,228 @@ paths:
                         status:
                           type: string
 
+  /execute/confidential:
+    post:
+      tags:
+        - Confidential Execution
+      summary: Full confidential pipeline execution
+      description: |
+        Execute with full confidential pipeline chaining Noir ZK → Inco FHE → Arcium MPC → Noir proof.
+        **Mandatory for trades >$100K to prevent MEV losses.**
+      operationId: executeConfidential
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - agent_id
+                - operation
+                - amount_usd
+              properties:
+                agent_id:
+                  type: string
+                operation:
+                  type: string
+                  enum: [swap, transfer, bid, vote, delegate, prove]
+                amount_usd:
+                  type: number
+                inputs:
+                  type: object
+                required_proofs:
+                  type: array
+                  items:
+                    type: string
+                privacy_level:
+                  type: string
+                  enum: [public, protected, confidential, maximum]
+      responses:
+        '200':
+          description: Execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfidentialExecutionResult'
+
+  /execute/tier:
+    post:
+      tags:
+        - Confidential Execution
+      summary: Determine required execution tier
+      description: Check what execution tier is required/recommended for a given trade size
+      operationId: getExecutionTier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount_usd
+              properties:
+                amount_usd:
+                  type: number
+      responses:
+        '200':
+          description: Tier recommendation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  amount_usd:
+                    type: number
+                  tier:
+                    type: string
+                    enum: [public, protected, confidential, maximum]
+                  recommendation:
+                    type: string
+
+  /execute/threshold-sign:
+    post:
+      tags:
+        - Confidential Execution
+      summary: Multi-party threshold signature
+      description: Generate threshold signature where multiple parties sign without revealing individual keys
+      operationId: thresholdSign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - signers
+                - threshold
+                - message_hash
+              properties:
+                signers:
+                  type: array
+                  items:
+                    type: string
+                threshold:
+                  type: integer
+                message_hash:
+                  type: string
+      responses:
+        '200':
+          description: Signature result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  signature:
+                    type: string
+                  signers_participated:
+                    type: array
+                    items:
+                      type: string
+                  threshold_met:
+                    type: boolean
+
+  /execute/orderbook:
+    post:
+      tags:
+        - Confidential Execution
+      summary: Create encrypted orderbook
+      description: Create a dark pool orderbook where prices and sizes are encrypted with FHE
+      operationId: createEncryptedOrderbook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - asset_pair
+              properties:
+                asset_pair:
+                  type: string
+      responses:
+        '200':
+          description: Orderbook created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  orderbook:
+                    $ref: '#/components/schemas/EncryptedOrderbook'
+
+  /execute/auction:
+    post:
+      tags:
+        - Confidential Execution
+      summary: Create private auction
+      description: Create sealed-bid auction where bids are encrypted and winner determined without revealing losing bids
+      operationId: createPrivateAuction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - auctioneer
+                - asset
+              properties:
+                auctioneer:
+                  type: string
+                asset:
+                  type: string
+                reserve_price:
+                  type: number
+      responses:
+        '200':
+          description: Auction created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  auction:
+                    $ref: '#/components/schemas/PrivateAuction'
+
+  /execute/stats:
+    get:
+      tags:
+        - Confidential Execution
+      summary: Pipeline statistics
+      description: Get confidential execution pipeline statistics
+      operationId: getExecutionStats
+      responses:
+        '200':
+          description: Pipeline stats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  execution_count:
+                    type: integer
+                  total_volume_usd:
+                    type: number
+                  total_fees_usd:
+                    type: number
+                  active_orderbooks:
+                    type: integer
+                  active_auctions:
+                    type: integer
+                  avg_fee_rate_bps:
+                    type: number
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -1100,3 +1322,61 @@ components:
         retry_after:
           type: integer
           description: Seconds until rate limit resets
+
+    ConfidentialExecutionResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        execution_id:
+          type: string
+        tier:
+          type: string
+          enum: [public, protected, confidential, maximum]
+        stages_completed:
+          type: array
+          items:
+            type: string
+        fee_usd:
+          type: number
+        slippage_saved_bps:
+          type: number
+        total_time_ms:
+          type: integer
+        stage_times:
+          type: object
+
+    EncryptedOrderbook:
+      type: object
+      properties:
+        orderbook_id:
+          type: string
+        asset_pair:
+          type: string
+        encrypted_bids:
+          type: array
+          items:
+            type: object
+        encrypted_asks:
+          type: array
+          items:
+            type: object
+
+    PrivateAuction:
+      type: object
+      properties:
+        auction_id:
+          type: string
+        auctioneer:
+          type: string
+        asset:
+          type: string
+        status:
+          type: string
+          enum: [bidding, revealing, settling, completed]
+        encrypted_reserve:
+          type: string
+        bids:
+          type: array
+          items:
+            type: object
