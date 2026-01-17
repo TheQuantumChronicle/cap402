@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAP-402 Economic Choke Points</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --arcium-purple: #6C44FC;
+      --inco-blue: #3B82F6;
+      --noir-orange: #F97316;
+      --bg-dark: #0a0a0c;
+      --bg-card: rgba(255,255,255,0.03);
+      --bg-elevated: rgba(255,255,255,0.05);
+      --border-subtle: rgba(255,255,255,0.08);
+      --text-primary: #fafafa;
+      --text-secondary: #888;
+      --text-muted: #555;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.7; }
+    
+    .page-wrapper { display: flex; }
+    .toc-sidebar { 
+      width: 280px; 
+      height: 100vh; 
+      position: sticky; 
+      top: 0; 
+      background: var(--bg-card); 
+      border-right: 1px solid var(--border-subtle); 
+      overflow-y: auto; 
+      padding: 1.5rem 1rem;
+      flex-shrink: 0;
+    }
+    .toc-sidebar h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; }
+    .toc-sidebar a { 
+      display: block; 
+      padding: 0.4rem 0.75rem; 
+      font-size: 0.8rem; 
+      color: var(--text-secondary); 
+      text-decoration: none; 
+      border-radius: 4px; 
+      margin-bottom: 2px;
+      transition: all 0.15s;
+    }
+    .toc-sidebar a:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .toc-sidebar a.section { font-weight: 600; color: var(--text-primary); margin-top: 0.75rem; }
+    .toc-sidebar .toc-sub { padding-left: 1rem; font-size: 0.75rem; }
+    
+    .main-content { flex: 1; min-width: 0; }
+    .topbar { background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%); padding: 1rem 2rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+    .topbar-left img { height: 28px; }
+    .topbar-left h1 { font-size: 1rem; color: var(--text-primary); }
+    .nav-links { display: flex; gap: 0.5rem; }
+    .nav-links a { padding: 0.4rem 0.8rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8rem; color: var(--text-secondary); text-decoration: none; transition: all 0.2s; }
+    .nav-links a:hover { background: rgba(108, 68, 252, 0.15); border-color: var(--arcium-purple); color: var(--text-primary); }
+    
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem 3rem; }
+    h1 { font-size: 2.25rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle); color: var(--text-primary); scroll-margin-top: 80px; }
+    h3 { font-size: 1.1rem; margin: 2rem 0 1rem; color: var(--arcium-purple); scroll-margin-top: 80px; }
+    h4 { font-size: 0.95rem; margin: 1.5rem 0 0.75rem; color: var(--text-primary); }
+    p { color: var(--text-secondary); margin-bottom: 1rem; }
+    .lead { font-size: 1.15rem; color: var(--text-primary); }
+    
+    .code-block { background: #0d0d0d; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1.25rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--green); overflow-x: auto; margin: 1.5rem 0; white-space: pre; line-height: 1.5; }
+    .code-block .comment { color: var(--text-muted); }
+    .code-block .keyword { color: var(--arcium-purple); }
+    .code-block .string { color: var(--green); }
+    .code-block .function { color: var(--inco-blue); }
+    
+    table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+    th, td { border: 1px solid var(--border-subtle); padding: 0.75rem 1rem; text-align: left; }
+    th { background: var(--bg-card); color: var(--text-primary); font-weight: 600; }
+    td { color: var(--text-secondary); }
+    
+    ul, ol { margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary); }
+    li { margin-bottom: 0.5rem; }
+    strong { color: var(--text-primary); }
+    code { background: rgba(108, 68, 252, 0.15); color: var(--arcium-purple); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+    
+    blockquote { border-left: 3px solid var(--arcium-purple); padding: 1rem 1.5rem; margin: 1.5rem 0; background: var(--bg-card); border-radius: 0 8px 8px 0; }
+    blockquote p { margin: 0; font-style: italic; color: var(--text-primary); }
+    
+    a { color: var(--arcium-purple); }
+    .subtitle { color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .meta { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; }
+    
+    /* Tech badges */
+    .tech-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; margin-right: 0.5rem; margin-bottom: 0.5rem; }
+    .tech-badge.arcium { background: rgba(108, 68, 252, 0.15); color: var(--arcium-purple); border: 1px solid rgba(108, 68, 252, 0.3); }
+    .tech-badge.inco { background: rgba(59, 130, 246, 0.15); color: var(--inco-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+    .tech-badge.noir { background: rgba(249, 115, 22, 0.15); color: var(--noir-orange); border: 1px solid rgba(249, 115, 22, 0.3); }
+    
+    /* Diagram boxes */
+    .diagram { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 2rem; margin: 2rem 0; }
+    .diagram-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1.5rem; text-align: center; }
+    
+    .pipeline { display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+    .pipeline-step { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem 1.25rem; text-align: center; min-width: 120px; }
+    .pipeline-step.arcium { border-color: rgba(108, 68, 252, 0.5); }
+    .pipeline-step.inco { border-color: rgba(59, 130, 246, 0.5); }
+    .pipeline-step.noir { border-color: rgba(249, 115, 22, 0.5); }
+    .pipeline-step .step-num { font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+    .pipeline-step .step-tech { font-size: 0.7rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .pipeline-step.arcium .step-tech { color: var(--arcium-purple); }
+    .pipeline-step.inco .step-tech { color: var(--inco-blue); }
+    .pipeline-step.noir .step-tech { color: var(--noir-orange); }
+    .pipeline-step .step-action { font-size: 0.8rem; color: var(--text-primary); }
+    .pipeline-arrow { color: var(--text-muted); font-size: 1.25rem; }
+    
+    /* Threshold visualization */
+    .threshold-viz { display: flex; align-items: stretch; margin: 2rem 0; border-radius: 8px; overflow: hidden; }
+    .threshold-zone { flex: 1; padding: 1.5rem; text-align: center; }
+    .threshold-zone.public { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); }
+    .threshold-zone.protected { background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); }
+    .threshold-zone.confidential { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .threshold-zone .zone-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .threshold-zone.public .zone-label { color: var(--green); }
+    .threshold-zone.protected .zone-label { color: var(--yellow); }
+    .threshold-zone.confidential .zone-label { color: var(--red); }
+    .threshold-zone .zone-range { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
+    .threshold-zone .zone-action { font-size: 0.8rem; color: var(--text-secondary); }
+    
+    /* Revenue card */
+    .revenue-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 2rem 0; }
+    .revenue-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.5rem; }
+    .revenue-card h4 { font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .revenue-card .trigger { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem; }
+    .revenue-card .pricing { font-size: 1.25rem; font-weight: 700; color: var(--green); }
+    
+    /* Endpoint cards */
+    .endpoint-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; margin-bottom: 0.75rem; overflow: hidden; }
+    .endpoint-header { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; }
+    .method { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; min-width: 50px; text-align: center; }
+    .method.get { background: var(--green); color: white; }
+    .method.post { background: var(--arcium-purple); color: white; }
+    .endpoint-path { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-primary); }
+    .endpoint-desc { font-size: 0.8rem; color: var(--text-secondary); margin-left: auto; }
+    
+    /* Alert boxes */
+    .alert { padding: 1rem 1.25rem; border-radius: 8px; margin: 1.5rem 0; display: flex; align-items: flex-start; gap: 0.75rem; }
+    .alert-icon { font-size: 1.25rem; }
+    .alert.warning { background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); }
+    .alert.danger { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .alert.info { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); }
+    .alert-content { flex: 1; }
+    .alert-title { font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
+    .alert-text { font-size: 0.9rem; color: var(--text-secondary); }
+    
+    /* Mobile */
+    @media (max-width: 1024px) {
+      .toc-sidebar { display: none; }
+      .container { padding: 1.5rem; }
+      .revenue-grid { grid-template-columns: 1fr; }
+      .threshold-viz { flex-direction: column; }
+      .pipeline { flex-direction: column; }
+      .pipeline-arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <nav class="toc-sidebar">
+      <h3>Table of Contents</h3>
+      <a href="#intro" class="section">The Core Truth</a>
+      <a href="#why-pay">Why Agents Must Pay</a>
+      <a href="#thresholds">Capital Thresholds</a>
+      <a href="#rails" class="section">The Three Rails</a>
+      <a href="#arcium" class="toc-sub">Arcium (MPC)</a>
+      <a href="#inco" class="toc-sub">Inco (FHE)</a>
+      <a href="#noir" class="toc-sub">Noir (ZK)</a>
+      <a href="#pipeline" class="section">Execution Pipeline</a>
+      <a href="#usecases">Combined Use Cases</a>
+      <a href="#endpoints" class="section">API Reference</a>
+      <a href="#arcium-api" class="toc-sub">Arcium Endpoints</a>
+      <a href="#inco-api" class="toc-sub">Inco Endpoints</a>
+      <a href="#noir-api" class="toc-sub">Noir Endpoints</a>
+      <a href="#execute-api" class="toc-sub">Execution Pipeline</a>
+      <a href="#security" class="section">Security</a>
+      <a href="#benchmarks">Performance</a>
+      <a href="#revenue" class="section">Revenue Model</a>
+      <a href="#investment">The Investment Story</a>
+    </nav>
+    
+    <div class="main-content">
+      <div class="topbar">
+        <div class="topbar-left">
+          <a href="/"><img src="/public/logo2.png" alt="CAP-402"></a>
+          <h1>Economic Choke Points</h1>
+        </div>
+        <div class="nav-links">
+          <a href="/docs">Docs</a>
+          <a href="/docs/api-docs.html">API</a>
+          <a href="/docs/whitepaper.html">Whitepaper</a>
+          <a href="/">Home</a>
+          <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank">GitHub</a>
+        </div>
+      </div>
+      
+      <div class="container">
+        <h1>Economic Choke Points</h1>
+        <p class="subtitle">Confidential Execution Infrastructure That Agents Must Use Once They Scale</p>
+        <p class="meta">Arcium MPC • Inco FHE • Noir ZK | <a href="https://cap402.com">cap402.com</a></p>
+        
+        <!-- Intro Section -->
+        <h2 id="intro">The Core Truth</h2>
+        
+        <blockquote>
+          <p>Agents don't pay for privacy. They pay for edge, profit, and survivability.</p>
+        </blockquote>
+        
+        <p class="lead">Privacy is the <em>means</em>, not the product. CAP-402 is <strong>profit-enabling</strong>, not privacy-enabling.</p>
+        
+        <p>We are not selling privacy. We are <strong>taxing successful autonomy</strong>.</p>
+        
+        <div class="alert danger">
+          <span class="alert-icon">⚠️</span>
+          <div class="alert-content">
+            <div class="alert-title">Public Execution = Death</div>
+            <div class="alert-text">Once an agent handles size (>$100K), handles other people's capital, or runs continuously—public execution means losing money to MEV, front-running, and strategy leakage.</div>
+          </div>
+        </div>
+        
+        <!-- Why Pay Section -->
+        <h3 id="why-pay">Why Agents Must Pay</h3>
+        
+        <p>Every profitable agent has the same pain:</p>
+        
+        <blockquote>
+          <p>"If my strategy becomes visible, I lose money."</p>
+        </blockquote>
+        
+        <p>CAP-402 sits on that pain <strong>by force, not choice</strong>. The protocol controls the economic rails that agents must use to survive at scale.</p>
+        
+        <!-- Threshold Visualization -->
+        <h3 id="thresholds">Capital Thresholds</h3>
+        
+        <div class="threshold-viz">
+          <div class="threshold-zone public">
+            <div class="zone-label">✓ Public OK</div>
+            <div class="zone-range">&lt; $50K</div>
+            <div class="zone-action">Standard execution acceptable</div>
+          </div>
+          <div class="threshold-zone protected">
+            <div class="zone-label">⚡ Recommended</div>
+            <div class="zone-range">$50K - $100K</div>
+            <div class="zone-action">Use Inco FHE for protection</div>
+          </div>
+          <div class="threshold-zone confidential">
+            <div class="zone-label">🔒 Mandatory</div>
+            <div class="zone-range">&gt; $100K</div>
+            <div class="zone-action">Must use Arcium MPC</div>
+          </div>
+        </div>
+        
+        <!-- Three Rails Section -->
+        <h2 id="rails">The Three Economic Rails</h2>
+        
+        <table>
+          <tr>
+            <th>Technology</th>
+            <th>Mandatory For</th>
+            <th>Threshold</th>
+            <th>Revenue Model</th>
+          </tr>
+          <tr>
+            <td><span class="tech-badge arcium">Arcium</span></td>
+            <td>Large-size execution, sealed auctions, OTC matching</td>
+            <td><strong>&gt;$100K</strong> trades</td>
+            <td>% of saved slippage</td>
+          </tr>
+          <tr>
+            <td><span class="tech-badge inco">Inco</span></td>
+            <td>Encrypted PnL, strategy scoring, agent ranking</td>
+            <td>Any competitive strategy</td>
+            <td>Subscription + compute fees</td>
+          </tr>
+          <tr>
+            <td><span class="tech-badge noir">Noir</span></td>
+            <td>Onboarding proofs, capital delegation, compliance</td>
+            <td>Institutional capital</td>
+            <td>Per-proof + verification fees</td>
+          </tr>
+        </table>
+        
+        <!-- Arcium Section -->
+        <h3 id="arcium">1. Arcium Integration (MPC)</h3>
+        
+        <p><strong>Arcium</strong> is a Decentralized Confidential Computing (DeCC) network on Solana that uses Multi-Party Computation (MPC) to enable secure computation on encrypted data. No single party ever sees the plaintext data.</p>
+        
+        <h4>Capabilities</h4>
+        
+        <div class="code-block"><span class="comment">// Provider: /providers/arcium-client.ts</span>
+
+<span class="comment">// 1. Confidential Token Wrapping (C-SPL)</span>
+<span class="keyword">await</span> arciumProvider.<span class="function">wrapToCSPL</span>(owner, mint, amount);
+
+<span class="comment">// 2. Private Token Transfers</span>
+<span class="keyword">await</span> arciumProvider.<span class="function">transferCSPL</span>(from, to, mint, encryptedAmount);
+
+<span class="comment">// 3. Confidential Swaps (hidden amounts)</span>
+<span class="keyword">await</span> arciumProvider.<span class="function">confidentialSwap</span>(inputToken, outputToken, encryptedAmount, wallet);
+
+<span class="comment">// 4. Private Auction Bids</span>
+<span class="keyword">await</span> arciumProvider.<span class="function">submitPrivateBid</span>(auctionId, bidder, encryptedBidAmount);
+
+<span class="comment">// 5. Confidential Voting</span>
+<span class="keyword">await</span> arciumProvider.<span class="function">castConfidentialVote</span>(proposalId, voter, encryptedVote, votingPower);
+
+<span class="comment">// 6. Private Order Book</span>
+<span class="keyword">await</span> arciumProvider.<span class="function">placePrivateOrder</span>(market, trader, side, encryptedPrice, encryptedSize);</div>
+        
+        <h4>Use Cases</h4>
+        <table>
+          <tr><th>Use Case</th><th>Description</th><th>Endpoint</th></tr>
+          <tr><td><strong>Dark Pool Trading</strong></td><td>Execute large trades without market impact</td><td><code>/execute/confidential</code></td></tr>
+          <tr><td><strong>MEV Protection</strong></td><td>Hide trade details from MEV bots</td><td><code>/arcium/confidential-swap</code></td></tr>
+          <tr><td><strong>Private Auctions</strong></td><td>Sealed-bid auctions for agent services</td><td><code>/execute/auction</code></td></tr>
+          <tr><td><strong>Threshold Signatures</strong></td><td>Multi-party signing without revealing keys</td><td><code>/execute/threshold-sign</code></td></tr>
+        </table>
+        
+        <!-- Inco Section -->
+        <h3 id="inco">2. Inco Integration (FHE)</h3>
+        
+        <p><strong>Inco Network</strong> provides Fully Homomorphic Encryption (FHE)—the ability to perform computations on encrypted data without ever decrypting it.</p>
+        
+        <h4>FHE Operations</h4>
+        
+        <table>
+          <tr><th>Operation</th><th>Function</th><th>Gas Cost</th><th>Description</th></tr>
+          <tr><td><code>fheAdd</code></td><td><code>e.add(a, b)</code></td><td>~50k</td><td>Add two encrypted values</td></tr>
+          <tr><td><code>fheSub</code></td><td><code>e.sub(a, b)</code></td><td>~50k</td><td>Subtract encrypted values</td></tr>
+          <tr><td><code>fheMul</code></td><td><code>e.mul(a, b)</code></td><td>~100k</td><td>Multiply encrypted values</td></tr>
+          <tr><td><code>fheLt</code></td><td><code>e.lt(a, b)</code></td><td>~75k</td><td>Less than comparison</td></tr>
+          <tr><td><code>fheSelect</code></td><td><code>e.select(c, t, f)</code></td><td>~80k</td><td>Conditional selection</td></tr>
+        </table>
+        
+        <div class="code-block"><span class="comment">// Provider: /providers/inco-fhe.ts</span>
+
+<span class="comment">// Encrypt values</span>
+<span class="keyword">const</span> encrypted = <span class="keyword">await</span> incoFHEProvider.<span class="function">encrypt</span>(<span class="string">1000</span>, <span class="string">'euint64'</span>);
+
+<span class="comment">// Homomorphic Operations</span>
+<span class="keyword">await</span> incoFHEProvider.<span class="function">fheAdd</span>(a, b);      <span class="comment">// Add encrypted values</span>
+<span class="keyword">await</span> incoFHEProvider.<span class="function">fheMul</span>(a, b);      <span class="comment">// Multiply encrypted values</span>
+<span class="keyword">await</span> incoFHEProvider.<span class="function">fheLt</span>(a, b);       <span class="comment">// Compare (a < b) on encrypted</span>
+
+<span class="comment">// Encrypted Orderbook Matching</span>
+<span class="keyword">await</span> confidentialExecutionPipeline.<span class="function">matchEncryptedOrders</span>(orderbookId);</div>
+        
+        <!-- Noir Section -->
+        <h3 id="noir">3. Noir Integration (ZK)</h3>
+        
+        <p><strong>Noir</strong> is Aztec's zero-knowledge proof language that enables proving statements about private data without revealing the data itself.</p>
+        
+        <h4>Available Circuits (20 total)</h4>
+        
+        <table>
+          <tr><th>Circuit</th><th>Public Inputs</th><th>Constraints</th></tr>
+          <tr><td><code>balance_threshold</code></td><td>threshold, token_mint</td><td>1,024</td></tr>
+          <tr><td><code>kyc_compliance</code></td><td>compliance_level, jurisdiction</td><td>3,072</td></tr>
+          <tr><td><code>strategy_performance</code></td><td>min_sharpe, max_drawdown, min_win_rate</td><td>4,096</td></tr>
+          <tr><td><code>capital_adequacy</code></td><td>required_margin, leverage_limit</td><td>2,048</td></tr>
+          <tr><td><code>delegation_eligibility</code></td><td>min_track_record, min_aum</td><td>2,560</td></tr>
+          <tr><td><code>mev_protection_proof</code></td><td>max_slippage, execution_timestamp</td><td>3,584</td></tr>
+          <tr><td><code>pnl_attestation</code></td><td>claimed_min_pnl, claimed_max_pnl</td><td>1,920</td></tr>
+          <tr><td><code>sybil_resistance</code></td><td>registry_merkle_root</td><td>2,304</td></tr>
+        </table>
+        
+        <div class="code-block"><span class="comment">// Provider: /providers/noir-circuits.ts</span>
+
+<span class="comment">// Prove strategy performance without revealing strategy</span>
+<span class="keyword">await</span> noirCircuitsProvider.<span class="function">proveStrategyPerformance</span>(
+  actualSharpe, actualDrawdown, actualWinRate, tradeHistoryHash
+);
+
+<span class="comment">// Prove capital adequacy for position sizing</span>
+<span class="keyword">await</span> noirCircuitsProvider.<span class="function">proveCapitalAdequacy</span>(totalCapital, requiredMargin);
+
+<span class="comment">// Prove MEV-protected execution</span>
+<span class="keyword">await</span> noirCircuitsProvider.<span class="function">proveMEVProtection</span>(maxSlippage, executionTimestamp);
+
+<span class="comment">// Prove PnL in range without revealing exact figure</span>
+<span class="keyword">await</span> noirCircuitsProvider.<span class="function">provePnLAttestation</span>(actualPnl, minClaim, maxClaim);</div>
+        
+        <!-- Pipeline Section -->
+        <h2 id="pipeline">Confidential Execution Pipeline</h2>
+        
+        <p>The full pipeline chains all three technologies for complete confidential execution:</p>
+        
+        <div class="diagram">
+          <div class="diagram-title">Execution Flow: Noir → Inco → Arcium → Noir</div>
+          <div class="pipeline">
+            <div class="pipeline-step noir">
+              <div class="step-num">STEP 1</div>
+              <div class="step-tech">NOIR</div>
+              <div class="step-action">Prove Eligibility</div>
+            </div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step inco">
+              <div class="step-num">STEP 2</div>
+              <div class="step-tech">INCO</div>
+              <div class="step-action">Encrypt Params</div>
+            </div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step arcium">
+              <div class="step-num">STEP 3</div>
+              <div class="step-tech">ARCIUM</div>
+              <div class="step-action">MPC Execute</div>
+            </div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step noir">
+              <div class="step-num">STEP 4</div>
+              <div class="step-tech">NOIR</div>
+              <div class="step-action">Execution Proof</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="code-block"><span class="comment">// Full confidential execution</span>
+<span class="keyword">const</span> result = <span class="keyword">await</span> confidentialExecutionPipeline.<span class="function">executeConfidential</span>({
+  agent_id: <span class="string">'agent_123'</span>,
+  operation: <span class="string">'swap'</span>,
+  amount_usd: <span class="string">150000</span>,  <span class="comment">// Above $100K threshold = mandatory confidential</span>
+  inputs: { token_in: <span class="string">'SOL'</span>, token_out: <span class="string">'USDC'</span> },
+  required_proofs: [<span class="string">'balance_threshold'</span>]
+});
+
+<span class="comment">// Result includes:</span>
+<span class="comment">// - eligibility_proof (Noir)</span>
+<span class="comment">// - encrypted_params (Inco FHE)</span>
+<span class="comment">// - mpc_result (Arcium)</span>
+<span class="comment">// - execution_proof (Noir)</span>
+<span class="comment">// - fee_usd, slippage_saved_bps</span></div>
+        
+        <!-- Use Cases -->
+        <h3 id="usecases">Combined Use Cases</h3>
+        
+        <h4>1. Private DeFi Trading</h4>
+        <div class="diagram">
+          <div class="pipeline">
+            <div class="pipeline-step noir"><div class="step-tech">NOIR</div><div class="step-action">Prove balance &gt; min</div></div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step arcium"><div class="step-tech">ARCIUM</div><div class="step-action">Encrypt trade amount</div></div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step inco"><div class="step-tech">INCO</div><div class="step-action">Execute on encrypted</div></div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step noir"><div class="step-tech">NOIR</div><div class="step-action">Proof of execution</div></div>
+          </div>
+        </div>
+        
+        <h4>2. Private Auction for Agent Services</h4>
+        <div class="diagram">
+          <div class="pipeline">
+            <div class="pipeline-step arcium"><div class="step-tech">ARCIUM</div><div class="step-action">Encrypt bids</div></div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step inco"><div class="step-tech">INCO</div><div class="step-action">Store encrypted</div></div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step inco"><div class="step-tech">INCO</div><div class="step-action">Compare via FHE</div></div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step noir"><div class="step-tech">NOIR</div><div class="step-action">Winner proof</div></div>
+          </div>
+        </div>
+        
+        <!-- API Reference -->
+        <h2 id="endpoints">API Reference</h2>
+        
+        <h3 id="arcium-api">Arcium Endpoints</h3>
+        
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/arcium/encrypt</span>
+            <span class="endpoint-desc">Encrypt data for MPC</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/arcium/compute</span>
+            <span class="endpoint-desc">Submit confidential computation</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/arcium/confidential-swap</span>
+            <span class="endpoint-desc">Execute confidential token swap</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/arcium/status</span>
+            <span class="endpoint-desc">Check Arcium connection status</span>
+          </div>
+        </div>
+        
+        <h3 id="inco-api">Inco Endpoints</h3>
+        
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/inco/encrypt</span>
+            <span class="endpoint-desc">Encrypt a value with FHE</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/inco/compute</span>
+            <span class="endpoint-desc">Perform FHE computation</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/inco/state/create</span>
+            <span class="endpoint-desc">Create encrypted state</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/inco/status</span>
+            <span class="endpoint-desc">Check Inco connection status</span>
+          </div>
+        </div>
+        
+        <h3 id="noir-api">Noir Endpoints</h3>
+        
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/noir/circuits</span>
+            <span class="endpoint-desc">List all 20 available circuits</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/noir/prove</span>
+            <span class="endpoint-desc">Generate ZK proof</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/noir/verify</span>
+            <span class="endpoint-desc">Verify ZK proof</span>
+          </div>
+        </div>
+        
+        <h3 id="execute-api">Confidential Execution Pipeline</h3>
+        
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/confidential</span>
+            <span class="endpoint-desc">Full pipeline execution (Noir→Inco→Arcium→Noir)</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/tier</span>
+            <span class="endpoint-desc">Determine required execution tier for amount</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/threshold-sign</span>
+            <span class="endpoint-desc">Multi-party threshold signature</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/multi-swap</span>
+            <span class="endpoint-desc">Atomic multi-party swap</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/orderbook</span>
+            <span class="endpoint-desc">Create encrypted orderbook</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/execute/auction</span>
+            <span class="endpoint-desc">Create private auction</span>
+          </div>
+        </div>
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/execute/stats</span>
+            <span class="endpoint-desc">Pipeline statistics</span>
+          </div>
+        </div>
+        
+        <!-- Security Section -->
+        <h2 id="security">Security Considerations</h2>
+        
+        <ul>
+          <li><strong>Key Management</strong>: All encryption keys are derived from chain entropy (block hashes) for verifiability</li>
+          <li><strong>Proof Verification</strong>: All ZK proofs are verified on-chain before execution</li>
+          <li><strong>MPC Threshold</strong>: Arcium uses 2-of-3 MPC for computation security</li>
+          <li><strong>FHE Parameters</strong>: Inco uses 128-bit security level for all FHE operations</li>
+          <li><strong>Circuit Auditing</strong>: All Noir circuits are audited for constraint completeness</li>
+        </ul>
+        
+        <!-- Benchmarks -->
+        <h3 id="benchmarks">Performance Benchmarks</h3>
+        
+        <table>
+          <tr><th>Operation</th><th>Technology</th><th>Latency</th><th>Gas/Cost</th></tr>
+          <tr><td>Encrypt 64-bit value</td><td>Inco FHE</td><td>~50ms</td><td>~30k gas</td></tr>
+          <tr><td>FHE Addition</td><td>Inco FHE</td><td>~100ms</td><td>~50k gas</td></tr>
+          <tr><td>FHE Multiplication</td><td>Inco FHE</td><td>~200ms</td><td>~100k gas</td></tr>
+          <tr><td>Generate ZK Proof</td><td>Noir</td><td>~500ms</td><td>Off-chain</td></tr>
+          <tr><td>Verify ZK Proof</td><td>Noir</td><td>~50ms</td><td>~200k gas</td></tr>
+          <tr><td>MPC Computation</td><td>Arcium</td><td>~1s</td><td>~100k gas</td></tr>
+          <tr><td>Confidential Swap</td><td>Arcium</td><td>~2s</td><td>~500k gas</td></tr>
+          <tr><td>Full Pipeline</td><td>All Three</td><td>~4s</td><td>~800k gas</td></tr>
+        </table>
+        
+        <!-- Revenue Section -->
+        <h2 id="revenue">Revenue Model</h2>
+        
+        <div class="revenue-grid">
+          <div class="revenue-card">
+            <h4>Execution-as-a-Service</h4>
+            <div class="trigger">Agent crosses $100K trade size</div>
+            <div class="pricing">0.1% of saved slippage</div>
+          </div>
+          <div class="revenue-card">
+            <h4>Dark Coordination</h4>
+            <div class="trigger">Agent-to-agent matching</div>
+            <div class="pricing">0.05% of matched volume</div>
+          </div>
+          <div class="revenue-card">
+            <h4>Reputation Proofs</h4>
+            <div class="trigger">Capital delegation, compliance</div>
+            <div class="pricing">$10-100 per proof</div>
+          </div>
+          <div class="revenue-card">
+            <h4>Subscriptions</h4>
+            <div class="trigger">Continuous attestation, priority</div>
+            <div class="pricing">$500-5000/month</div>
+          </div>
+        </div>
+        
+        <!-- Investment Story -->
+        <h3 id="investment">The Investment Story</h3>
+        
+        <p><strong>Not</strong>: "We integrated Arcium, Inco, Noir"</p>
+        <p><strong>But</strong>: "CAP-402 takes a cut of agent execution once they make money."</p>
+        
+        <div class="alert info">
+          <span class="alert-icon">💡</span>
+          <div class="alert-content">
+            <div class="alert-title">Why This Works</div>
+            <div class="alert-text">
+              <ol>
+                <li><strong>Agents have no choice</strong> — public execution above thresholds = death</li>
+                <li><strong>Value is obvious</strong> — save $5K in MEV, pay $500 to CAP-402</li>
+                <li><strong>Sponsors are structural</strong> — not optional features, mandatory rails</li>
+                <li><strong>Network effects</strong> — more agents = better coordination = more value</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+        
+        <blockquote>
+          <p>"Confidential execution infrastructure that agents must use once they scale."</p>
+        </blockquote>
+        
+        <p style="text-align: center; margin-top: 3rem; color: var(--text-muted);">That's CAP-402.</p>
+        
+      </div>
+    </div>
+  </div>
+</body>
+</html>
