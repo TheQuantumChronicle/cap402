@@ -10,7 +10,8 @@
 import { Request, Response, NextFunction } from 'express';
 import * as crypto from 'crypto';
 
-const SIGNING_SECRET = process.env.CAP402_SIGNING_SECRET || crypto.randomBytes(32).toString('hex');
+// Use CAP402_TOKEN_SECRET for request signing (same as capability tokens)
+const SIGNING_SECRET = process.env.CAP402_TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
 
 /**
  * Verify request signature for sensitive operations
