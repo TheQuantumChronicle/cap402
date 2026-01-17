@@ -8133,6 +8133,9 @@ app.post('/execute/orderbook', async (req: Request, res: Response) => {
     }
     
     const orderbook = confidentialExecutionPipeline.createEncryptedOrderbook(asset_pair);
+    if (!orderbook) {
+      return res.status(400).json({ success: false, error: 'Invalid asset_pair' });
+    }
     res.json({ success: true, orderbook });
   } catch (error) {
     res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Creation failed' });
@@ -8185,6 +8188,9 @@ app.post('/execute/auction', async (req: Request, res: Response) => {
     }
     
     const auction = await confidentialExecutionPipeline.createPrivateAuction(auctioneer, asset, reserve_price);
+    if (!auction) {
+      return res.status(400).json({ success: false, error: 'Invalid auction parameters' });
+    }
     res.json({ success: true, auction });
   } catch (error) {
     res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Creation failed' });

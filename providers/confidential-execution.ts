@@ -384,7 +384,10 @@ class ConfidentialExecutionPipeline {
   /**
    * Create encrypted orderbook for dark pool trading
    */
-  createEncryptedOrderbook(assetPair: string): EncryptedOrderbook {
+  createEncryptedOrderbook(assetPair: string): EncryptedOrderbook | null {
+    // Input validation
+    if (!assetPair || assetPair.trim().length === 0) return null;
+    
     const orderbookId = `ob_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     
     const orderbook: EncryptedOrderbook = {
@@ -408,6 +411,10 @@ class ConfidentialExecutionPipeline {
     price: number,
     size: number
   ): Promise<{ order_id: string; commitment: string } | null> {
+    // Input validation
+    if (!orderbookId || !agentId) return null;
+    if (price <= 0 || size <= 0) return null;
+    
     const orderbook = this.orderbooks.get(orderbookId);
     if (!orderbook) return null;
     
@@ -488,7 +495,11 @@ class ConfidentialExecutionPipeline {
     auctioneer: string,
     asset: string,
     reservePrice?: number
-  ): Promise<PrivateAuctionState> {
+  ): Promise<PrivateAuctionState | null> {
+    // Input validation
+    if (!auctioneer || !asset) return null;
+    if (reservePrice !== undefined && reservePrice < 0) return null;
+    
     const auctionId = `auction_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     
     let encryptedReserve: string | undefined;
@@ -518,6 +529,10 @@ class ConfidentialExecutionPipeline {
     bidder: string,
     bidAmount: number
   ): Promise<{ bid_commitment: string } | null> {
+    // Input validation
+    if (!auctionId || !bidder) return null;
+    if (bidAmount <= 0) return null;
+    
     const auction = this.auctions.get(auctionId);
     if (!auction || auction.status !== 'bidding') return null;
     
