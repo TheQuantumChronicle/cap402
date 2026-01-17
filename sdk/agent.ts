@@ -226,6 +226,9 @@ export class CAP402Agent extends EventEmitter {
     this.state.connected = false;
     this.emit('stopped', { agent_id: this.config.agent_id });
     this.log('info', `Agent ${this.config.agent_id} stopped`);
+    
+    // Remove all event listeners to prevent memory leaks
+    this.removeAllListeners();
   }
 
   pause(): void {

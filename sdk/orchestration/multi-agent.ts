@@ -125,6 +125,9 @@ export class MultiAgentOrchestrator extends EventEmitter {
 
     await this.coordinator.stop();
     this.emit('stopped');
+    
+    // Remove all event listeners to prevent memory leaks
+    this.removeAllListeners();
   }
 
   // ============================================

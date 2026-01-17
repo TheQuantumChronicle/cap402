@@ -179,6 +179,9 @@ export class AnalyticsAgent extends EventEmitter {
     this.printStats();
     await this.agent.stop();
     this.emit('stopped');
+    
+    // Remove all event listeners to prevent memory leaks
+    this.removeAllListeners();
   }
 
   // ============================================
