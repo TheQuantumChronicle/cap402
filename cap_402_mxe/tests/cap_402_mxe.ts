@@ -140,7 +140,8 @@ describe("Cap402Mxe", () => {
     console.log("Finalize sig is ", finalizeSig);
 
     const sumEvent = await sumEventPromise;
-    const decrypted = cipher.decrypt([sumEvent.sum as unknown as Uint8Array], sumEvent.nonce as unknown as Uint8Array)[0];
+    // @ts-ignore - Arcium client type mismatch between event data and cipher.decrypt signature
+    const decrypted = cipher.decrypt([sumEvent.sum], sumEvent.nonce)[0];
     expect(decrypted).to.equal(val1 + val2);
   });
 
