@@ -3,7 +3,7 @@ use arcium_anchor::prelude::*;
 
 const COMP_DEF_OFFSET_ADD_TOGETHER: u32 = comp_def_offset("add_together");
 
-declare_id!("BiUfgQZAbi4Xs3XJX7SLAdTBbqZSQez9k1yW4GdhfSTR");
+declare_id!("GJ1amABP184RZe79RzXRo1SynLj76gfYRcFLQqpoFH2B");
 
 #[arcium_program]
 pub mod cap_402_mxe {
@@ -74,11 +74,11 @@ pub struct AddTogether<'info> {
         init_if_needed,
         space = 9,
         payer = payer,
-        seeds = [&SIGN_PDA_SEED],
+        seeds = [b"ArciumSignerAccount"],
         bump,
         address = derive_sign_pda!(),
     )]
-    pub sign_pda_account: Account<'info, SignerAccount>,
+    pub sign_pda_account: Account<'info, ArciumSignerAccount>,
     #[account(
         address = derive_mxe_pda!()
     )]
@@ -116,6 +116,7 @@ pub struct AddTogether<'info> {
     )]
     pub pool_account: Account<'info, FeePool>,
     #[account(
+        mut,
         address = ARCIUM_CLOCK_ACCOUNT_ADDRESS
     )]
     pub clock_account: Account<'info, ClockAccount>,

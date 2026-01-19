@@ -48,8 +48,8 @@
   "author": "CAP-402 Team",
   "license": "MIT",
   "dependencies": {
-    "@arcium-hq/client": "^0.1.47",
-    "@arcium-hq/reader": "^0.1.47",
+    "@arcium-hq/client": "^0.6.3",
+    "@arcium-hq/reader": "^0.6.3",
     "@coral-xyz/anchor": "^0.31.1",
     "@fhevm/sdk": "^0.7.0-20",
     "@noir-lang/backend_barretenberg": "^0.36.0",

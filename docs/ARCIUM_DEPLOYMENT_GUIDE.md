@@ -4,7 +4,7 @@
 
 ## Current Status
 
-✅ **Arcium SDK Integrated**: `@arcium-hq/client` v0.1.47  
+✅ **Arcium SDK Integrated**: `@arcium-hq/client` v0.6.3  
 ✅ **Integration Layer Built**: `providers/arcium-client.ts`  
 ✅ **Executor Configured**: `router/execution/arcium-executor.ts`  
 ⏳ **MXE Program**: Needs deployment to Arcium testnet  

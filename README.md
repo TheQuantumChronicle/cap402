@@ -670,7 +670,7 @@ Usage commitments are hashed and signaled to chain:
 ### **Prerequisites Installed**
 
 - Solana CLI 3.0.13 + devnet keypair (2 SOL)
-- Arcium CLI 0.5.4 via `arcup`
+- Arcium CLI 0.6.3 via `arcup`
 - Nargo 1.0.0-beta.18 (Noir compiler)
 - Docker + Inco Lightning containers  
 
@@ -1133,7 +1133,7 @@ curl https://cap402.com/trace/trace_abc123
 
 **🛠️ Infrastructure Installed:**
 - Solana CLI 3.0.13 + devnet keypair (2 SOL funded)
-- Arcium CLI 0.5.4 via `arcup`
+- Arcium CLI 0.6.3 via `arcup`
 - Nargo 1.0.0-beta.18 (Noir compiler)
 - Docker + Inco Lightning containers (ports 8545, 50055)
 

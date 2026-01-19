@@ -67,13 +67,13 @@ describe("Cap402Mxe", () => {
   const clusterAccount = getClusterAccount();
 
   it("Is initialized!", async () => {
-    const owner = readKpJson(`${os.homedir()}/.config/solana/id.json`);
+    const owner = readKpJson(`${os.homedir()}/.config/solana/devnet.json`);
 
     console.log("Initializing add together computation definition");
     const initATSig = await initAddTogetherCompDef(
       program,
       owner,
-      false,
+      true,
       false,
     );
     console.log(
@@ -140,7 +140,7 @@ describe("Cap402Mxe", () => {
     console.log("Finalize sig is ", finalizeSig);
 
     const sumEvent = await sumEventPromise;
-    const decrypted = cipher.decrypt([sumEvent.sum], sumEvent.nonce)[0];
+    const decrypted = cipher.decrypt([sumEvent.sum as unknown as Uint8Array], sumEvent.nonce as unknown as Uint8Array)[0];
     expect(decrypted).to.equal(val1 + val2);
   });
 
@@ -162,29 +162,47 @@ describe("Cap402Mxe", () => {
 
     console.log("Comp def pda is ", compDefPDA);
 
-    const sig = await program.methods
-      .initAddTogetherCompDef()
-      .accounts({
-        compDefAccount: compDefPDA,
-        payer: owner.publicKey,
-        mxeAccount: getMXEAccAddress(program.programId),
-      })
-      .signers([owner])
-      .rpc({
-        commitment: "confirmed",
-      });
-    console.log("Init add together computation definition transaction", sig);
+    let sig: string;
+    try {
+      sig = await program.methods
+        .initAddTogetherCompDef()
+        .accounts({
+          compDefAccount: compDefPDA,
+          payer: owner.publicKey,
+          mxeAccount: getMXEAccAddress(program.programId),
+        })
+        .signers([owner])
+        .rpc({
+          commitment: "confirmed",
+        });
+      console.log("Init add together computation definition transaction", sig);
+    } catch (e: any) {
+      if (e.message?.includes("already in use")) {
+        console.log("Computation definition already initialized, skipping init");
+        sig = "already-initialized";
+      } else {
+        throw e;
+      }
+    }
 
     if (uploadRawCircuit) {
       const rawCircuit = fs.readFileSync("build/add_together.arcis");
 
-      await uploadCircuit(
-        provider as anchor.AnchorProvider,
-        "add_together",
-        program.programId,
-        rawCircuit,
-        true,
-      );
+      try {
+        await uploadCircuit(
+          provider as anchor.AnchorProvider,
+          "add_together",
+          program.programId,
+          rawCircuit,
+          true,
+        );
+      } catch (e: any) {
+        if (e.message?.includes("already in use")) {
+          console.log("Circuit already uploaded, skipping upload");
+        } else {
+          throw e;
+        }
+      }
     } else if (!offchainSource) {
       const finalizeTx = await buildFinalizeCompDefTx(
         provider as anchor.AnchorProvider,

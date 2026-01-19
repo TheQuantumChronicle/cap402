@@ -39,7 +39,7 @@
 
 | Component | Status | Location |
 |-----------|--------|----------|
-| **SDK Installed** | ✅ Complete | `@arcium-hq/client` v0.1.47 |
+| **SDK Installed** | ✅ Complete | `@arcium-hq/client` v0.6.3 |
 | **Integration Layer** | ✅ Complete | `providers/arcium-client.ts` |
 | **Executor** | ✅ Complete | `router/execution/arcium-executor.ts` |
 | **Program Built** | ✅ Complete | `/Users/zion/Desktop/cap402_confidential` |
