@@ -1093,6 +1093,61 @@ class PumpFunProvider {
   }
 
   /**
+   * Stop all graduation monitors (cleanup for graceful shutdown)
+   */
+  stopAllMonitors(): void {
+    for (const [mintAddress, monitor] of this.graduationMonitors.entries()) {
+      clearInterval(monitor);
+      console.log(`[Stealth] 🛑 Stopped monitor for ${mintAddress.slice(0, 8)}...`);
+    }
+    this.graduationMonitors.clear();
+    this.graduationCallbacks.clear();
+    console.log('[Stealth] All monitors stopped');
+  }
+
+  /**
+   * Cleanup old stealth registry entries (prevent memory leak)
+   * Call periodically to remove graduated/revealed entries older than maxAgeMs
+   */
+  cleanupStealthRegistry(maxAgeMs: number = 7 * 24 * 60 * 60 * 1000): number {
+    const now = Date.now();
+    let cleaned = 0;
+    
+    for (const [mintAddress, record] of this.stealthRegistry.entries()) {
+      // Remove if graduated/revealed and older than maxAge
+      if ((record.graduated || record.revealed) && (now - record.createdAt > maxAgeMs)) {
+        this.stealthRegistry.delete(mintAddress);
+        cleaned++;
+      }
+    }
+    
+    if (cleaned > 0) {
+      console.log(`[Stealth] Cleaned up ${cleaned} old registry entries`);
+    }
+    return cleaned;
+  }
+
+  /**
+   * Cleanup old anonymity set entries (prevent memory leak)
+   */
+  cleanupAnonymitySets(maxAgeMs: number = 7 * 24 * 60 * 60 * 1000): number {
+    const now = Date.now();
+    let cleaned = 0;
+    
+    for (const [mintAddress, info] of this.holderAnonymitySets.entries()) {
+      if (now - info.lastUpdated > maxAgeMs) {
+        this.holderAnonymitySets.delete(mintAddress);
+        cleaned++;
+      }
+    }
+    
+    if (cleaned > 0) {
+      console.log(`[Stealth] Cleaned up ${cleaned} old anonymity sets`);
+    }
+    return cleaned;
+  }
+
+  /**
    * Get all active graduation monitors
    */
   getActiveMonitors(): string[] {

@@ -8289,11 +8289,24 @@ app.post('/stealthpump/launch', async (req: Request, res: Response) => {
       });
     }
     
-    // In production, payer would come from authenticated session
+    // SECURITY: In production, NEVER accept private keys via API
+    // Payer should come from authenticated session or use stealth wallet generation
+    // This is simulation mode only - real launches use client-side signing
     const { Keypair } = await import('@solana/web3.js');
-    const payer = payer_secret 
-      ? Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'))
-      : Keypair.generate();
+    let payer: InstanceType<typeof Keypair>;
+    
+    if (payer_secret) {
+      // Log security warning - this should not be used in production
+      console.warn('[SECURITY] payer_secret provided via API - simulation mode only');
+      try {
+        payer = Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'));
+      } catch {
+        return res.status(400).json({ success: false, error: 'Invalid payer_secret format' });
+      }
+    } else {
+      // Generate ephemeral stealth wallet (recommended)
+      payer = Keypair.generate();
+    }
     
     const result = await pumpFunProvider.stealthLaunch(payer, {
       metadata: { name, symbol, description, image, twitter, telegram, website },
@@ -8326,10 +8339,30 @@ app.post('/stealthpump/buy', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'mint_address, amount_sol required' });
     }
     
+    // Validate mint address format
+    if (typeof mint_address !== 'string' || mint_address.length < 32 || mint_address.length > 44) {
+      return res.status(400).json({ success: false, error: 'Invalid mint_address format' });
+    }
+    
+    // Validate amount
+    if (typeof amount_sol !== 'number' || amount_sol <= 0 || amount_sol > 1000) {
+      return res.status(400).json({ success: false, error: 'amount_sol must be between 0 and 1000 SOL' });
+    }
+    
+    // SECURITY: In production, NEVER accept private keys via API
     const { Keypair } = await import('@solana/web3.js');
-    const payer = payer_secret 
-      ? Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'))
-      : Keypair.generate();
+    let payer: InstanceType<typeof Keypair>;
+    
+    if (payer_secret) {
+      console.warn('[SECURITY] payer_secret provided via API - simulation mode only');
+      try {
+        payer = Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'));
+      } catch {
+        return res.status(400).json({ success: false, error: 'Invalid payer_secret format' });
+      }
+    } else {
+      payer = Keypair.generate();
+    }
     
     const result = await pumpFunProvider.buy(
       payer, mint_address, amount_sol, slippage_bps || 500, mev_protection || false
@@ -8351,10 +8384,30 @@ app.post('/stealthpump/sell', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'mint_address, token_amount required' });
     }
     
+    // Validate mint address format
+    if (typeof mint_address !== 'string' || mint_address.length < 32 || mint_address.length > 44) {
+      return res.status(400).json({ success: false, error: 'Invalid mint_address format' });
+    }
+    
+    // Validate token amount
+    if (typeof token_amount !== 'number' || token_amount <= 0) {
+      return res.status(400).json({ success: false, error: 'token_amount must be positive' });
+    }
+    
+    // SECURITY: In production, NEVER accept private keys via API
     const { Keypair } = await import('@solana/web3.js');
-    const payer = payer_secret 
-      ? Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'))
-      : Keypair.generate();
+    let payer: InstanceType<typeof Keypair>;
+    
+    if (payer_secret) {
+      console.warn('[SECURITY] payer_secret provided via API - simulation mode only');
+      try {
+        payer = Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'));
+      } catch {
+        return res.status(400).json({ success: false, error: 'Invalid payer_secret format' });
+      }
+    } else {
+      payer = Keypair.generate();
+    }
     
     const result = await pumpFunProvider.sell(
       payer, mint_address, token_amount, slippage_bps || 500, mev_protection || false
@@ -8715,10 +8768,25 @@ app.post('/stealthpump/launch-protected', async (req: Request, res: Response) =>
       });
     }
 
+    // Validate initial buy amount
+    if (typeof initial_buy_sol !== 'number' || initial_buy_sol < 0.01 || initial_buy_sol > 100) {
+      return res.status(400).json({ success: false, error: 'initial_buy_sol must be between 0.01 and 100 SOL' });
+    }
+
+    // SECURITY: In production, NEVER accept private keys via API
     const { Keypair } = await import('@solana/web3.js');
-    const payer = payer_secret
-      ? Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'))
-      : Keypair.generate();
+    let payer: InstanceType<typeof Keypair>;
+    
+    if (payer_secret) {
+      console.warn('[SECURITY] payer_secret provided via API - simulation mode only');
+      try {
+        payer = Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'));
+      } catch {
+        return res.status(400).json({ success: false, error: 'Invalid payer_secret format' });
+      }
+    } else {
+      payer = Keypair.generate();
+    }
 
     const result = await pumpFunProvider.stealthLaunchWithMevProtection(payer, {
       metadata: { name, symbol, description, image, twitter, telegram, website },
@@ -9347,6 +9415,11 @@ async function gracefulShutdown(signal: string) {
     const { responseCache } = await import('./cache');
     responseCache.destroy();
     console.log('   Response cache cleaned up');
+    
+    // Cleanup pump.fun provider monitors
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    pumpFunProvider.stopAllMonitors();
+    console.log('   Pump.fun monitors cleaned up');
   } catch (e) {
     // Ignore cleanup errors
   }
