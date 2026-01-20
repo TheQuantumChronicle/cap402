@@ -87,10 +87,11 @@ cleanupOldSnapshots(maxAgeMs): number
 
 **Graceful Shutdown Integration**:
 ```typescript
-// server.ts - lines 9423-9432
+// server.ts - lines 9427-9441
 pumpFunProvider.stopAllMonitors();
 privacyAlertSystem.stopAllMonitors();
 privacyAlertSystem.cleanupOldAlerts();
+privacyAnalytics.stopAllTracking();
 ```
 
 ### ✅ Error Handling
@@ -156,8 +157,19 @@ private priceCache: Map<string, CacheEntry>
 
 **Privacy Alerts**:
 - `/privacy-alerts/monitor/start` ✅
+- `/privacy-alerts/monitor/stop` ✅
 - `/privacy-alerts/:mint_address` ✅
+- `/privacy-alerts/:mint_address/stats` ✅
 - `/privacy-alerts/acknowledge` ✅
+- `/privacy-alerts/monitored/list` ✅
+
+**Privacy Analytics**:
+- `/privacy-analytics/track/start` ✅
+- `/privacy-analytics/track/stop` ✅
+- `/privacy-analytics/trend/:mint_address` ✅
+- `/privacy-analytics/snapshots/:mint_address` ✅
+- `/privacy-analytics/compare` ✅
+- `/privacy-analytics/tracked/list` ✅
 
 ### ✅ Request/Response Consistency
 
