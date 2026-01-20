@@ -365,6 +365,7 @@ class PumpFunProvider {
 
   /**
    * Get bonding curve info for a token
+   * Makes REAL on-chain RPC call to read pump.fun bonding curve state
    */
   async getBondingCurveInfo(mintAddress: string): Promise<BondingCurveInfo | null> {
     await this.initialize();
@@ -373,27 +374,53 @@ class PumpFunProvider {
       const mint = new PublicKey(mintAddress);
       const bondingCurve = this.deriveBondingCurvePDA(mint);
       
-      if (this.useLiveMode) {
-        const accountInfo = await this.connection.getAccountInfo(bondingCurve);
-        if (!accountInfo) return null;
-        
-        // In production, would decode the account data
-        // For now, return simulated data
+      // Always try to fetch real on-chain data
+      const accountInfo = await this.connection.getAccountInfo(bondingCurve);
+      
+      if (!accountInfo || !accountInfo.data) {
+        // Token doesn't exist on pump.fun or hasn't been created yet
+        return null;
       }
-
-      // Simulated bonding curve data
+      
+      // Decode pump.fun bonding curve account data
+      // Layout: discriminator(8) + virtualTokenReserves(8) + virtualSolReserves(8) + 
+      //         realTokenReserves(8) + realSolReserves(8) + tokenTotalSupply(8) + complete(1)
+      const data = accountInfo.data;
+      
+      if (data.length < 49) {
+        console.warn(`[PumpFun] Invalid bonding curve data length: ${data.length}`);
+        return null;
+      }
+      
+      // Read u64 values (little-endian)
+      const virtualTokenReserves = Number(data.readBigUInt64LE(8));
+      const virtualSolReserves = Number(data.readBigUInt64LE(16));
+      const realTokenReserves = Number(data.readBigUInt64LE(24));
+      const realSolReserves = Number(data.readBigUInt64LE(32));
+      const tokenTotalSupply = Number(data.readBigUInt64LE(40));
+      const complete = data[48] === 1;
+      
+      // Calculate price per token (SOL per token)
+      const pricePerToken = virtualSolReserves / virtualTokenReserves / LAMPORTS_PER_SOL;
+      
+      // Market cap = price * total supply (in SOL)
+      const marketCapSol = (virtualSolReserves / LAMPORTS_PER_SOL);
+      
+      console.log(`[PumpFun] ✓ Read bonding curve for ${mintAddress.slice(0, 8)}... - MCap: ${marketCapSol.toFixed(2)} SOL`);
+      
       return {
         mintAddress,
-        virtualSolReserves: 30 * LAMPORTS_PER_SOL,
-        virtualTokenReserves: 1_000_000_000_000_000,
-        realSolReserves: 0,
-        realTokenReserves: 793_100_000_000_000,
-        tokenTotalSupply: 1_000_000_000_000_000,
-        complete: false,
-        pricePerToken: 0.00000003,
-        marketCapSol: 30
+        virtualSolReserves,
+        virtualTokenReserves,
+        realSolReserves,
+        realTokenReserves,
+        tokenTotalSupply,
+        complete,
+        pricePerToken,
+        marketCapSol
       };
-    } catch {
+    } catch (error) {
+      console.error(`[PumpFun] Failed to get bonding curve:`, error);
       return null;
     }
   }
