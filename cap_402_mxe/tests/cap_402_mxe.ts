@@ -29,7 +29,8 @@ import { expect } from "chai";
 // Cluster configuration
 // For localnet testing: null (uses ARCIUM_CLUSTER_PUBKEY from env)
 // For devnet/testnet: specific cluster offset (456 for v0.6.3)
-const CLUSTER_OFFSET: number | null = 456;
+// NOTE: Devnet cluster 456 ARX nodes are not responding - use localnet for testing
+const CLUSTER_OFFSET: number | null = null;
 
 /**
  * Gets the cluster account address based on configuration.
@@ -133,7 +134,11 @@ describe("Cap402Mxe", () => {
         ),
       })
       .signers([owner])
-      .rpc({ commitment: "confirmed" });
+      .rpc({ 
+        skipPreflight: true, 
+        commitment: "confirmed",
+        maxRetries: 3,
+      });
     console.log("Queue sig is ", queueSig);
 
     const finalizeSig = await awaitComputationFinalization(
