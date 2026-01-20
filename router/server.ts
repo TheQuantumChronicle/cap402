@@ -101,6 +101,10 @@ app.use('/docs', express.static(path.join(process.cwd(), 'docs')));
 import privacyAlertsRouter from './privacy-alerts-routes';
 app.use('/privacy-alerts', privacyAlertsRouter);
 
+// Privacy Analytics API
+import privacyAnalyticsRouter from './privacy-analytics-routes';
+app.use('/privacy-analytics', privacyAnalyticsRouter);
+
 // Redirect /docs to /docs/api-docs.html
 app.get('/docs', (req: Request, res: Response) => {
   res.redirect('/docs/api-docs.html');
@@ -9430,6 +9434,11 @@ async function gracefulShutdown(signal: string) {
     privacyAlertSystem.stopAllMonitors();
     privacyAlertSystem.cleanupOldAlerts();
     console.log('   Privacy alert system cleaned up');
+
+    // Cleanup privacy analytics
+    const { privacyAnalytics } = await import('../providers/privacy-analytics');
+    privacyAnalytics.stopAllTracking();
+    console.log('   Privacy analytics cleaned up');
   } catch (e) {
     // Ignore cleanup errors
   }

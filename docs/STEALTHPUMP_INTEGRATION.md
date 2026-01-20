@@ -391,6 +391,36 @@ ARCIUM_MXE_ID=456
 ARCIUM_NETWORK=devnet
 ```
 
+## Privacy Monitoring APIs (Jan 2026)
+
+### Privacy Alerts API
+Real-time monitoring for privacy degradation.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/privacy-alerts/monitor/start` | POST | Start monitoring a token |
+| `/privacy-alerts/monitor/stop` | POST | Stop monitoring |
+| `/privacy-alerts/:mint_address` | GET | Get alerts for token |
+| `/privacy-alerts/acknowledge` | POST | Acknowledge an alert |
+| `/privacy-alerts/:mint_address/stats` | GET | Get alert statistics |
+| `/privacy-alerts/monitored/list` | GET | List all monitored tokens |
+
+**Alert Types**: `anonymity_drop`, `holder_concentration`, `privacy_degradation`, `holder_count_low`
+
+### Privacy Analytics API
+Historical privacy trend analysis.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/privacy-analytics/track/start` | POST | Start tracking trends |
+| `/privacy-analytics/track/stop` | POST | Stop tracking |
+| `/privacy-analytics/trend/:mint_address` | GET | Get trend analysis |
+| `/privacy-analytics/snapshots/:mint_address` | GET | Get snapshot history |
+| `/privacy-analytics/compare` | GET | Compare multiple tokens |
+| `/privacy-analytics/tracked/list` | GET | List tracked tokens |
+
+**Trend Directions**: `improving`, `stable`, `degrading`
+
 ## Future Enhancements
 
 1. **Advanced Privacy** (Partially Complete)
