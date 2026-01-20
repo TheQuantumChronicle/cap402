@@ -523,6 +523,170 @@ interface UnifiedDashboardData {
   };
 }
 
+// ============================================
+// CROSS-SYSTEM EVENT SYNCHRONIZATION
+// Enables real-time updates across CAP-402, StealthPump, and pump.fun
+// ============================================
+
+export interface CrossSystemEvent {
+  source: 'cap402' | 'stealthpump' | 'pumpfun';
+  type: string;
+  data: any;
+  timestamp: number;
+  correlationId?: string;
+}
+
+class CrossSystemEventBus {
+  private subscribers: Map<string, ((event: CrossSystemEvent) => void)[]> = new Map();
+  private eventHistory: CrossSystemEvent[] = [];
+  private maxHistorySize: number = 1000;
+
+  /**
+   * Emit an event to all subscribers
+   */
+  emit(source: CrossSystemEvent['source'], type: string, data: any, correlationId?: string): void {
+    const event: CrossSystemEvent = {
+      source,
+      type,
+      data,
+      timestamp: Date.now(),
+      correlationId
+    };
+
+    // Store in history
+    this.eventHistory.push(event);
+    if (this.eventHistory.length > this.maxHistorySize) {
+      this.eventHistory.shift();
+    }
+
+    // Notify subscribers
+    const key = `${source}:${type}`;
+    const specificSubscribers = this.subscribers.get(key) || [];
+    const wildcardSubscribers = this.subscribers.get('*:*') || [];
+    const sourceWildcard = this.subscribers.get(`${source}:*`) || [];
+    const typeWildcard = this.subscribers.get(`*:${type}`) || [];
+
+    [...specificSubscribers, ...wildcardSubscribers, ...sourceWildcard, ...typeWildcard]
+      .forEach(cb => {
+        try {
+          cb(event);
+        } catch (e) {
+          console.error('[EventBus] Subscriber error:', e);
+        }
+      });
+
+    console.log(`[EventBus] ${source}:${type}`, JSON.stringify(data).slice(0, 200));
+  }
+
+  /**
+   * Subscribe to events
+   * Pattern: "source:type" or "*:*" for all, "cap402:*" for all CAP-402 events
+   */
+  subscribe(pattern: string, callback: (event: CrossSystemEvent) => void): () => void {
+    const subscribers = this.subscribers.get(pattern) || [];
+    subscribers.push(callback);
+    this.subscribers.set(pattern, subscribers);
+
+    // Return unsubscribe function
+    return () => {
+      const current = this.subscribers.get(pattern) || [];
+      this.subscribers.set(pattern, current.filter(cb => cb !== callback));
+    };
+  }
+
+  /**
+   * Get recent events, optionally filtered
+   */
+  getRecentEvents(options?: {
+    source?: CrossSystemEvent['source'];
+    type?: string;
+    since?: number;
+    limit?: number;
+  }): CrossSystemEvent[] {
+    let events = [...this.eventHistory];
+
+    if (options?.source) {
+      events = events.filter(e => e.source === options.source);
+    }
+    if (options?.type) {
+      events = events.filter(e => e.type === options.type);
+    }
+    if (options?.since) {
+      const sinceTime = options.since;
+      events = events.filter(e => e.timestamp >= sinceTime);
+    }
+
+    events.sort((a, b) => b.timestamp - a.timestamp);
+
+    if (options?.limit) {
+      events = events.slice(0, options.limit);
+    }
+
+    return events;
+  }
+
+  /**
+   * Get events by correlation ID (for tracking related events across systems)
+   */
+  getCorrelatedEvents(correlationId: string): CrossSystemEvent[] {
+    return this.eventHistory.filter(e => e.correlationId === correlationId);
+  }
+
+  /**
+   * Clear event history
+   */
+  clearHistory(): void {
+    this.eventHistory = [];
+  }
+}
+
+// Singleton event bus
+export const eventBus = new CrossSystemEventBus();
+
+// ============================================
+// PREDEFINED EVENT TYPES
+// Standard events for cross-system communication
+// ============================================
+
+export const EventTypes = {
+  // Launch Events
+  LAUNCH_INITIATED: 'launch_initiated',
+  LAUNCH_PHASE_CHANGED: 'launch_phase_changed',
+  LAUNCH_COMPLETED: 'launch_completed',
+  LAUNCH_FAILED: 'launch_failed',
+
+  // Privacy Events
+  PRIVACY_SCORE_UPDATED: 'privacy_score_updated',
+  CREATOR_REVEALED: 'creator_revealed',
+  ANONYMITY_CHANGED: 'anonymity_changed',
+  MEV_PROTECTION_APPLIED: 'mev_protection_applied',
+
+  // Market Events
+  BONDING_CURVE_UPDATED: 'bonding_curve_updated',
+  TOKEN_GRADUATED: 'token_graduated',
+  TRADE_EXECUTED: 'trade_executed',
+
+  // System Events
+  SYSTEM_STATUS_CHANGED: 'system_status_changed',
+  PROVIDER_SWITCHED: 'provider_switched',
+  ERROR_OCCURRED: 'error_occurred'
+} as const;
+
+// Helper to emit CAP-402 events
+export function emitCAP402Event(type: string, data: any, correlationId?: string): void {
+  eventBus.emit('cap402', type, data, correlationId);
+}
+
+// Helper to emit StealthPump events
+export function emitStealthPumpEvent(type: string, data: any, correlationId?: string): void {
+  eventBus.emit('stealthpump', type, data, correlationId);
+}
+
+// Helper to emit pump.fun events
+export function emitPumpFunEvent(type: string, data: any, correlationId?: string): void {
+  eventBus.emit('pumpfun', type, data, correlationId);
+}
+
 // Export singleton instance
 export const unifiedPrivacy = new UnifiedPrivacyOrchestrator();
 

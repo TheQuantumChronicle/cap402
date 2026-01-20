@@ -9217,6 +9217,105 @@ app.get('/unified/status', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// CROSS-SYSTEM EVENT BUS ENDPOINTS
+// Real-time event synchronization
+// ============================================
+
+// Get recent cross-system events
+app.get('/unified/events', async (req: Request, res: Response) => {
+  try {
+    const { eventBus } = await import('../providers/unified-privacy');
+    const { source, type, since, limit } = req.query;
+
+    const events = eventBus.getRecentEvents({
+      source: source as 'cap402' | 'stealthpump' | 'pumpfun' | undefined,
+      type: type as string | undefined,
+      since: since ? parseInt(since as string) : undefined,
+      limit: limit ? parseInt(limit as string) : 50
+    });
+
+    res.json({
+      success: true,
+      count: events.length,
+      events
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get events' });
+  }
+});
+
+// Get correlated events by correlation ID
+app.get('/unified/events/correlated/:correlation_id', async (req: Request, res: Response) => {
+  try {
+    const { eventBus } = await import('../providers/unified-privacy');
+    const events = eventBus.getCorrelatedEvents(req.params.correlation_id);
+
+    res.json({
+      success: true,
+      correlation_id: req.params.correlation_id,
+      count: events.length,
+      events
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get events' });
+  }
+});
+
+// Emit a cross-system event (for external systems to notify CAP-402)
+app.post('/unified/events/emit', async (req: Request, res: Response) => {
+  try {
+    const { eventBus } = await import('../providers/unified-privacy');
+    const { source, type, data, correlation_id } = req.body;
+
+    if (!source || !type || !data) {
+      return res.status(400).json({
+        success: false,
+        error: 'source, type, and data required'
+      });
+    }
+
+    if (!['cap402', 'stealthpump', 'pumpfun'].includes(source)) {
+      return res.status(400).json({
+        success: false,
+        error: 'source must be cap402, stealthpump, or pumpfun'
+      });
+    }
+
+    eventBus.emit(source, type, data, correlation_id);
+
+    res.json({
+      success: true,
+      message: 'Event emitted',
+      event: { source, type, correlation_id, timestamp: Date.now() }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to emit event' });
+  }
+});
+
+// Get event types reference
+app.get('/unified/events/types', async (req: Request, res: Response) => {
+  try {
+    const { EventTypes } = await import('../providers/unified-privacy');
+
+    res.json({
+      success: true,
+      event_types: EventTypes,
+      sources: ['cap402', 'stealthpump', 'pumpfun'],
+      subscription_patterns: [
+        '*:*           - All events from all sources',
+        'cap402:*      - All CAP-402 events',
+        'stealthpump:* - All StealthPump events',
+        'pumpfun:*     - All pump.fun events',
+        '*:launch_completed - Launch completed from any source'
+      ]
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get event types' });
+  }
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 
