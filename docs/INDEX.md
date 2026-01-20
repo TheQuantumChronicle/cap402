@@ -47,6 +47,13 @@
    - Data flow diagrams
    - Security model
 
+7. **[STEALTHPUMP_INTEGRATION.md](STEALTHPUMP_INTEGRATION.md)** ⭐ NEW
+   - Complete StealthPump integration architecture
+   - Privacy-first token launches on pump.fun
+   - Cross-system event synchronization
+   - Privacy scoring and anonymity tracking
+   - API endpoints and security features
+
 ### For Presentations
 5. **[HACKATHON_PITCH.md](HACKATHON_PITCH.md)**
    - Pitch deck format
