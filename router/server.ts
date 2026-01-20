@@ -97,6 +97,10 @@ app.use('/public', express.static(path.join(process.cwd(), 'public')));
 app.use(express.static(path.join(process.cwd(), 'public')));
 // Serve docs folder for API documentation (Swagger)
 app.use('/docs', express.static(path.join(process.cwd(), 'docs')));
+// Privacy Alerts API
+import privacyAlertsRouter from './privacy-alerts-routes';
+app.use('/privacy-alerts', privacyAlertsRouter);
+
 // Redirect /docs to /docs/api-docs.html
 app.get('/docs', (req: Request, res: Response) => {
   res.redirect('/docs/api-docs.html');
@@ -9420,6 +9424,12 @@ async function gracefulShutdown(signal: string) {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     pumpFunProvider.stopAllMonitors();
     console.log('   Pump.fun monitors cleaned up');
+    
+    // Cleanup privacy alert system
+    const { privacyAlertSystem } = await import('../providers/privacy-alerts');
+    privacyAlertSystem.stopAllMonitors();
+    privacyAlertSystem.cleanupOldAlerts();
+    console.log('   Privacy alert system cleaned up');
   } catch (e) {
     // Ignore cleanup errors
   }
