@@ -8261,6 +8261,195 @@ app.get('/execute/stats', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// STEALTHPUMP / PUMP.FUN ENDPOINTS
+// ============================================
+
+// Stealth launch a token on pump.fun
+app.post('/stealthpump/launch', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { 
+      name, symbol, description, image, twitter, telegram, website,
+      initial_buy_sol, slippage_bps, use_stealth_wallet, mev_protection,
+      payer_secret
+    } = req.body;
+    
+    if (!name || !symbol || !description || !initial_buy_sol) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'name, symbol, description, initial_buy_sol required' 
+      });
+    }
+    
+    if (initial_buy_sol < 0.01) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'initial_buy_sol must be at least 0.01 SOL' 
+      });
+    }
+    
+    // In production, payer would come from authenticated session
+    const { Keypair } = await import('@solana/web3.js');
+    const payer = payer_secret 
+      ? Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'))
+      : Keypair.generate();
+    
+    const result = await pumpFunProvider.stealthLaunch(payer, {
+      metadata: { name, symbol, description, image, twitter, telegram, website },
+      initialBuySol: initial_buy_sol,
+      slippageBps: slippage_bps || 500,
+      useStealthWallet: use_stealth_wallet || false,
+      mevProtection: mev_protection || false
+    });
+    
+    if (result.success) {
+      res.json({
+        ...result,
+        pump_fun_url: `https://pump.fun/${result.mintAddress}`
+      });
+    } else {
+      res.status(500).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Launch failed' });
+  }
+});
+
+// Buy tokens from pump.fun bonding curve
+app.post('/stealthpump/buy', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { mint_address, amount_sol, slippage_bps, mev_protection, payer_secret } = req.body;
+    
+    if (!mint_address || !amount_sol) {
+      return res.status(400).json({ success: false, error: 'mint_address, amount_sol required' });
+    }
+    
+    const { Keypair } = await import('@solana/web3.js');
+    const payer = payer_secret 
+      ? Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'))
+      : Keypair.generate();
+    
+    const result = await pumpFunProvider.buy(
+      payer, mint_address, amount_sol, slippage_bps || 500, mev_protection || false
+    );
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Buy failed' });
+  }
+});
+
+// Sell tokens back to pump.fun bonding curve
+app.post('/stealthpump/sell', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { mint_address, token_amount, slippage_bps, mev_protection, payer_secret } = req.body;
+    
+    if (!mint_address || !token_amount) {
+      return res.status(400).json({ success: false, error: 'mint_address, token_amount required' });
+    }
+    
+    const { Keypair } = await import('@solana/web3.js');
+    const payer = payer_secret 
+      ? Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'))
+      : Keypair.generate();
+    
+    const result = await pumpFunProvider.sell(
+      payer, mint_address, token_amount, slippage_bps || 500, mev_protection || false
+    );
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Sell failed' });
+  }
+});
+
+// Get buy/sell quote from bonding curve
+app.get('/stealthpump/quote', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { mint_address, side, amount } = req.query;
+    
+    if (!mint_address || !side || !amount) {
+      return res.status(400).json({ success: false, error: 'mint_address, side, amount required' });
+    }
+    
+    const amountNum = parseFloat(amount as string);
+    
+    if (side === 'buy') {
+      const quote = await pumpFunProvider.getBuyQuote(mint_address as string, amountNum);
+      res.json({ success: true, side: 'buy', ...quote });
+    } else if (side === 'sell') {
+      const quote = await pumpFunProvider.getSellQuote(mint_address as string, amountNum);
+      res.json({ success: true, side: 'sell', ...quote });
+    } else {
+      res.status(400).json({ success: false, error: 'side must be "buy" or "sell"' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Quote failed' });
+  }
+});
+
+// Get bonding curve info
+app.get('/stealthpump/curve/:mint_address', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const info = await pumpFunProvider.getBondingCurveInfo(req.params.mint_address);
+    
+    if (!info) {
+      return res.status(404).json({ success: false, error: 'Token not found or not a pump.fun token' });
+    }
+    
+    // Calculate graduation progress (85 SOL to graduate)
+    const graduationThreshold = 85;
+    const progress = Math.min(100, (info.realSolReserves / graduationThreshold) * 100);
+    
+    res.json({ 
+      success: true, 
+      ...info,
+      progress_to_graduation: progress,
+      pump_fun_url: `https://pump.fun/${req.params.mint_address}`
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get curve info' });
+  }
+});
+
+// Check if token has graduated to Raydium
+app.get('/stealthpump/graduated/:mint_address', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const graduated = await pumpFunProvider.hasGraduated(req.params.mint_address);
+    res.json({ success: true, mint_address: req.params.mint_address, graduated });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Check failed' });
+  }
+});
+
+// Generate stealth wallet
+app.post('/stealthpump/wallet/generate', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const wallet = pumpFunProvider.generateStealthWallet();
+    res.json({ success: true, ...wallet });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Generation failed' });
+  }
+});
+
+// Get StealthPump provider status
+app.get('/stealthpump/status', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const status = pumpFunProvider.getStatus();
+    res.json({ success: true, ...status });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Status failed' });
+  }
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 
