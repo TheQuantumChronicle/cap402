@@ -88,6 +88,49 @@ export interface BondingCurveInfo {
   marketCapSol: number;
 }
 
+// Pump.fun constants (from their bonding curve)
+export const PUMPFUN_CONSTANTS = {
+  TOTAL_SUPPLY: 1_000_000_000,           // 1 billion tokens
+  RESERVED_TOKENS: 206_900_000,          // Reserved for liquidity
+  INITIAL_REAL_TOKEN_RESERVES: 793_100_000, // totalSupply - reservedTokens
+  GRADUATION_THRESHOLD_SOL: 85,          // SOL needed to graduate
+  GRADUATION_THRESHOLD_MCAP_USD: 69_000, // ~$69K market cap to graduate
+  DECIMALS: 6,
+  FEE_BPS: 100  // 1% fee
+};
+
+// Pump.fun compatible token data format (matches their frontend)
+export interface PumpFunTokenData {
+  mint: string;
+  name: string;
+  symbol: string;
+  description: string;
+  image_uri: string;
+  metadata_uri: string;
+  twitter: string | null;
+  telegram: string | null;
+  website: string | null;
+  bonding_curve: string;
+  associated_bonding_curve: string;
+  creator: string;
+  created_timestamp: number;
+  raydium_pool: string | null;
+  complete: boolean;
+  virtual_sol_reserves: number;
+  virtual_token_reserves: number;
+  total_supply: number;
+  // Calculated fields
+  usd_market_cap: number;
+  market_cap_sol: number;
+  price_sol: number;
+  price_usd: number;
+  bonding_curve_progress: number;
+  reply_count: number;
+  last_reply: number | null;
+  king_of_the_hill_timestamp: number | null;
+  is_currently_live: boolean;
+}
+
 // Stealth launch registry - tracks hidden launches until graduation
 export interface StealthLaunchRecord {
   mintAddress: string;
@@ -533,6 +576,201 @@ class PumpFunProvider {
       solOut: solOut / LAMPORTS_PER_SOL,
       priceImpact,
       newPrice: newPrice / LAMPORTS_PER_SOL
+    };
+  }
+
+  // ============================================
+  // PUMP.FUN COMPATIBLE DATA FORMATS
+  // Matches their frontend/backend structures
+  // ============================================
+
+  /**
+   * Calculate bonding curve progress using pump.fun's exact formula
+   * Formula: BondingCurveProgress = 100 - ((leftTokens * 100) / initialRealTokenReserves)
+   * Where: leftTokens = realTokenReserves - reservedTokens
+   */
+  calculateBondingCurveProgress(realTokenReserves: number): number {
+    const leftTokens = realTokenReserves - PUMPFUN_CONSTANTS.RESERVED_TOKENS;
+    const progress = 100 - ((leftTokens * 100) / PUMPFUN_CONSTANTS.INITIAL_REAL_TOKEN_RESERVES);
+    return Math.max(0, Math.min(100, progress));
+  }
+
+  /**
+   * Get pump.fun compatible token data format
+   * Matches their API response structure for frontend compatibility
+   */
+  async getPumpFunCompatibleData(
+    mintAddress: string,
+    metadata?: TokenMetadata,
+    solPriceUsd: number = 200  // Current SOL price in USD
+  ): Promise<PumpFunTokenData | null> {
+    const curveInfo = await this.getBondingCurveInfo(mintAddress);
+    if (!curveInfo) return null;
+
+    const stealthRecord = this.stealthRegistry.get(mintAddress);
+    const bondingCurve = this.deriveBondingCurvePDA(new PublicKey(mintAddress));
+
+    // Calculate bonding curve progress using pump.fun formula
+    const bondingCurveProgress = this.calculateBondingCurveProgress(curveInfo.realTokenReserves);
+
+    // Calculate prices
+    const priceSol = curveInfo.virtualSolReserves / curveInfo.virtualTokenReserves / LAMPORTS_PER_SOL;
+    const priceUsd = priceSol * solPriceUsd;
+    const marketCapSol = curveInfo.virtualSolReserves / LAMPORTS_PER_SOL;
+    const usdMarketCap = PUMPFUN_CONSTANTS.TOTAL_SUPPLY * priceUsd;
+
+    return {
+      mint: mintAddress,
+      name: metadata?.name || stealthRecord?.publicData.name || 'Unknown',
+      symbol: metadata?.symbol || stealthRecord?.publicData.symbol || 'UNKNOWN',
+      description: metadata?.description || stealthRecord?.publicData.description || '',
+      image_uri: metadata?.image || stealthRecord?.publicData.image || '',
+      metadata_uri: '',  // Would be IPFS URI
+      twitter: metadata?.twitter || null,
+      telegram: metadata?.telegram || null,
+      website: metadata?.website || null,
+      bonding_curve: bondingCurve.toBase58(),
+      associated_bonding_curve: bondingCurve.toBase58(),  // Simplified
+      creator: stealthRecord?.revealed ? stealthRecord.hiddenData.creatorWallet : '🔒 Hidden',
+      created_timestamp: stealthRecord?.createdAt || Date.now(),
+      raydium_pool: curveInfo.complete ? 'graduated' : null,
+      complete: curveInfo.complete,
+      virtual_sol_reserves: curveInfo.virtualSolReserves,
+      virtual_token_reserves: curveInfo.virtualTokenReserves,
+      total_supply: PUMPFUN_CONSTANTS.TOTAL_SUPPLY,
+      usd_market_cap: usdMarketCap,
+      market_cap_sol: marketCapSol,
+      price_sol: priceSol,
+      price_usd: priceUsd,
+      bonding_curve_progress: Math.round(bondingCurveProgress * 100) / 100,
+      reply_count: 0,
+      last_reply: null,
+      king_of_the_hill_timestamp: null,
+      is_currently_live: !curveInfo.complete
+    };
+  }
+
+  /**
+   * Get token metrics in pump.fun dashboard format
+   */
+  async getTokenMetrics(mintAddress: string, solPriceUsd: number = 200): Promise<{
+    price: { sol: number; usd: number };
+    marketCap: { sol: number; usd: number };
+    bondingCurve: {
+      progress: number;
+      solRaised: number;
+      tokensRemaining: number;
+      graduationThreshold: number;
+      estimatedTimeToGraduation?: string;
+    };
+    volume24h?: { sol: number; usd: number };
+    holders?: number;
+    transactions24h?: number;
+  } | null> {
+    const curveInfo = await this.getBondingCurveInfo(mintAddress);
+    if (!curveInfo) return null;
+
+    const progress = this.calculateBondingCurveProgress(curveInfo.realTokenReserves);
+    const priceSol = curveInfo.virtualSolReserves / curveInfo.virtualTokenReserves / LAMPORTS_PER_SOL;
+    const priceUsd = priceSol * solPriceUsd;
+    const marketCapSol = curveInfo.virtualSolReserves / LAMPORTS_PER_SOL;
+    const solRaised = curveInfo.realSolReserves / LAMPORTS_PER_SOL;
+    const tokensRemaining = curveInfo.realTokenReserves - PUMPFUN_CONSTANTS.RESERVED_TOKENS;
+
+    return {
+      price: {
+        sol: priceSol,
+        usd: priceUsd
+      },
+      marketCap: {
+        sol: marketCapSol,
+        usd: PUMPFUN_CONSTANTS.TOTAL_SUPPLY * priceUsd
+      },
+      bondingCurve: {
+        progress: Math.round(progress * 100) / 100,
+        solRaised,
+        tokensRemaining,
+        graduationThreshold: PUMPFUN_CONSTANTS.GRADUATION_THRESHOLD_SOL
+      }
+    };
+  }
+
+  /**
+   * Format data for pump.fun frontend display
+   * Returns privacy-aware data that hides creator until graduation
+   */
+  async getDisplayData(mintAddress: string, solPriceUsd: number = 200): Promise<{
+    // Always visible
+    token: {
+      mint: string;
+      name: string;
+      symbol: string;
+      image?: string;
+    };
+    metrics: {
+      price_usd: string;
+      market_cap_usd: string;
+      bonding_progress: string;
+      sol_raised: string;
+    };
+    status: {
+      is_live: boolean;
+      graduated: boolean;
+      graduation_progress: number;
+    };
+    // Privacy-controlled
+    creator: {
+      revealed: boolean;
+      wallet: string;
+      initial_buy?: string;
+    };
+    // Links
+    links: {
+      pump_fun: string;
+      solscan: string;
+      birdeye?: string;
+    };
+  } | null> {
+    const curveInfo = await this.getBondingCurveInfo(mintAddress);
+    if (!curveInfo) return null;
+
+    const stealthRecord = this.stealthRegistry.get(mintAddress);
+    const progress = this.calculateBondingCurveProgress(curveInfo.realTokenReserves);
+    const priceSol = curveInfo.virtualSolReserves / curveInfo.virtualTokenReserves / LAMPORTS_PER_SOL;
+    const priceUsd = priceSol * solPriceUsd;
+    const marketCapUsd = PUMPFUN_CONSTANTS.TOTAL_SUPPLY * priceUsd;
+    const solRaised = curveInfo.realSolReserves / LAMPORTS_PER_SOL;
+
+    const isRevealed = stealthRecord?.revealed || curveInfo.complete;
+
+    return {
+      token: {
+        mint: mintAddress,
+        name: stealthRecord?.publicData.name || 'Unknown',
+        symbol: stealthRecord?.publicData.symbol || '???',
+        image: stealthRecord?.publicData.image
+      },
+      metrics: {
+        price_usd: `$${priceUsd.toFixed(8)}`,
+        market_cap_usd: marketCapUsd >= 1000 ? `$${(marketCapUsd / 1000).toFixed(1)}K` : `$${marketCapUsd.toFixed(2)}`,
+        bonding_progress: `${progress.toFixed(1)}%`,
+        sol_raised: `${solRaised.toFixed(2)} SOL`
+      },
+      status: {
+        is_live: !curveInfo.complete,
+        graduated: curveInfo.complete,
+        graduation_progress: progress
+      },
+      creator: {
+        revealed: isRevealed,
+        wallet: isRevealed ? (stealthRecord?.hiddenData.creatorWallet || 'Unknown') : '🔒 Hidden until graduation',
+        initial_buy: isRevealed && stealthRecord ? `${stealthRecord.hiddenData.initialBuyAmount} SOL` : undefined
+      },
+      links: {
+        pump_fun: `https://pump.fun/${mintAddress}`,
+        solscan: `https://solscan.io/token/${mintAddress}`,
+        birdeye: curveInfo.complete ? `https://birdeye.so/token/${mintAddress}` : undefined
+      }
     };
   }
 

@@ -8870,6 +8870,158 @@ app.get('/stealthpump/privacy-score/:mint_address', async (req: Request, res: Re
   }
 });
 
+// ============================================
+// PUMP.FUN COMPATIBLE DATA ENDPOINTS
+// Matches their frontend/backend structures
+// ============================================
+
+// Get pump.fun compatible token data (matches their API format)
+app.get('/stealthpump/pumpfun-data/:mint_address', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { sol_price_usd } = req.query;
+    
+    const data = await pumpFunProvider.getPumpFunCompatibleData(
+      req.params.mint_address,
+      undefined,
+      sol_price_usd ? parseFloat(sol_price_usd as string) : 200
+    );
+
+    if (!data) {
+      return res.status(404).json({ success: false, error: 'Token not found' });
+    }
+
+    res.json({
+      success: true,
+      // Return in pump.fun compatible format
+      ...data
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get data' });
+  }
+});
+
+// Get token metrics in pump.fun dashboard format
+app.get('/stealthpump/metrics/:mint_address', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { sol_price_usd } = req.query;
+    
+    const metrics = await pumpFunProvider.getTokenMetrics(
+      req.params.mint_address,
+      sol_price_usd ? parseFloat(sol_price_usd as string) : 200
+    );
+
+    if (!metrics) {
+      return res.status(404).json({ success: false, error: 'Token not found' });
+    }
+
+    res.json({
+      success: true,
+      mint_address: req.params.mint_address,
+      price: metrics.price,
+      market_cap: metrics.marketCap,
+      bonding_curve: {
+        progress: metrics.bondingCurve.progress,
+        sol_raised: metrics.bondingCurve.solRaised,
+        tokens_remaining: metrics.bondingCurve.tokensRemaining,
+        graduation_threshold: metrics.bondingCurve.graduationThreshold,
+        progress_bar: `${'█'.repeat(Math.floor(metrics.bondingCurve.progress / 5))}${'░'.repeat(20 - Math.floor(metrics.bondingCurve.progress / 5))} ${metrics.bondingCurve.progress.toFixed(1)}%`
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get metrics' });
+  }
+});
+
+// Get privacy-aware display data for frontend
+app.get('/stealthpump/display/:mint_address', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { sol_price_usd } = req.query;
+    
+    const displayData = await pumpFunProvider.getDisplayData(
+      req.params.mint_address,
+      sol_price_usd ? parseFloat(sol_price_usd as string) : 200
+    );
+
+    if (!displayData) {
+      return res.status(404).json({ success: false, error: 'Token not found' });
+    }
+
+    res.json({
+      success: true,
+      ...displayData
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get display data' });
+  }
+});
+
+// Get pump.fun constants (for frontend reference)
+app.get('/stealthpump/constants', async (req: Request, res: Response) => {
+  try {
+    const { PUMPFUN_CONSTANTS } = await import('../providers/pumpfun');
+    
+    res.json({
+      success: true,
+      constants: {
+        total_supply: PUMPFUN_CONSTANTS.TOTAL_SUPPLY,
+        reserved_tokens: PUMPFUN_CONSTANTS.RESERVED_TOKENS,
+        initial_real_token_reserves: PUMPFUN_CONSTANTS.INITIAL_REAL_TOKEN_RESERVES,
+        graduation_threshold_sol: PUMPFUN_CONSTANTS.GRADUATION_THRESHOLD_SOL,
+        graduation_threshold_mcap_usd: PUMPFUN_CONSTANTS.GRADUATION_THRESHOLD_MCAP_USD,
+        decimals: PUMPFUN_CONSTANTS.DECIMALS,
+        fee_bps: PUMPFUN_CONSTANTS.FEE_BPS
+      },
+      formulas: {
+        bonding_curve_progress: 'BondingCurveProgress = 100 - ((leftTokens * 100) / initialRealTokenReserves)',
+        left_tokens: 'leftTokens = realTokenReserves - reservedTokens',
+        market_cap: 'marketCap = totalSupply * priceUsd',
+        price: 'price = virtualSolReserves / virtualTokenReserves'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get constants' });
+  }
+});
+
+// Calculate bonding curve progress for any token balance
+app.get('/stealthpump/calculate-progress', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider, PUMPFUN_CONSTANTS } = await import('../providers/pumpfun');
+    const { real_token_reserves } = req.query;
+
+    if (!real_token_reserves) {
+      return res.status(400).json({ success: false, error: 'real_token_reserves required' });
+    }
+
+    const reserves = parseFloat(real_token_reserves as string);
+    const progress = pumpFunProvider.calculateBondingCurveProgress(reserves);
+    const leftTokens = reserves - PUMPFUN_CONSTANTS.RESERVED_TOKENS;
+
+    res.json({
+      success: true,
+      input: {
+        real_token_reserves: reserves
+      },
+      calculation: {
+        left_tokens: leftTokens,
+        initial_real_token_reserves: PUMPFUN_CONSTANTS.INITIAL_REAL_TOKEN_RESERVES,
+        reserved_tokens: PUMPFUN_CONSTANTS.RESERVED_TOKENS
+      },
+      result: {
+        bonding_curve_progress: Math.round(progress * 100) / 100,
+        tokens_sold_percent: Math.round(progress * 100) / 100,
+        tokens_remaining_percent: Math.round((100 - progress) * 100) / 100,
+        progress_bar: `${'█'.repeat(Math.floor(progress / 5))}${'░'.repeat(20 - Math.floor(progress / 5))} ${progress.toFixed(1)}%`
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Calculation failed' });
+  }
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 
