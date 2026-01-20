@@ -102,10 +102,12 @@ CAP-402/
 │
 ├── 🔀 Router (Core)
 │   └── router/
-│       ├── server.ts          ← HTTP API
-│       ├── registry.ts        ← Capability registry
-│       ├── router.ts          ← Routing logic
-│       ├── observability.ts   ← Logging
+│       ├── server.ts                  ← HTTP API
+│       ├── registry.ts                ← Capability registry
+│       ├── router.ts                  ← Routing logic
+│       ├── observability.ts           ← Logging
+│       ├── privacy-alerts-routes.ts   ← Privacy Alerts API
+│       ├── privacy-analytics-routes.ts← Privacy Analytics API
 │       ├── execution/
 │       │   ├── types.ts
 │       │   ├── public-executor.ts
