@@ -1,7 +1,13 @@
 /**
- * Arcium Client - REAL Solana Devnet Integration
+ * Arcium Client - Solana Mainnet/Devnet Integration
  * 
- * Makes real RPC calls to Solana devnet for confidential computations
+ * Makes real RPC calls to Solana for confidential computations.
+ * Supports both mainnet and devnet via ARCIUM_NETWORK env var.
+ * 
+ * When Arcium mainnet launches, simply update:
+ * - ARCIUM_NETWORK=mainnet
+ * - ARCIUM_PROGRAM_ID=<mainnet program id>
+ * - ARCIUM_MXE_ID=<mainnet cluster id>
  */
 
 import { Connection, Keypair, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
@@ -10,10 +16,19 @@ import crypto from 'crypto';
 
 dotenv.config();
 
-// Solana devnet RPC - use Helius for better reliability
-const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
-const ARCIUM_PROGRAM_ID = process.env.ARCIUM_PROGRAM_ID || 'FsTTMJS6BbDTc8dCXKwvq4Kau5dXMRAAwTbEAGw6vZ3w';
-const ARCIUM_MXE_ID = process.env.ARCIUM_MXE_ID || '1078779259';
+// Network configuration
+const ARCIUM_NETWORK = process.env.ARCIUM_NETWORK || 'devnet';
+const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || 
+  (ARCIUM_NETWORK === 'mainnet' ? 'https://api.mainnet-beta.solana.com' : 'https://api.devnet.solana.com');
+
+// Arcium program configuration
+// When Arcium launches on mainnet, update ARCIUM_PROGRAM_ID and ARCIUM_MXE_ID in .env
+const ARCIUM_PROGRAM_ID = process.env.ARCIUM_PROGRAM_ID || 'Aaco6pyLJ6wAod2ivxS264xRcFyFZWdamy5VaqHQVC2d';
+const ARCIUM_MXE_ID = process.env.ARCIUM_MXE_ID || '456';
+
+// Arcium mainnet availability flag
+// Set to true when Arcium launches on mainnet
+const ARCIUM_MAINNET_AVAILABLE = process.env.ARCIUM_MAINNET_AVAILABLE === 'true' || false;
 
 // Check if running in test environment
 const IS_TEST_ENV = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
@@ -60,17 +75,28 @@ class ArciumProvider {
     if (this.isInitialized) return;
 
     try {
-      // Test Solana devnet connection
+      // Test Solana connection
       const slot = await this.connection.getSlot();
-      console.log(`✅ Arcium connected to Solana devnet - Slot: ${slot}`);
+      console.log(`✅ Arcium connected to Solana ${ARCIUM_NETWORK} - Slot: ${slot}`);
+      
+      // Check if Arcium is available on the target network
+      if (ARCIUM_NETWORK === 'mainnet' && !ARCIUM_MAINNET_AVAILABLE) {
+        console.log(`⚠️  Arcium mainnet not yet available - confidential compute features disabled`);
+        console.log(`   Set ARCIUM_MAINNET_AVAILABLE=true when Arcium launches on mainnet`);
+        this.program = { programId: ARCIUM_PROGRAM_ID, mxeId: ARCIUM_MXE_ID, network: ARCIUM_NETWORK };
+        this.useLiveMode = false;
+        this.isInitialized = true;
+        return;
+      }
       
       this.program = { 
         programId: ARCIUM_PROGRAM_ID, 
-        mxeId: ARCIUM_MXE_ID 
+        mxeId: ARCIUM_MXE_ID,
+        network: ARCIUM_NETWORK
       };
       this.useLiveMode = true;
       this.isInitialized = true;
-      console.log(`✅ Arcium LIVE mode - Program: ${ARCIUM_PROGRAM_ID.slice(0, 8)}...`);
+      console.log(`✅ Arcium LIVE mode (${ARCIUM_NETWORK}) - Program: ${ARCIUM_PROGRAM_ID.slice(0, 8)}...`);
     } catch (error) {
       if (IS_TEST_ENV) {
         // Allow tests to pass without real connection
@@ -199,10 +225,12 @@ class ArciumProvider {
     return this.isInitialized;
   }
 
-  getStatus(): { status: string; mode: string; programId?: string } {
+  getStatus(): { status: string; mode: string; network: string; mainnetAvailable: boolean; programId?: string } {
     return {
       status: this.isInitialized ? 'ready' : 'not-initialized',
       mode: this.useLiveMode ? 'live' : 'simulation',
+      network: ARCIUM_NETWORK,
+      mainnetAvailable: ARCIUM_MAINNET_AVAILABLE,
       programId: this.program?.programId
     };
   }
