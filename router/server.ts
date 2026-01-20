@@ -8450,6 +8450,172 @@ app.get('/stealthpump/status', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// STEALTH REGISTRY ENDPOINTS
+// Hidden creator until graduation/reveal
+// ============================================
+
+// Register a stealth launch (hide creator until graduation)
+app.post('/stealthpump/stealth/register', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { mint_address, creator_wallet, name, symbol, description, image, initial_buy_amount, reveal_delay_seconds } = req.body;
+
+    if (!mint_address || !creator_wallet || !name || !symbol) {
+      return res.status(400).json({ success: false, error: 'mint_address, creator_wallet, name, symbol required' });
+    }
+
+    const record = pumpFunProvider.registerStealthLaunch(
+      mint_address,
+      creator_wallet,
+      { name, symbol, description: description || '', image },
+      initial_buy_amount || 0,
+      reveal_delay_seconds
+    );
+
+    res.json({
+      success: true,
+      mint_address: record.mintAddress,
+      stealth_wallet_hash: record.stealthWalletHash,
+      reveal_at: record.revealAt,
+      public_data: record.publicData,
+      message: 'Creator hidden until graduation or scheduled reveal'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Registration failed' });
+  }
+});
+
+// Get privacy-preserving bonding curve view (shows MC/progress, hides creator)
+app.get('/stealthpump/stealth/view/:mint_address', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const view = await pumpFunProvider.getStealthBondingCurveView(req.params.mint_address);
+
+    if (!view) {
+      return res.status(404).json({ success: false, error: 'Token not found' });
+    }
+
+    res.json({
+      success: true,
+      mint_address: view.mintAddress,
+      // Always visible
+      market_cap_sol: view.marketCapSol,
+      price_per_token: view.pricePerToken,
+      progress_to_graduation: view.progressToGraduation,
+      graduated: view.graduated,
+      // Hidden until reveal
+      creator_revealed: view.creatorRevealed,
+      creator_wallet: view.creatorWallet || '🔒 Hidden until graduation',
+      initial_buy_amount: view.initialBuyAmount,
+      pump_fun_url: `https://pump.fun/${req.params.mint_address}`
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'View failed' });
+  }
+});
+
+// Check graduation and auto-reveal if graduated
+app.get('/stealthpump/stealth/check-graduation/:mint_address', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const result = await pumpFunProvider.checkAndRevealIfGraduated(req.params.mint_address);
+
+    res.json({
+      success: true,
+      mint_address: req.params.mint_address,
+      graduated: result.graduated,
+      revealed: result.revealed,
+      creator_wallet: result.creatorWallet || (result.graduated ? 'Unknown' : '🔒 Hidden'),
+      market_cap_sol: result.marketCapSol,
+      message: result.graduated 
+        ? '🎓 Token graduated to Raydium! Creator revealed.' 
+        : '⏳ Still on bonding curve, creator hidden.'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Check failed' });
+  }
+});
+
+// Get all stealth launches (dashboard view)
+app.get('/stealthpump/stealth/launches', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { only_active, only_graduated, limit } = req.query;
+
+    const launches = pumpFunProvider.getStealthLaunches({
+      onlyActive: only_active === 'true',
+      onlyGraduated: only_graduated === 'true',
+      limit: limit ? parseInt(limit as string) : undefined
+    });
+
+    res.json({
+      success: true,
+      count: launches.length,
+      launches: launches.map(l => ({
+        mint_address: l.mintAddress,
+        name: l.name,
+        symbol: l.symbol,
+        launch_timestamp: l.launchTimestamp,
+        graduated: l.graduated,
+        revealed: l.revealed,
+        creator_wallet: l.creatorWallet || '🔒 Hidden',
+        pump_fun_url: `https://pump.fun/${l.mintAddress}`
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Fetch failed' });
+  }
+});
+
+// Manually reveal a stealth launch (creator choice)
+app.post('/stealthpump/stealth/reveal', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { mint_address, creator_signature } = req.body;
+
+    if (!mint_address) {
+      return res.status(400).json({ success: false, error: 'mint_address required' });
+    }
+
+    const result = pumpFunProvider.revealStealthLaunch(mint_address, creator_signature || '');
+
+    if (result.success) {
+      res.json({
+        success: true,
+        mint_address,
+        creator_wallet: result.creatorWallet,
+        message: '✅ Creator revealed successfully'
+      });
+    } else {
+      res.status(404).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Reveal failed' });
+  }
+});
+
+// Get stealth launch statistics
+app.get('/stealthpump/stealth/stats', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const stats = pumpFunProvider.getStealthStats();
+
+    res.json({
+      success: true,
+      total_stealth_launches: stats.totalStealthLaunches,
+      active_hidden: stats.activeHidden,
+      graduated: stats.graduated,
+      revealed: stats.revealed,
+      privacy_rate: stats.totalStealthLaunches > 0 
+        ? Math.round((stats.activeHidden / stats.totalStealthLaunches) * 100) 
+        : 0
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Stats failed' });
+  }
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 

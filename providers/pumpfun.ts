@@ -88,6 +88,46 @@ export interface BondingCurveInfo {
   marketCapSol: number;
 }
 
+// Stealth launch registry - tracks hidden launches until graduation
+export interface StealthLaunchRecord {
+  mintAddress: string;
+  stealthWalletHash: string;  // Hash of stealth wallet (not the actual address)
+  createdAt: number;
+  revealAt?: number;  // Timestamp when creator will be revealed
+  graduated: boolean;
+  revealed: boolean;
+  // Privacy-preserving public data (visible to everyone)
+  publicData: {
+    name: string;
+    symbol: string;
+    description: string;
+    image?: string;
+    launchTimestamp: number;
+  };
+  // Hidden data (only revealed after graduation or reveal time)
+  hiddenData: {
+    creatorWallet: string;  // Encrypted or hashed
+    initialBuyAmount: number;  // Hidden until reveal
+    fundingSource?: string;  // Hidden funding path
+  };
+}
+
+// Privacy-preserving bonding curve view
+export interface StealthBondingCurveView {
+  mintAddress: string;
+  // Public metrics (always visible)
+  marketCapSol: number;
+  pricePerToken: number;
+  progressToGraduation: number;  // 0-100%
+  graduated: boolean;
+  totalHolders?: number;
+  // Hidden metrics (revealed after graduation)
+  creatorRevealed: boolean;
+  creatorWallet?: string;  // Only shown if revealed
+  creatorHoldings?: number;  // Only shown if revealed
+  initialBuyAmount?: number;  // Only shown if revealed
+}
+
 class PumpFunProvider {
   private connection: Connection;
   private initialized = false;
@@ -100,6 +140,12 @@ class PumpFunProvider {
     totalSells: 0,
     totalVolumeSol: 0
   };
+
+  // Stealth launch registry (in production: use database)
+  private stealthRegistry: Map<string, StealthLaunchRecord> = new Map();
+  
+  // Graduation threshold (85 SOL to graduate to Raydium)
+  private readonly GRADUATION_THRESHOLD_SOL = 85;
 
   constructor() {
     this.connection = new Connection(SOLANA_RPC_URL, 'confirmed');
@@ -487,6 +533,220 @@ class PumpFunProvider {
       solOut: solOut / LAMPORTS_PER_SOL,
       priceImpact,
       newPrice: newPrice / LAMPORTS_PER_SOL
+    };
+  }
+
+  // ============================================
+  // STEALTH REGISTRY METHODS
+  // Hidden creator until graduation/reveal
+  // ============================================
+
+  /**
+   * Register a stealth launch in the privacy registry
+   * Creator info is hidden until graduation or scheduled reveal
+   */
+  registerStealthLaunch(
+    mintAddress: string,
+    creatorWallet: string,
+    metadata: TokenMetadata,
+    initialBuyAmount: number,
+    revealDelaySeconds?: number
+  ): StealthLaunchRecord {
+    const now = Date.now();
+    const record: StealthLaunchRecord = {
+      mintAddress,
+      stealthWalletHash: crypto.createHash('sha256').update(creatorWallet).digest('hex'),
+      createdAt: now,
+      revealAt: revealDelaySeconds ? now + (revealDelaySeconds * 1000) : undefined,
+      graduated: false,
+      revealed: false,
+      publicData: {
+        name: metadata.name,
+        symbol: metadata.symbol,
+        description: metadata.description,
+        image: metadata.image,
+        launchTimestamp: now
+      },
+      hiddenData: {
+        creatorWallet,
+        initialBuyAmount,
+        fundingSource: 'stealth'
+      }
+    };
+
+    this.stealthRegistry.set(mintAddress, record);
+    console.log(`[Stealth] Registered hidden launch: ${metadata.symbol} (${mintAddress.slice(0, 8)}...)`);
+    return record;
+  }
+
+  /**
+   * Get privacy-preserving bonding curve view
+   * Shows market cap and progress, hides creator until graduation
+   */
+  async getStealthBondingCurveView(mintAddress: string): Promise<StealthBondingCurveView | null> {
+    const curveInfo = await this.getBondingCurveInfo(mintAddress);
+    if (!curveInfo) return null;
+
+    const stealthRecord = this.stealthRegistry.get(mintAddress);
+    const now = Date.now();
+
+    // Calculate graduation progress (85 SOL threshold)
+    const progressToGraduation = Math.min(100, (curveInfo.realSolReserves / LAMPORTS_PER_SOL / this.GRADUATION_THRESHOLD_SOL) * 100);
+
+    // Check if should reveal (graduated or reveal time passed)
+    let shouldReveal = curveInfo.complete;  // Always reveal on graduation
+    if (stealthRecord?.revealAt && now >= stealthRecord.revealAt) {
+      shouldReveal = true;
+    }
+
+    // Update registry if graduated
+    if (stealthRecord && curveInfo.complete && !stealthRecord.graduated) {
+      stealthRecord.graduated = true;
+      stealthRecord.revealed = true;
+      console.log(`[Stealth] 🎓 Token graduated! Creator revealed: ${stealthRecord.hiddenData.creatorWallet.slice(0, 8)}...`);
+    }
+
+    const view: StealthBondingCurveView = {
+      mintAddress,
+      // Always visible
+      marketCapSol: curveInfo.marketCapSol,
+      pricePerToken: curveInfo.pricePerToken,
+      progressToGraduation: Math.round(progressToGraduation * 100) / 100,
+      graduated: curveInfo.complete,
+      // Hidden until reveal
+      creatorRevealed: shouldReveal,
+      creatorWallet: shouldReveal ? stealthRecord?.hiddenData.creatorWallet : undefined,
+      creatorHoldings: shouldReveal ? stealthRecord?.hiddenData.initialBuyAmount : undefined,
+      initialBuyAmount: shouldReveal ? stealthRecord?.hiddenData.initialBuyAmount : undefined
+    };
+
+    return view;
+  }
+
+  /**
+   * Check graduation status and auto-reveal if graduated
+   */
+  async checkAndRevealIfGraduated(mintAddress: string): Promise<{
+    graduated: boolean;
+    revealed: boolean;
+    creatorWallet?: string;
+    marketCapSol?: number;
+  }> {
+    const curveInfo = await this.getBondingCurveInfo(mintAddress);
+    const stealthRecord = this.stealthRegistry.get(mintAddress);
+
+    if (!curveInfo) {
+      return { graduated: false, revealed: false };
+    }
+
+    const graduated = curveInfo.complete;
+    let revealed = false;
+    let creatorWallet: string | undefined;
+
+    if (graduated && stealthRecord) {
+      stealthRecord.graduated = true;
+      stealthRecord.revealed = true;
+      revealed = true;
+      creatorWallet = stealthRecord.hiddenData.creatorWallet;
+      console.log(`[Stealth] 🎓 Auto-reveal on graduation: ${creatorWallet?.slice(0, 8)}...`);
+    }
+
+    return {
+      graduated,
+      revealed,
+      creatorWallet,
+      marketCapSol: curveInfo.marketCapSol
+    };
+  }
+
+  /**
+   * Get all stealth launches (for dashboard)
+   * Returns public data only, hides creator info
+   */
+  getStealthLaunches(options?: {
+    onlyActive?: boolean;  // Only non-graduated
+    onlyGraduated?: boolean;
+    limit?: number;
+  }): Array<{
+    mintAddress: string;
+    name: string;
+    symbol: string;
+    launchTimestamp: number;
+    graduated: boolean;
+    revealed: boolean;
+    creatorWallet?: string;  // Only if revealed
+  }> {
+    let launches = Array.from(this.stealthRegistry.values());
+
+    if (options?.onlyActive) {
+      launches = launches.filter(l => !l.graduated);
+    }
+    if (options?.onlyGraduated) {
+      launches = launches.filter(l => l.graduated);
+    }
+
+    // Sort by launch time (newest first)
+    launches.sort((a, b) => b.createdAt - a.createdAt);
+
+    if (options?.limit) {
+      launches = launches.slice(0, options.limit);
+    }
+
+    return launches.map(l => ({
+      mintAddress: l.mintAddress,
+      name: l.publicData.name,
+      symbol: l.publicData.symbol,
+      launchTimestamp: l.publicData.launchTimestamp,
+      graduated: l.graduated,
+      revealed: l.revealed,
+      creatorWallet: l.revealed ? l.hiddenData.creatorWallet : undefined
+    }));
+  }
+
+  /**
+   * Manually reveal a stealth launch (creator can choose to reveal early)
+   */
+  revealStealthLaunch(mintAddress: string, creatorSignature: string): {
+    success: boolean;
+    creatorWallet?: string;
+    error?: string;
+  } {
+    const record = this.stealthRegistry.get(mintAddress);
+    if (!record) {
+      return { success: false, error: 'Stealth launch not found' };
+    }
+
+    // In production: verify creatorSignature proves ownership
+    // For now, just reveal
+    record.revealed = true;
+    console.log(`[Stealth] Manual reveal: ${record.publicData.symbol} - ${record.hiddenData.creatorWallet.slice(0, 8)}...`);
+
+    return {
+      success: true,
+      creatorWallet: record.hiddenData.creatorWallet
+    };
+  }
+
+  /**
+   * Get stealth launch statistics
+   */
+  getStealthStats(): {
+    totalStealthLaunches: number;
+    activeHidden: number;
+    graduated: number;
+    revealed: number;
+    averageTimeToGraduation?: number;
+  } {
+    const launches = Array.from(this.stealthRegistry.values());
+    const graduated = launches.filter(l => l.graduated);
+    const revealed = launches.filter(l => l.revealed);
+    const activeHidden = launches.filter(l => !l.graduated && !l.revealed);
+
+    return {
+      totalStealthLaunches: launches.length,
+      activeHidden: activeHidden.length,
+      graduated: graduated.length,
+      revealed: revealed.length
     };
   }
 }
