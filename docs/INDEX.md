@@ -158,11 +158,13 @@ CAP-402/
 ### Capabilities
 Semantic contracts that define what can be done, not how to do it.
 - Defined in `spec/capabilities.ts`
-- 3 initial: price_lookup, wallet_snapshot, document_parse
+- Core: price_lookup, wallet_snapshot, swap, zk_proof, fhe_compute
+- StealthPump: stealth_launch, stealth_buy, privacy_score
 
 ### Execution Modes
 - **Public**: Standard API/RPC execution
 - **Confidential**: Arcium MPC with proofs
+- **Stealth**: Hidden creator launches via StealthPump
 
 ### Economic Layer
 - **X.402**: Payment hints with ephemeral addresses
@@ -173,13 +175,13 @@ Usage commitments emitted to Solana for verification
 
 ## 📊 Quick Stats
 
-- **Version**: 0.1.0
-- **Files**: 26
-- **Lines of Code**: ~2,500
-- **Capabilities**: 3
-- **Execution Modes**: 2
+- **Version**: 1.0.0
+- **Files**: 30+
+- **Lines of Code**: ~10,000
+- **Capabilities**: 15+ (including StealthPump)
+- **Execution Modes**: 3 (Public, Confidential, Stealth)
 - **Payment Methods**: 3
-- **Dependencies**: 138 packages
+- **Integrations**: Arcium, Noir, Inco, Helius, pump.fun
 - **Status**: ✅ Production-Ready
 
 ## 🚀 Launch Commands

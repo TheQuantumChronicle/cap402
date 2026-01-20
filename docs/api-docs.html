@@ -1276,6 +1276,194 @@
           </div>
         </div>
       </div>
+      
+      <!-- StealthPump / Unified Privacy -->
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">🥷 StealthPump — Privacy-First Token Launches</div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/unified/launch</span>
+            <span class="endpoint-desc">Execute unified privacy-first token launch</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Launch a token on pump.fun with privacy features: hidden creator wallet, MEV protection, timing obfuscation. Creator revealed only on graduation (85 SOL).</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Request Body</div>
+              <table class="params-table">
+                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                <tr><td class="param-name">token</td><td class="param-type">object</td><td class="param-required">required</td><td>{ name, symbol, description, image?, twitter?, telegram?, website? }</td></tr>
+                <tr><td class="param-name">initial_buy_sol</td><td class="param-type">number</td><td class="param-required">required</td><td>Initial buy amount in SOL</td></tr>
+                <tr><td class="param-name">privacy_level</td><td class="param-type">string</td><td class="param-optional">optional</td><td>basic | enhanced | maximum (default: enhanced)</td></tr>
+                <tr><td class="param-name">slippage_bps</td><td class="param-type">number</td><td class="param-optional">optional</td><td>Slippage tolerance in basis points (default: 500)</td></tr>
+              </table>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Example Request</div>
+              <div class="code-block">curl -X POST https://cap402.com/unified/launch \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": {"name": "StealthCoin", "symbol": "STEALTH", "description": "Privacy-first launch"},
+    "initial_buy_sol": 1.5,
+    "privacy_level": "enhanced"
+  }'</div>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Response</div>
+              <div class="response-block">{
+  <span class="key">"success"</span>: <span class="boolean">true</span>,
+  <span class="key">"mint_address"</span>: <span class="string">"7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"</span>,
+  <span class="key">"pump_fun_url"</span>: <span class="string">"https://pump.fun/7xKXtg..."</span>,
+  <span class="key">"privacy_level"</span>: <span class="string">"enhanced"</span>,
+  <span class="key">"privacy_score"</span>: <span class="number">85</span>,
+  <span class="key">"privacy_grade"</span>: <span class="string">"A"</span>,
+  <span class="key">"creator_hidden"</span>: <span class="boolean">true</span>,
+  <span class="key">"mev_protected"</span>: <span class="boolean">true</span>
+}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/unified/dashboard/:mint_address</span>
+            <span class="endpoint-desc">Aggregated dashboard data from all systems</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Get unified dashboard data combining CAP-402 privacy metrics, StealthPump registry, and pump.fun market data.</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Response</div>
+              <div class="response-block">{
+  <span class="key">"token"</span>: { <span class="key">"mint"</span>: <span class="string">"..."</span>, <span class="key">"name"</span>: <span class="string">"StealthCoin"</span>, <span class="key">"symbol"</span>: <span class="string">"STEALTH"</span> },
+  <span class="key">"market"</span>: { <span class="key">"bonding_curve_progress"</span>: <span class="number">45.2</span>, <span class="key">"sol_raised"</span>: <span class="number">38.4</span>, <span class="key">"graduated"</span>: <span class="boolean">false</span> },
+  <span class="key">"privacy"</span>: { <span class="key">"score"</span>: <span class="number">85</span>, <span class="key">"grade"</span>: <span class="string">"A"</span>, <span class="key">"creator_revealed"</span>: <span class="boolean">false</span> },
+  <span class="key">"anonymity"</span>: { <span class="key">"score"</span>: <span class="number">72</span>, <span class="key">"total_holders"</span>: <span class="number">156</span>, <span class="key">"anonymous_holders"</span>: <span class="number">112</span> }
+}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/unified/privacy-presets</span>
+            <span class="endpoint-desc">Get privacy configuration presets</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Returns available privacy presets: basic (hidden creator), enhanced (+ MEV protection, timing obfuscation), maximum (+ no auto-reveal, Noir ZK proofs).</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/unified/status</span>
+            <span class="endpoint-desc">System integration status</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Check status of CAP-402, StealthPump, and pump.fun integration. Returns operational status, active launches, and integration health.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/stealthpump/privacy-score/:mint_address</span>
+            <span class="endpoint-desc">Get privacy score for a token</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Calculate comprehensive privacy score (0-100) with grade (A-F) based on: creator visibility, holder anonymity, funding obfuscation, MEV protection, timing patterns.</p>
+            </div>
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Response</div>
+              <div class="response-block">{
+  <span class="key">"success"</span>: <span class="boolean">true</span>,
+  <span class="key">"privacy_score"</span>: <span class="number">85</span>,
+  <span class="key">"grade"</span>: <span class="string">"A"</span>,
+  <span class="key">"factors"</span>: {
+    <span class="key">"creator_hidden"</span>: <span class="boolean">true</span>,
+    <span class="key">"holder_anonymity"</span>: <span class="number">72</span>,
+    <span class="key">"funding_obfuscated"</span>: <span class="boolean">true</span>,
+    <span class="key">"mev_protected"</span>: <span class="boolean">true</span>,
+    <span class="key">"timing_obfuscated"</span>: <span class="boolean">true</span>
+  }
+}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/stealthpump/stealth/view/:mint_address</span>
+            <span class="endpoint-desc">Privacy-preserving token view</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>View token data with creator hidden until graduation. Shows bonding curve progress, market cap, but masks creator wallet.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/stealthpump/monitor/:mint_address</span>
+            <span class="endpoint-desc">Start graduation monitoring</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Monitor a token for graduation (85 SOL threshold). Returns current progress and emits events on graduation.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/stealthpump/anonymity/:mint_address</span>
+            <span class="endpoint-desc">Holder anonymity analysis</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Analyze holder distribution for anonymity. Tracks anonymous vs revealed holders, concentration metrics, and deanonymization risks.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/stealthpump/pumpfun-data/:mint_address</span>
+            <span class="endpoint-desc">Pump.fun compatible data format</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-section">
+              <div class="endpoint-section-title">Description</div>
+              <p>Returns token data in pump.fun's exact format for frontend compatibility. Includes bonding curve progress, market cap, and display formatting.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     
   </div>

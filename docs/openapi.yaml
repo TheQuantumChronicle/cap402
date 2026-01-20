@@ -100,6 +100,16 @@ tags:
       Advanced features including privacy gradient selection (4 levels from 
       public to ZK-verifiable), capability negotiation, intent graphs for 
       complex workflows, and verifiable execution receipts.
+  - name: StealthPump
+    description: |
+      Privacy-first token launches on pump.fun. Features include hidden creator 
+      wallets (revealed only on graduation), MEV protection via Jito bundles, 
+      timing obfuscation, holder anonymity tracking, and privacy scoring.
+      
+      **Privacy Levels:**
+      - `basic` — Hidden creator, stealth wallet
+      - `enhanced` — + MEV protection, timing obfuscation, anonymity tracking
+      - `maximum` — + No auto-reveal, Noir ZK proofs, full obfuscation
 
 paths:
   /capabilities:
@@ -1380,3 +1390,136 @@ components:
           type: array
           items:
             type: object
+
+    StealthLaunchRequest:
+      type: object
+      required:
+        - token
+        - initial_buy_sol
+      properties:
+        token:
+          type: object
+          required:
+            - name
+            - symbol
+            - description
+          properties:
+            name:
+              type: string
+              example: "StealthCoin"
+            symbol:
+              type: string
+              example: "STEALTH"
+            description:
+              type: string
+            image:
+              type: string
+            twitter:
+              type: string
+            telegram:
+              type: string
+            website:
+              type: string
+        initial_buy_sol:
+          type: number
+          example: 1.5
+        privacy_level:
+          type: string
+          enum: [basic, enhanced, maximum]
+          default: enhanced
+        slippage_bps:
+          type: integer
+          default: 500
+
+    StealthLaunchResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        mint_address:
+          type: string
+        bonding_curve_address:
+          type: string
+        pump_fun_url:
+          type: string
+        signature:
+          type: string
+        privacy_level:
+          type: string
+        privacy_score:
+          type: number
+        privacy_grade:
+          type: string
+          enum: [A, B, C, D, F]
+        creator_hidden:
+          type: boolean
+        mev_protected:
+          type: boolean
+        stealth_registry_id:
+          type: string
+
+    PrivacyScore:
+      type: object
+      properties:
+        success:
+          type: boolean
+        privacy_score:
+          type: number
+          minimum: 0
+          maximum: 100
+        grade:
+          type: string
+          enum: [A, B, C, D, F]
+        factors:
+          type: object
+          properties:
+            creator_hidden:
+              type: boolean
+            holder_anonymity:
+              type: number
+            funding_obfuscated:
+              type: boolean
+            mev_protected:
+              type: boolean
+            timing_obfuscated:
+              type: boolean
+
+    UnifiedDashboard:
+      type: object
+      properties:
+        token:
+          type: object
+          properties:
+            mint:
+              type: string
+            name:
+              type: string
+            symbol:
+              type: string
+        market:
+          type: object
+          properties:
+            bonding_curve_progress:
+              type: number
+            sol_raised:
+              type: number
+            graduated:
+              type: boolean
+        privacy:
+          type: object
+          properties:
+            score:
+              type: number
+            grade:
+              type: string
+            creator_revealed:
+              type: boolean
+        anonymity:
+          type: object
+          properties:
+            score:
+              type: number
+            total_holders:
+              type: integer
+            anonymous_holders:
+              type: integer
