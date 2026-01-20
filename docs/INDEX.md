@@ -181,7 +181,7 @@ Usage commitments emitted to Solana for verification
 - **Capabilities**: 15+ (including StealthPump)
 - **Execution Modes**: 3 (Public, Confidential, Stealth)
 - **Payment Methods**: 3
-- **Integrations**: Arcium, Noir, Inco, Helius, pump.fun
+- **Integrations**: Arcium, Noir, Inco, Helius, [stealthpump.fun](https://stealthpump.fun)
 - **Status**: ✅ Production-Ready
 
 ## 🚀 Launch Commands

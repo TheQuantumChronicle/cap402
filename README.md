@@ -259,7 +259,7 @@ Operations are versioned, semantic contracts:
 
 ### StealthPump Integration
 
-Privacy-first token launches on pump.fun with hidden creator wallets:
+Privacy-first token launches on [pump.fun](https://pump.fun) via [stealthpump.fun](https://stealthpump.fun):
 
 ```bash
 # Unified privacy-first launch

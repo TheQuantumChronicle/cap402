@@ -102,9 +102,9 @@ tags:
       complex workflows, and verifiable execution receipts.
   - name: StealthPump
     description: |
-      Privacy-first token launches on pump.fun. Features include hidden creator 
-      wallets (revealed only on graduation), MEV protection via Jito bundles, 
-      timing obfuscation, holder anonymity tracking, and privacy scoring.
+      Privacy-first token launches on pump.fun via [stealthpump.fun](https://stealthpump.fun). 
+      Features include hidden creator wallets (revealed only on graduation), MEV protection 
+      via Jito bundles, timing obfuscation, holder anonymity tracking, and privacy scoring.
       
       **Privacy Levels:**
       - `basic` — Hidden creator, stealth wallet
