@@ -9022,6 +9022,201 @@ app.get('/stealthpump/calculate-progress', async (req: Request, res: Response) =
   }
 });
 
+// ============================================
+// UNIFIED PRIVACY ORCHESTRATOR ENDPOINTS
+// Cohesive CAP-402 + StealthPump + Pump.fun
+// ============================================
+
+// Execute unified privacy-first launch
+app.post('/unified/launch', async (req: Request, res: Response) => {
+  try {
+    const { unifiedPrivacy, DEFAULT_PRIVACY_CONFIGS } = await import('../providers/unified-privacy');
+    const { token, initial_buy_sol, slippage_bps, privacy_level, privacy_config } = req.body;
+
+    if (!token?.name || !token?.symbol || !token?.description || !initial_buy_sol) {
+      return res.status(400).json({
+        success: false,
+        error: 'token.name, token.symbol, token.description, initial_buy_sol required'
+      });
+    }
+
+    // Resolve privacy config
+    let privacyConfig = privacy_config;
+    if (!privacyConfig && privacy_level) {
+      privacyConfig = DEFAULT_PRIVACY_CONFIGS[privacy_level] || DEFAULT_PRIVACY_CONFIGS.enhanced;
+    } else if (!privacyConfig) {
+      privacyConfig = 'enhanced';
+    }
+
+    const result = await unifiedPrivacy.executeLaunch({
+      token: {
+        name: token.name,
+        symbol: token.symbol,
+        description: token.description,
+        image: token.image,
+        twitter: token.twitter,
+        telegram: token.telegram,
+        website: token.website
+      },
+      initialBuySol: initial_buy_sol,
+      slippageBps: slippage_bps || 500,
+      privacy: privacyConfig
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unified launch failed' });
+  }
+});
+
+// Get unified dashboard data
+app.get('/unified/dashboard/:mint_address', async (req: Request, res: Response) => {
+  try {
+    const { unifiedPrivacy } = await import('../providers/unified-privacy');
+    const { sol_price_usd } = req.query;
+
+    const dashboard = await unifiedPrivacy.getUnifiedDashboard(
+      req.params.mint_address,
+      sol_price_usd ? parseFloat(sol_price_usd as string) : 200
+    );
+
+    if (!dashboard) {
+      return res.status(404).json({ success: false, error: 'Token not found' });
+    }
+
+    res.json({
+      success: true,
+      ...dashboard
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Dashboard failed' });
+  }
+});
+
+// Get privacy configuration presets
+app.get('/unified/privacy-presets', async (req: Request, res: Response) => {
+  try {
+    const { DEFAULT_PRIVACY_CONFIGS } = await import('../providers/unified-privacy');
+
+    res.json({
+      success: true,
+      presets: {
+        basic: {
+          ...DEFAULT_PRIVACY_CONFIGS.basic,
+          description: '🔓 Basic Privacy - Hidden creator, stealth wallet',
+          recommended_for: 'Quick launches with minimal privacy needs'
+        },
+        enhanced: {
+          ...DEFAULT_PRIVACY_CONFIGS.enhanced,
+          description: '🔒 Enhanced Privacy - MEV protection, timing obfuscation, anonymity tracking',
+          recommended_for: 'Standard stealth launches'
+        },
+        maximum: {
+          ...DEFAULT_PRIVACY_CONFIGS.maximum,
+          description: '🛡️ Maximum Privacy - Full obfuscation, no auto-reveal, Noir ZK proofs',
+          recommended_for: 'High-value launches requiring maximum anonymity'
+        }
+      },
+      default: 'enhanced'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get presets' });
+  }
+});
+
+// Get active launches
+app.get('/unified/launches/active', async (req: Request, res: Response) => {
+  try {
+    const { unifiedPrivacy } = await import('../providers/unified-privacy');
+    const activeLaunches = unifiedPrivacy.getActiveLaunches();
+
+    res.json({
+      success: true,
+      count: activeLaunches.length,
+      launches: activeLaunches.map(l => ({
+        id: l.id,
+        phase: l.phase,
+        started_at: l.startedAt,
+        privacy_level: l.privacyConfig.level,
+        events_count: l.events.length
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get launches' });
+  }
+});
+
+// Get launch state by ID
+app.get('/unified/launches/:launch_id', async (req: Request, res: Response) => {
+  try {
+    const { unifiedPrivacy } = await import('../providers/unified-privacy');
+    const state = unifiedPrivacy.getLaunchState(req.params.launch_id);
+
+    if (!state) {
+      return res.status(404).json({ success: false, error: 'Launch not found' });
+    }
+
+    res.json({
+      success: true,
+      id: state.id,
+      phase: state.phase,
+      started_at: state.startedAt,
+      privacy_config: state.privacyConfig,
+      events: state.events.slice(-20) // Last 20 events
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get launch' });
+  }
+});
+
+// Get system integration status
+app.get('/unified/status', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { unifiedPrivacy } = await import('../providers/unified-privacy');
+
+    const pumpFunStatus = pumpFunProvider.getStatus();
+    const stealthStats = pumpFunProvider.getStealthStats();
+    const activeLaunches = unifiedPrivacy.getActiveLaunches();
+    const activeMonitors = pumpFunProvider.getActiveMonitors();
+
+    res.json({
+      success: true,
+      systems: {
+        cap402: {
+          status: 'operational',
+          version: '1.0.0',
+          providers: ['arcium', 'inco', 'noir']
+        },
+        stealthpump: {
+          status: pumpFunStatus.initialized ? 'operational' : 'initializing',
+          mode: pumpFunStatus.mode,
+          stats: stealthStats
+        },
+        pumpfun: {
+          status: 'connected',
+          program_id: pumpFunStatus.programId,
+          stats: pumpFunStatus.stats
+        }
+      },
+      activity: {
+        active_launches: activeLaunches.length,
+        active_monitors: activeMonitors.length,
+        total_stealth_launches: stealthStats.totalStealthLaunches,
+        hidden_creators: stealthStats.activeHidden,
+        graduated_tokens: stealthStats.graduated
+      },
+      integration: {
+        unified_privacy: 'enabled',
+        cross_system_events: 'enabled',
+        privacy_orchestration: 'enabled'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Status failed' });
+  }
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 
