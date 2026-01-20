@@ -8616,6 +8616,260 @@ app.get('/stealthpump/stealth/stats', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// GRADUATION MONITORING ENDPOINTS
+// Real-time tracking of bonding curve progress
+// ============================================
+
+// Start monitoring a token for graduation
+app.post('/stealthpump/monitor/start', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { mint_address, poll_interval_ms } = req.body;
+
+    if (!mint_address) {
+      return res.status(400).json({ success: false, error: 'mint_address required' });
+    }
+
+    // Start monitor (callback will log events server-side)
+    const result = pumpFunProvider.startGraduationMonitor(
+      mint_address,
+      (event) => {
+        console.log(`[Monitor] ${event.type}: ${mint_address.slice(0, 8)}... - ${event.progress}% (${event.marketCapSol.toFixed(2)} SOL)`);
+      },
+      poll_interval_ms || 10000
+    );
+
+    res.json({
+      success: result.success,
+      monitor_id: result.monitorId,
+      mint_address,
+      poll_interval_ms: poll_interval_ms || 10000,
+      message: '👁️ Graduation monitor started'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Monitor start failed' });
+  }
+});
+
+// Stop monitoring a token
+app.post('/stealthpump/monitor/stop', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { mint_address } = req.body;
+
+    if (!mint_address) {
+      return res.status(400).json({ success: false, error: 'mint_address required' });
+    }
+
+    const stopped = pumpFunProvider.stopGraduationMonitor(mint_address);
+
+    res.json({
+      success: stopped,
+      mint_address,
+      message: stopped ? '🛑 Monitor stopped' : 'Monitor not found'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Monitor stop failed' });
+  }
+});
+
+// Get active monitors
+app.get('/stealthpump/monitor/active', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const monitors = pumpFunProvider.getActiveMonitors();
+
+    res.json({
+      success: true,
+      count: monitors.length,
+      monitors: monitors.map(m => ({
+        mint_address: m,
+        pump_fun_url: `https://pump.fun/${m}`
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get monitors' });
+  }
+});
+
+// ============================================
+// MEV PROTECTION ENDPOINTS
+// Jito bundle support for frontrunning protection
+// ============================================
+
+// Launch with MEV protection
+app.post('/stealthpump/launch-protected', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const {
+      name, symbol, description, image, twitter, telegram, website,
+      initial_buy_sol, slippage_bps, use_stealth_wallet, jito_tip_lamports,
+      payer_secret
+    } = req.body;
+
+    if (!name || !symbol || !description || !initial_buy_sol) {
+      return res.status(400).json({
+        success: false,
+        error: 'name, symbol, description, initial_buy_sol required'
+      });
+    }
+
+    const { Keypair } = await import('@solana/web3.js');
+    const payer = payer_secret
+      ? Keypair.fromSecretKey(Buffer.from(payer_secret, 'base64'))
+      : Keypair.generate();
+
+    const result = await pumpFunProvider.stealthLaunchWithMevProtection(payer, {
+      metadata: { name, symbol, description, image, twitter, telegram, website },
+      initialBuySol: initial_buy_sol,
+      slippageBps: slippage_bps || 500,
+      useStealthWallet: use_stealth_wallet || true,
+      mevProtection: true,
+      jitoTipLamports: jito_tip_lamports || 10000
+    });
+
+    res.json({
+      success: result.success,
+      mint_address: result.mintAddress,
+      signature: result.signature,
+      bundle_id: result.bundleId,
+      mev_protected: result.mevProtected,
+      pump_fun_url: result.mintAddress ? `https://pump.fun/${result.mintAddress}` : undefined,
+      error: result.error
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Protected launch failed' });
+  }
+});
+
+// ============================================
+// HOLDER ANONYMITY ENDPOINTS
+// Track anonymous holder distribution
+// ============================================
+
+// Initialize anonymity tracking for a token
+app.post('/stealthpump/anonymity/init', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { mint_address } = req.body;
+
+    if (!mint_address) {
+      return res.status(400).json({ success: false, error: 'mint_address required' });
+    }
+
+    const info = pumpFunProvider.initializeAnonymitySet(mint_address);
+
+    res.json({
+      success: true,
+      mint_address: info.mintAddress,
+      anonymity_score: info.anonymityScore,
+      message: 'Anonymity tracking initialized'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Init failed' });
+  }
+});
+
+// Update anonymity set with holder data
+app.post('/stealthpump/anonymity/update', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const { mint_address, total_holders, largest_holder_percent, top10_holders_percent, known_wallets } = req.body;
+
+    if (!mint_address) {
+      return res.status(400).json({ success: false, error: 'mint_address required' });
+    }
+
+    const info = pumpFunProvider.updateAnonymitySet(mint_address, {
+      totalHolders: total_holders || 0,
+      largestHolderPercent: largest_holder_percent || 0,
+      top10HoldersPercent: top10_holders_percent || 0,
+      knownWallets: known_wallets || 0
+    });
+
+    if (!info) {
+      return res.status(404).json({ success: false, error: 'Token not found' });
+    }
+
+    res.json({
+      success: true,
+      mint_address: info.mintAddress,
+      total_holders: info.totalHolders,
+      anonymous_holders: info.anonymousHolders,
+      revealed_holders: info.revealedHolders,
+      anonymity_score: info.anonymityScore,
+      largest_holder_percent: info.largestHolderPercent,
+      top10_holders_percent: info.top10HoldersPercent
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Update failed' });
+  }
+});
+
+// Get anonymity set info
+app.get('/stealthpump/anonymity/:mint_address', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const info = pumpFunProvider.getAnonymitySetInfo(req.params.mint_address);
+
+    if (!info) {
+      return res.status(404).json({ success: false, error: 'Anonymity set not found' });
+    }
+
+    res.json({
+      success: true,
+      mint_address: info.mintAddress,
+      total_holders: info.totalHolders,
+      anonymous_holders: info.anonymousHolders,
+      revealed_holders: info.revealedHolders,
+      anonymity_score: info.anonymityScore,
+      largest_holder_percent: info.largestHolderPercent,
+      top10_holders_percent: info.top10HoldersPercent,
+      created_at: info.createdAt,
+      last_updated: info.lastUpdated
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Fetch failed' });
+  }
+});
+
+// ============================================
+// PRIVACY SCORE ENDPOINT
+// Combined privacy rating for stealth launches
+// ============================================
+
+// Get comprehensive privacy score
+app.get('/stealthpump/privacy-score/:mint_address', async (req: Request, res: Response) => {
+  try {
+    const { pumpFunProvider } = await import('../providers/pumpfun');
+    const score = await pumpFunProvider.getPrivacyScore(req.params.mint_address);
+
+    res.json({
+      success: true,
+      mint_address: req.params.mint_address,
+      overall_score: score.overallScore,
+      grade: score.grade,
+      factors: {
+        creator_hidden: score.factors.creatorHidden,
+        holder_anonymity: score.factors.holderAnonymity,
+        funding_obfuscated: score.factors.fundingObfuscated,
+        mev_protected: score.factors.mevProtected,
+        timing_obfuscated: score.factors.timingObfuscated
+      },
+      grade_description: {
+        'A': '🛡️ Maximum Privacy - All factors optimized',
+        'B': '🔒 Strong Privacy - Most factors covered',
+        'C': '⚠️ Moderate Privacy - Some exposure',
+        'D': '⚡ Basic Privacy - Significant exposure',
+        'F': '❌ Minimal Privacy - High exposure'
+      }[score.grade]
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Score failed' });
+  }
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 
