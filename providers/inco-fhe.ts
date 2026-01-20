@@ -7,15 +7,25 @@
  * - Encrypted state management
  * - Private computation without decryption
  * 
- * Uses local Inco Lightning Docker (port 8545) or remote RPC
+ * Supports mainnet/testnet via INCO_NETWORK env var.
+ * When Inco mainnet launches, update:
+ * - INCO_NETWORK=mainnet
+ * - INCO_RPC_URL=<mainnet rpc>
+ * - INCO_MAINNET_AVAILABLE=true
  */
 
 import crypto from 'crypto';
 import { ethers } from 'ethers';
 
-// Inco Network - use local Docker if set, otherwise try testnet
-const INCO_RPC_URL = process.env.INCO_RPC_URL || 'http://localhost:8545';
-const INCO_COVALIDATOR_URL = process.env.INCO_COVALIDATOR_URL || 'http://localhost:50055';
+// Network configuration
+const INCO_NETWORK = process.env.INCO_NETWORK || 'testnet';
+const INCO_RPC_URL = process.env.INCO_RPC_URL || 
+  (INCO_NETWORK === 'mainnet' ? 'https://mainnet.inco.org' : 'http://localhost:8545');
+const INCO_COVALIDATOR_URL = process.env.INCO_COVALIDATOR_URL || 
+  (INCO_NETWORK === 'mainnet' ? 'https://covalidator.inco.org' : 'http://localhost:50055');
+
+// Inco mainnet availability flag
+const INCO_MAINNET_AVAILABLE = process.env.INCO_MAINNET_AVAILABLE === 'true' || false;
 
 // Check if running in test environment
 const IS_TEST_ENV = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
@@ -88,12 +98,16 @@ class IncoFHEProvider {
   getStatus(): { 
     initialized: boolean; 
     mode: string; 
+    network: string;
+    mainnetAvailable: boolean;
     chainId: string | null;
     operationCount: number;
   } {
     return {
       initialized: this.initialized,
       mode: this.useLiveMode ? 'live' : 'simulation',
+      network: INCO_NETWORK,
+      mainnetAvailable: INCO_MAINNET_AVAILABLE,
       chainId: this.chainId ? this.chainId.toString() : null,
       operationCount: this.operationCount
     };
@@ -103,12 +117,21 @@ class IncoFHEProvider {
     if (this.initialized) return;
 
     try {
+      // Check if Inco mainnet is available when targeting mainnet
+      if (INCO_NETWORK === 'mainnet' && !INCO_MAINNET_AVAILABLE) {
+        console.log(`⚠️  Inco mainnet not yet available - FHE features disabled`);
+        console.log(`   Set INCO_MAINNET_AVAILABLE=true when Inco launches on mainnet`);
+        this.useLiveMode = false;
+        this.initialized = true;
+        return;
+      }
+      
       const connected = await initIncoProvider();
       if (connected && incoProvider) {
         const network = await incoProvider.getNetwork();
         this.chainId = network.chainId;
         this.useLiveMode = true;
-        console.log(`✅ Inco FHE LIVE mode - Connected to chain ${this.chainId}`);
+        console.log(`✅ Inco FHE LIVE mode (${INCO_NETWORK}) - Connected to chain ${this.chainId}`);
       } else if (IS_TEST_ENV) {
         // Allow simulation in test environment only
         console.log('⚠️  Inco FHE test mode - simulation enabled for tests');
