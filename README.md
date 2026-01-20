@@ -254,6 +254,41 @@ Operations are versioned, semantic contracts:
 | `cap.zk.proof.v1` | Generate Noir ZK proofs for any circuit |
 | `cap.fhe.compute.v1` | Compute on encrypted data via Inco FHE |
 | `cap.lightning.message.v1` | Encrypted agent-to-agent messaging |
+| `cap.stealth.launch.v1` | Privacy-first token launches via pump.fun |
+| `cap.stealth.buy.v1` | Hidden initial buys with MEV protection |
+
+### StealthPump Integration
+
+Privacy-first token launches on pump.fun with hidden creator wallets:
+
+```bash
+# Unified privacy-first launch
+curl -X POST https://cap402.com/unified/launch \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": {"name": "MyToken", "symbol": "MTK", "description": "Stealth launch"},
+    "initial_buy_sol": 1.5,
+    "privacy_level": "enhanced"
+  }'
+
+# Get privacy score for a token
+curl https://cap402.com/stealthpump/privacy-score/TOKEN_MINT_ADDRESS
+
+# Check bonding curve progress (creator hidden until graduation)
+curl https://cap402.com/stealthpump/stealth/view/TOKEN_MINT_ADDRESS
+```
+
+**Privacy Levels:**
+- `basic` — Hidden creator, stealth wallet
+- `enhanced` — + MEV protection, timing obfuscation, anonymity tracking
+- `maximum` — + No auto-reveal, Noir ZK proofs, full obfuscation
+
+**Key Features:**
+- Creator wallet hidden until 85 SOL graduation threshold
+- Market cap and bonding curve progress always visible
+- Auto-reveal on Raydium graduation
+- Jito bundle support for frontrunning protection
+- Privacy score grading (A-F)
 
 ### Quick Start
 
