@@ -3,7 +3,7 @@ use arcium_anchor::prelude::*;
 
 const COMP_DEF_OFFSET_ADD_TOGETHER: u32 = comp_def_offset("add_together");
 
-declare_id!("GJ1amABP184RZe79RzXRo1SynLj76gfYRcFLQqpoFH2B");
+declare_id!("Aaco6pyLJ6wAod2ivxS264xRcFyFZWdamy5VaqHQVC2d");
 
 #[arcium_program]
 pub mod cap_402_mxe {

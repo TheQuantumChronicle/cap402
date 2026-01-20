@@ -28,8 +28,8 @@ import { expect } from "chai";
 
 // Cluster configuration
 // For localnet testing: null (uses ARCIUM_CLUSTER_PUBKEY from env)
-// For devnet/testnet: specific cluster offset
-const CLUSTER_OFFSET: number | null = null;
+// For devnet/testnet: specific cluster offset (456 for v0.6.3)
+const CLUSTER_OFFSET: number | null = 456;
 
 /**
  * Gets the cluster account address based on configuration.
@@ -104,6 +104,9 @@ describe("Cap402Mxe", () => {
     const sumEventPromise = awaitEvent("sumEvent");
     const computationOffset = new anchor.BN(randomBytes(8), "hex");
 
+    console.log("Queueing computation with offset:", computationOffset.toString());
+    console.log("Cluster offset:", CLUSTER_OFFSET);
+    
     const queueSig = await program.methods
       .addTogether(
         computationOffset,
@@ -112,23 +115,25 @@ describe("Cap402Mxe", () => {
         Array.from(publicKey),
         new anchor.BN(deserializeLE(nonce).toString()),
       )
-      .accountsPartial({
+      .accounts({
+        payer: owner.publicKey,
         computationAccount: getComputationAccAddress(
-          arciumEnv.arciumClusterOffset,
+          CLUSTER_OFFSET ?? arciumEnv.arciumClusterOffset,
           computationOffset,
         ),
         clusterAccount,
         mxeAccount: getMXEAccAddress(program.programId),
-        mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
+        mempoolAccount: getMempoolAccAddress(CLUSTER_OFFSET ?? arciumEnv.arciumClusterOffset),
         executingPool: getExecutingPoolAccAddress(
-          arciumEnv.arciumClusterOffset,
+          CLUSTER_OFFSET ?? arciumEnv.arciumClusterOffset,
         ),
         compDefAccount: getCompDefAccAddress(
           program.programId,
           Buffer.from(getCompDefAccOffset("add_together")).readUInt32LE(),
         ),
       })
-      .rpc({ skipPreflight: true, commitment: "confirmed" });
+      .signers([owner])
+      .rpc({ commitment: "confirmed" });
     console.log("Queue sig is ", queueSig);
 
     const finalizeSig = await awaitComputationFinalization(
@@ -199,7 +204,27 @@ describe("Cap402Mxe", () => {
         );
       } catch (e: any) {
         if (e.message?.includes("already in use")) {
-          console.log("Circuit already uploaded, skipping upload");
+          console.log("Circuit already uploaded, trying to finalize...");
+          // Try to finalize even if upload was skipped
+          try {
+            const finalizeTx = await buildFinalizeCompDefTx(
+              provider as anchor.AnchorProvider,
+              Buffer.from(offset).readUInt32LE(),
+              program.programId,
+            );
+            const latestBlockhash = await provider.connection.getLatestBlockhash();
+            finalizeTx.recentBlockhash = latestBlockhash.blockhash;
+            finalizeTx.lastValidBlockHeight = latestBlockhash.lastValidBlockHeight;
+            finalizeTx.sign(owner);
+            await provider.sendAndConfirm(finalizeTx);
+            console.log("Computation definition finalized");
+          } catch (finalizeErr: any) {
+            if (finalizeErr.message?.includes("already") || finalizeErr.message?.includes("AccountOwnedByWrongProgram")) {
+              console.log("Computation definition already finalized");
+            } else {
+              console.log("Finalize error:", finalizeErr.message);
+            }
+          }
         } else {
           throw e;
         }

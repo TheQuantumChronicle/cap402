@@ -6,13 +6,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-cap_402_mxe = "GJ1amABP184RZe79RzXRo1SynLj76gfYRcFLQqpoFH2B"
+cap_402_mxe = "Aaco6pyLJ6wAod2ivxS264xRcFyFZWdamy5VaqHQVC2d"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "https://solana-devnet.g.alchemy.com/v2/snjxlun1pUvKeI_EDZO8B9OVnE2575qH"
 wallet = "~/.config/solana/devnet.json"
 
 [test]
