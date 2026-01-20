@@ -1004,7 +1004,8 @@ class PumpFunProvider {
   startGraduationMonitor(
     mintAddress: string,
     callback: (event: GraduationEvent) => void,
-    pollIntervalMs: number = 10000  // Default 10 seconds
+    pollIntervalMs: number = 10000,  // Default 10 seconds
+    webhookUrl?: string  // Optional webhook for notifications
   ): { success: boolean; monitorId: string } {
     // Add callback to list
     const callbacks = this.graduationCallbacks.get(mintAddress) || [];
@@ -1062,6 +1063,14 @@ class PumpFunProvider {
 
           // Notify and stop monitoring
           cbs.forEach(cb => cb(graduationEvent));
+          
+          // Send webhook if configured
+          if (webhookUrl) {
+            this.sendGraduationWebhook(webhookUrl, graduationEvent).catch((err: any) => {
+              console.error('[Stealth] Webhook error:', err);
+            });
+          }
+          
           this.stopGraduationMonitor(mintAddress);
           
           console.log(`[Stealth] 🎓 GRADUATED: ${mintAddress.slice(0, 8)}... - Creator revealed!`);
@@ -1090,6 +1099,29 @@ class PumpFunProvider {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Send graduation webhook notification
+   */
+  private async sendGraduationWebhook(url: string, event: GraduationEvent): Promise<void> {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'token_graduated',
+          data: event,
+          timestamp: Date.now()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Webhook failed: ${response.status}`);
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
