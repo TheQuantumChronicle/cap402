@@ -39,7 +39,7 @@ npm run demo
 ```
 
 You'll see the agent:
-1. Discover 3 capabilities
+1. Discover 20+ capabilities
 2. Execute wallet snapshot + price lookup
 3. Chain capabilities together
 4. Display economic hints and chain signals

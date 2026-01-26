@@ -8,7 +8,7 @@
 CAP-402/
 ├── spec/
 │   ├── capabilities.schema.json    ✅ Formal JSON Schema
-│   └── capabilities.ts              ✅ TypeScript types + 3 capabilities
+│   └── capabilities.ts              ✅ TypeScript types + 20+ capabilities
 ├── router/
 │   ├── server.ts                    ✅ HTTP API (Express)
 │   ├── registry.ts                  ✅ Capability registry
@@ -199,7 +199,7 @@ curl https://cap402.com/health
 
 ### Technical
 - [x] Working prototype
-- [x] 3 capabilities implemented
+- [x] 20+ capabilities implemented
 - [x] Public + confidential execution
 - [x] Economic signaling
 - [x] Chain integration
