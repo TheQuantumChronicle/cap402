@@ -1,0 +1,7 @@
+[package]
+name = "strategy_performance"
+type = "bin"
+authors = ["CAP-402"]
+compiler_version = ">=0.30.0"
+
+[dependencies]
