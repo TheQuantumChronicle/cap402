@@ -169,3 +169,15 @@ export {
 
 // Re-export capability types from spec
 export type { Capability } from '../spec/capabilities';
+
+// Agent Framework Integrations
+export {
+  CAP402Toolkit,
+  createLangChainTools,
+  CAP402AutoGPTPlugin,
+  createAutoGPTPlugin,
+  CAP402CrewTools,
+  CAP402CrewAgent,
+  createCrewTools,
+  createCrewAgent
+} from './integrations';

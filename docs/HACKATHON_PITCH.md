@@ -73,11 +73,11 @@ Agent → SDK → Router → Executor → Provider
 
 ---
 
-## What We Built (v0.1)
+## What We Built (v1.0)
 
 ### ✅ Formal Capability Schema
 - JSON Schema validation
-- 3 initial capabilities (price, wallet, document)
+- 20+ capabilities (price, wallet, swap, AI, KYC, and more)
 - Typed inputs/outputs
 
 ### ✅ Reference Router
@@ -106,11 +106,26 @@ Agent → SDK → Router → Executor → Provider
 - Demo agent with realistic workflow
 - Capability chaining/composition
 
+### ✅ NEW: Private AI Inference
+- `cap.ai.inference.v1` - Sentiment, classification, summarization
+- `cap.ai.embedding.v1` - Private vector embeddings for RAG
+- Encrypted inputs via Arcium MPC
+
+### ✅ NEW: Private KYC Verification
+- `cap.zk.kyc.v1` - Prove age, jurisdiction, accreditation
+- `cap.zk.credential.v1` - Prove credentials privately
+- Zero-knowledge proofs via Noir
+
+### ✅ NEW: Agent Framework Integrations
+- **LangChain**: `CAP402Toolkit` with ready-to-use tools
+- **AutoGPT**: `CAP402AutoGPTPlugin` with 6 commands
+- **CrewAI**: `CAP402CrewAgent` and `CAP402CrewTools`
+
 ---
 
 ## Live Demo Flow
 
-1. **Discovery**: Agent discovers 3 capabilities
+1. **Discovery**: Agent discovers 20+ capabilities
 2. **Execution**: Agent invokes wallet snapshot + price lookup
 3. **Composition**: Agent chains capabilities together
 4. **Economics**: X.402 hints + Privacy Cash notes generated

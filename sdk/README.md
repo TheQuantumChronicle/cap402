@@ -118,6 +118,9 @@ const result = await client.invokeCapability('cap.ai.inference.v1', {
 | `cap.cspl.transfer.v1` | Confidential token transfer | L2 |
 | `cap.fhe.compute.v1` | Fully homomorphic encryption | L3 |
 | `cap.ai.inference.v1` | Private AI model execution | L2 |
+| `cap.ai.embedding.v1` | Private vector embeddings | L2 |
+| `cap.zk.kyc.v1` | Private KYC verification | L2 |
+| `cap.zk.credential.v1` | Private credential proofs | L2 |
 
 ## Integration Examples
 

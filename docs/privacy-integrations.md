@@ -399,6 +399,74 @@ We are not selling privacy. We are **taxing successful autonomy**.
 
 ---
 
+## 4. AI Inference Integration (NEW)
+
+### What is Private AI?
+
+CAP-402 now supports **private AI inference** using Arcium MPC. Your prompts and data are encrypted before processing - the model never sees plaintext.
+
+### CAP-402 AI Capabilities
+
+```typescript
+// Provider: /providers/ai-inference.ts
+
+// 1. Private Sentiment Analysis
+await client.invokeCapability('cap.ai.inference.v1', {
+  model: 'sentiment-analysis',
+  input: 'Confidential document text...',
+  privacy_level: 2
+});
+
+// 2. Private Embeddings for RAG
+await client.invokeCapability('cap.ai.embedding.v1', {
+  texts: ['Private document 1', 'Private document 2'],
+  privacy_level: 2
+});
+```
+
+### Supported Models
+
+| Model | Use Case | Privacy |
+|-------|----------|---------|
+| `sentiment-analysis` | Analyze sentiment without exposing text | L2 (MPC) |
+| `classification` | Classify documents privately | L2 (MPC) |
+| `summarization` | Summarize without revealing content | L2 (MPC) |
+| `embeddings` | Generate vectors for private search | L2 (MPC) |
+
+---
+
+## 5. KYC Verification Integration (NEW)
+
+### What is Private KYC?
+
+Zero-knowledge proofs for identity verification. Prove you meet requirements (age, jurisdiction, accreditation) **without revealing the underlying data**.
+
+### CAP-402 KYC Capabilities
+
+```typescript
+// Provider: Uses Noir ZK circuits
+
+// Prove you're 18+ without revealing birthdate
+await client.invokeCapability('cap.zk.kyc.v1', {
+  verification_type: 'age',
+  private_inputs: { date_of_birth: '1990-05-15' }, // NEVER revealed
+  public_inputs: { min_age: 18 }
+});
+// Returns: { compliant: true, proof: '0x...' }
+// Verifier learns ONLY: "User is 18+" - nothing else
+```
+
+### Verification Types
+
+| Type | Proves | Without Revealing |
+|------|--------|-------------------|
+| `age` | User is above minimum age | Birthdate |
+| `jurisdiction` | User is in allowed country | Exact location |
+| `accreditation` | User is accredited investor | Net worth/income |
+| `aml` | User passes AML checks | Identity details |
+
+---
+
 ## The One Sentence
 
 > **"Confidential execution infrastructure that agents must use once they scale."**
