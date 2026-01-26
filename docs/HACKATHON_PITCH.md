@@ -184,30 +184,25 @@ CAP-402 makes Arcium a first-class execution mode, not an afterthought.
 
 ## Roadmap
 
-### v0.1 (Hackathon) ✅
+### v1.0 (Current) ✅
 - Core schema + router
-- 3 capabilities
-- Public + Arcium executors
-- Economic hints
+- 20+ capabilities (price, wallet, swap, AI, KYC, and more)
+- Public + Arcium + Noir executors
+- Economic hints + Privacy Cash
 - Chain signals
+- Agent framework integrations (LangChain, AutoGPT, CrewAI)
 
-### v0.2 (Post-Hackathon)
-- Real Arcium integration
-- 10+ capabilities
-- Multi-chain support
+### v2.0 (Next)
+- Multi-language SDKs (Python, Rust, Go)
+- 50+ capabilities
+- Multi-chain support (EVM, Cosmos)
 - Advanced routing
 
-### v0.3 (Production)
+### v3.0 (Future)
 - Decentralized router network
-- ZK proof verification
+- On-chain capability registry
 - Privacy Cash settlement
-- Agent reputation
-
-### v1.0 (Protocol Standard)
-- Formal specification
-- Multi-language implementations
-- Governance
-- Grant program
+- Agent reputation & governance
 
 ---
 
