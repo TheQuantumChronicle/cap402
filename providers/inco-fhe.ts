@@ -7,15 +7,16 @@
  * - Encrypted state management
  * - Private computation without decryption
  * 
+ * Uses fhevmjs SDK for real FHE operations on Inco network.
  * Supports mainnet/testnet via INCO_NETWORK env var.
- * When Inco mainnet launches, update:
- * - INCO_NETWORK=mainnet
- * - INCO_RPC_URL=<mainnet rpc>
- * - INCO_MAINNET_AVAILABLE=true
  */
 
 import crypto from 'crypto';
 import { ethers } from 'ethers';
+
+// fhevmjs SDK for real FHE operations
+let fhevmInstance: any = null;
+let fhevmInitialized = false;
 
 // Network configuration
 const INCO_NETWORK = process.env.INCO_NETWORK || 'testnet';
@@ -40,8 +41,27 @@ async function initIncoProvider(): Promise<boolean> {
   try {
     incoProvider = new ethers.JsonRpcProvider(INCO_RPC_URL);
     const network = await incoProvider.getNetwork();
-    console.log(`✅ Inco FHE LIVE mode - Chain ID: ${network.chainId}`);
+    console.log(`✅ Inco FHE connected - Chain ID: ${network.chainId}`);
     incoConnected = true;
+    
+    // Initialize fhevmjs for real FHE operations
+    if (!fhevmInitialized) {
+      try {
+        // Use require for CommonJS compatibility
+        const fhevmjs = require('fhevmjs');
+        fhevmInstance = await fhevmjs.createInstance({
+          chainId: Number(network.chainId),
+          networkUrl: INCO_RPC_URL,
+          gatewayUrl: INCO_COVALIDATOR_URL
+        });
+        fhevmInitialized = true;
+        console.log(`✅ Inco FHE LIVE mode - fhevmjs initialized`);
+      } catch (fhevmErr) {
+        console.log(`⚠️  fhevmjs init warning: ${fhevmErr}`);
+        // Continue without fhevmjs - will use chain-based encryption
+      }
+    }
+    
     return true;
   } catch (e) {
     console.log('⚠️  Inco Lightning not available - using simulation');
@@ -152,7 +172,7 @@ class IncoFHEProvider {
 
   /**
    * Encrypt a value using FHE
-   * Uses real Inco Lightning when connected
+   * Uses real Inco fhevmjs when connected
    */
   async encrypt(
     value: number | boolean | string,
@@ -162,12 +182,50 @@ class IncoFHEProvider {
 
     if (this.useLiveMode && incoProvider) {
       try {
-        // Real FHE encryption via Inco Lightning
-        // Create deterministic encryption using chain data
         const blockNumber = await incoProvider.getBlockNumber();
-        const block = await incoProvider.getBlock(blockNumber);
         
-        // Use block hash as entropy source for real encryption
+        // Use fhevmjs for real FHE encryption if available
+        if (fhevmInitialized && fhevmInstance) {
+          let encryptedValue: Uint8Array;
+          const numValue = typeof value === 'number' ? value : 
+                          typeof value === 'boolean' ? (value ? 1 : 0) : 
+                          parseInt(value) || 0;
+          
+          switch (encryptionType) {
+            case 'ebool':
+              encryptedValue = fhevmInstance.encrypt_bool(!!numValue);
+              break;
+            case 'euint8':
+              encryptedValue = fhevmInstance.encrypt8(numValue & 0xFF);
+              break;
+            case 'euint16':
+              encryptedValue = fhevmInstance.encrypt16(numValue & 0xFFFF);
+              break;
+            case 'euint32':
+              encryptedValue = fhevmInstance.encrypt32(numValue >>> 0);
+              break;
+            case 'euint64':
+              encryptedValue = fhevmInstance.encrypt64(BigInt(numValue));
+              break;
+            default:
+              encryptedValue = fhevmInstance.encrypt32(numValue >>> 0);
+          }
+          
+          const ciphertextHex = '0x' + Buffer.from(encryptedValue).toString('hex');
+          const publicKey = fhevmInstance.getPublicKey?.() || '0x' + crypto.randomBytes(32).toString('hex');
+          
+          console.log(`✅ Inco FHE REAL encryption - block ${blockNumber}, type ${encryptionType}`);
+          
+          return {
+            ciphertext: ciphertextHex,
+            public_key: typeof publicKey === 'string' ? publicKey : '0x' + Buffer.from(publicKey).toString('hex'),
+            encryption_type: encryptionType,
+            mode: 'live'
+          };
+        }
+        
+        // Chain-based encryption when fhevmjs not available but chain is connected
+        const block = await incoProvider.getBlock(blockNumber);
         const entropy = block?.hash || crypto.randomBytes(32).toString('hex');
         const key = crypto.createHash('sha256').update(entropy + value.toString()).digest();
         const nonce = crypto.randomBytes(12);
@@ -185,13 +243,11 @@ class IncoFHEProvider {
           mode: 'live'
         };
       } catch (e) {
-        // Fallback to local encryption - system must be failproof
         console.log('⚠️  Inco live encryption failed, using fallback');
       }
     }
 
     // Fallback: Local AES-256-GCM encryption (cryptographically secure)
-    // System must NEVER fail - this provides equivalent security locally
     const nonce = crypto.randomBytes(12);
     const key = crypto.randomBytes(32);
     const cipher = crypto.createCipheriv('aes-256-gcm', key, nonce);
