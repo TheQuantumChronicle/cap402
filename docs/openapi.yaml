@@ -110,6 +110,29 @@ tags:
       - `basic` — Hidden creator, stealth wallet
       - `enhanced` — + MEV protection, timing obfuscation, anonymity tracking
       - `maximum` — + No auto-reveal, Noir ZK proofs, full obfuscation
+  - name: AI Inference
+    description: |
+      Private AI model execution with encrypted inputs. Run sentiment analysis, 
+      classification, summarization, and embeddings without exposing your data.
+      
+      **Capabilities:**
+      - `cap.ai.inference.v1` — General AI inference (sentiment, classification, summarization)
+      - `cap.ai.embedding.v1` — Private vector embeddings for semantic search/RAG
+      
+      **Privacy Levels:**
+      - Level 0: Public execution
+      - Level 2: Confidential (Arcium MPC) — inputs encrypted before processing
+  - name: KYC Verification
+    description: |
+      Zero-knowledge KYC verification. Prove compliance without revealing personal data.
+      
+      **Capabilities:**
+      - `cap.zk.kyc.v1` — Prove age, jurisdiction, accreditation status
+      - `cap.zk.credential.v1` — Prove degrees, certifications, memberships
+      
+      **What Verifiers Learn:**
+      - ONLY whether requirements are met (true/false)
+      - NOT the underlying personal data
 
 paths:
   /capabilities:

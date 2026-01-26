@@ -242,7 +242,9 @@
           <tr><td>Check MEV risk</td><td><code>POST /mev/analyze</code></td><td><code>{"token_in": "SOL", "amount": 1000}</code></td></tr>
           <tr><td>Find arbitrage</td><td><code>GET /alpha/arbitrage</code></td><td>Returns live opportunities</td></tr>
           <tr><td>Track whales</td><td><code>GET /alpha/whale-tracker</code></td><td>Returns recent large txs</td></tr>
-          <tr><td>List capabilities</td><td><code>GET /capabilities</code></td><td>Returns all 13 capabilities</td></tr>
+          <tr><td>List capabilities</td><td><code>GET /capabilities</code></td><td>Returns all 20+ capabilities</td></tr>
+          <tr><td>Private AI analysis</td><td><code>POST /invoke</code></td><td><code>{"capability_id": "cap.ai.inference.v1", "inputs": {"model": "sentiment-analysis", "input": "text", "privacy_level": 2}}</code></td></tr>
+          <tr><td>Private KYC proof</td><td><code>POST /invoke</code></td><td><code>{"capability_id": "cap.zk.kyc.v1", "inputs": {"verification_type": "age", "public_inputs": {"min_age": 18}}}</code></td></tr>
         </table>
       </div>
       

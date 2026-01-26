@@ -807,8 +807,8 @@
         <a href="https://helius.dev" target="_blank" rel="noopener noreferrer" class="infra-card">
           <img src="/public/helius.svg" alt="Helius" style="height: 32px; width: auto;">
         </a>
-        <a href="https://stealthpump.fun" target="_blank" rel="noopener noreferrer" class="infra-card" title="Privacy-First Token Launches">
-          <img src="/public/stealthpumplogo.png" alt="StealthPump" style="height: 32px; width: auto; border-radius: 6px;">
+        <a href="https://atracks.xyz" target="_blank" rel="noopener noreferrer" class="infra-card" title="Agent PnL Tracking & Reputation">
+          <img src="/public/atrackslogo.png" alt="aTracks" style="height: 32px; width: auto; border-radius: 6px;">
         </a>
       </div>
     </div>
@@ -1113,6 +1113,8 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
         <button class="playground-btn" data-endpoint="liquidations" data-method="GET" data-url="/alpha/liquidations" data-body=""><i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Liquidations</button>
         <button class="playground-btn" data-endpoint="capabilities" data-method="GET" data-url="/capabilities" data-body=""><i data-lucide="list" style="width:14px;height:14px;"></i> Capabilities</button>
         <button class="playground-btn" data-endpoint="health" data-method="GET" data-url="/sponsors/health" data-body=""><i data-lucide="heart-pulse" style="width:14px;height:14px;"></i> Health</button>
+        <button class="playground-btn" data-endpoint="ai" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.ai.inference.v1","inputs":{"model":"sentiment-analysis","input":"This product is amazing!","privacy_level":2}}'><i data-lucide="brain" style="width:14px;height:14px;"></i> AI</button>
+        <button class="playground-btn" data-endpoint="kyc" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.zk.kyc.v1","inputs":{"verification_type":"age","private_inputs":{},"public_inputs":{"min_age":18}}}'><i data-lucide="shield-check" style="width:14px;height:14px;"></i> KYC</button>
       </div>
       
       <!-- Request/Response -->

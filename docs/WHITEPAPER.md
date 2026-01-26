@@ -672,6 +672,8 @@ interface Capability {
 | **Private Swaps** | `cap.confidential.swap.v1` | Confidential | Arcium MPC |
 | **ZK Proofs** | `cap.zk.proof.balance.v1` | Confidential | Noir |
 | **Messaging** | `cap.lightning.message.v1` | Confidential | Inco + Arcium |
+| **Private AI** | `cap.ai.inference.v1`, `cap.ai.embedding.v1` | Confidential | Arcium MPC |
+| **Private KYC** | `cap.zk.kyc.v1`, `cap.zk.credential.v1` | Confidential | Noir ZK |
 
 ### 7.3 Versioning
 
@@ -1407,11 +1409,14 @@ npm run example:swarm           # Run multi-agent demo
 | Milestone | Status | Details |
 |-----------|--------|---------|
 | Protocol specification | ✅ Complete | OpenAPI 3.1, JSON Schema, TypeScript types |
-| Reference router | ✅ Complete | 58 TypeScript files, 55+ endpoints |
+| Reference router | ✅ Complete | 70+ TypeScript files, 100+ endpoints |
 | Privacy stack integration | ✅ Complete | Noir, Arcium, Inco fully integrated |
 | Security framework | ✅ Complete | Multi-layer auth, capability tokens, trust network |
 | Economic model | ✅ Complete | X.402 hints, trust-based pricing, composition discounts |
-| Test coverage | ✅ Complete | 306 tests, 262 passing (44 external API dependent) |
+| Test coverage | ✅ Complete | 530 tests passing |
+| Private AI Inference | ✅ Complete | `cap.ai.inference.v1`, `cap.ai.embedding.v1` |
+| Private KYC Verification | ✅ Complete | `cap.zk.kyc.v1`, `cap.zk.credential.v1` |
+| Agent Framework Integrations | ✅ Complete | LangChain, AutoGPT, CrewAI |
 
 ### Phase 2: Expansion (Q1 2026)
 | Milestone | Target | Impact |

@@ -197,8 +197,8 @@ class IntegrationManager {
 
   private async healthCheck(): Promise<void> {
     await Promise.allSettled([
-      this.withRetry(() => priceProvider.getPrice('SOL', 'USD'), 'price-api', 1).catch(() => {}),
-      this.withRetry(() => solanaRPC.getRecentBlockhash(), 'solana-rpc', 1).catch(() => {}),
+      this.getPrice('SOL', 'USD').catch(() => {}),
+      this.cachedRequest('health:blockhash', () => solanaRPC.getRecentBlockhash(), 'solana-rpc', 30000).catch(() => {}),
       Promise.resolve(this.setHealth('birdeye-ws', birdEyeClient.isConnected() ? 'healthy' : 'degraded'))
     ]);
   }

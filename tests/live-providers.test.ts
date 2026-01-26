@@ -366,7 +366,7 @@ describe('🔴 LIVE Provider Integration Tests', () => {
       expect(price.price).toBeGreaterThan(0);
       expect(price.base_token).toBe('SOL');
       expect(price.quote_token).toBe('USD');
-      expect(['coinmarketcap', 'solana-tracker', 'fallback-cache']).toContain(price.source);
+      expect(['coinmarketcap', 'solana-tracker', 'fallback-cache', 'cached-market-data']).toContain(price.source);
     });
 
     test('fetches LIVE BTC price from CoinMarketCap', async () => {

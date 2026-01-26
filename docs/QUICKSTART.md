@@ -93,6 +93,42 @@ curl -X POST https://cap402.com/invoke \
   }'
 ```
 
+### Private AI Inference (NEW)
+
+```bash
+curl -X POST https://cap402.com/invoke \
+  -H "Content-Type: application/json" \
+  -d '{
+    "capability_id": "cap.ai.inference.v1",
+    "inputs": {
+      "model": "sentiment-analysis",
+      "input": "This product is amazing!",
+      "privacy_level": 2
+    }
+  }'
+```
+
+### Private KYC Verification (NEW)
+
+```bash
+curl -X POST https://cap402.com/invoke \
+  -H "Content-Type: application/json" \
+  -d '{
+    "capability_id": "cap.zk.kyc.v1",
+    "inputs": {
+      "verification_type": "age",
+      "private_inputs": {
+        "date_of_birth": "1990-05-15"
+      },
+      "public_inputs": {
+        "min_age": 18
+      }
+    }
+  }'
+# Returns: { compliant: true, proof: "0x..." }
+# Verifier learns ONLY "user is 18+" - NOT the birthdate
+```
+
 ## Project Structure
 
 ```

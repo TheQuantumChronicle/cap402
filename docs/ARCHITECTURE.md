@@ -65,11 +65,13 @@ Executors are pluggable implementations:
 
 Providers are the actual implementation of capability logic:
 
-- **Price Provider**: Mock price data (would call CoinGecko, Jupiter, etc.)
-- **Wallet Provider**: Mock wallet data (would call Helius, Alchemy, etc.)
-- **Document Provider**: Mock document parsing (would call Arcium MPC)
+- **Price Provider**: Real API calls to CoinMarketCap, Solana Tracker with fallback
+- **Wallet Provider**: Real Helius DAS API integration
+- **Document Provider**: Arcium MPC integration
+- **AI Inference Provider**: Private AI execution via Arcium MPC (sentiment, classification, embeddings)
+- **KYC Provider**: Zero-knowledge proofs via Noir (age, jurisdiction, accreditation verification)
 
-**Design Decision**: Providers are mocked in v0.1 but architected for real integration.
+**Design Decision**: All providers are REAL integrations with graceful fallback for rate limits.
 
 ## Layer 5: Economic Layer
 

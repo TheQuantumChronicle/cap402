@@ -1,8 +1,24 @@
 # CAP-402: Execution Monetization Layer for Autonomous Agents
 
-**Version 1.0.0** | Confidential execution infrastructure that agents must use once they scale.
+**Version 0.1.0** | Confidential execution infrastructure that agents must use once they scale.
 
 🌐 **Website**: [cap402.com](https://cap402.com) | 📄 [Whitepaper](docs/WHITEPAPER.md) | 🔌 [API Docs](docs/api-docs.html)
+
+---
+
+## 🚀 Try Demo
+
+<p align="center">
+  <a href="https://atracks.xyz">
+    <img src="public/atrackslogo.png" alt="aTracks - CAP-402 Demo" width="200"/>
+  </a>
+</p>
+
+<p align="center">
+  <strong>Experience CAP-402 in action →</strong> <a href="https://atracks.xyz"><b>atracks.xyz</b></a>
+</p>
+
+**aTracks** is our live demo application built on CAP-402, showcasing confidential execution and agent coordination in a real-world environment. Perfect for hackathon judges, investors, and developers who want to see the protocol working before diving into the code.
 
 ---
 
@@ -1084,7 +1100,33 @@ CAP-402 | Agent Infrastructure Standard | v0.1.0
 
 ## 📋 Recent Updates
 
-### Latest (Jan 16, 2026) — SDK Cleanup & Documentation
+### Latest (Jan 26, 2026) — AI Inference, KYC Proofs & Agent Framework Integrations
+
+**New Capabilities:**
+- ✅ **Private AI Inference** (`cap.ai.inference.v1`) - Run sentiment analysis, classification, summarization with encrypted inputs
+- ✅ **Private Embeddings** (`cap.ai.embedding.v1`) - Generate vector embeddings without exposing your data
+- ✅ **Private KYC Verification** (`cap.zk.kyc.v1`) - Prove age, jurisdiction, accreditation without revealing personal data
+- ✅ **Private Credential Verification** (`cap.zk.credential.v1`) - Prove degrees, certifications, memberships privately
+
+**Agent Framework Integrations:**
+- ✅ **LangChain** - `CAP402Toolkit` with ready-to-use tools
+- ✅ **AutoGPT** - `CAP402AutoGPTPlugin` with 6 commands
+- ✅ **CrewAI** - `CAP402CrewAgent` and `CAP402CrewTools`
+
+**SDK Publishing:**
+- ✅ Prepared `@cap402/sdk` npm package with `package.json`, `tsup.config.ts`
+- ✅ Comprehensive SDK README with usage examples
+- ✅ Export integrations from `sdk/integrations/`
+
+**Test Coverage:**
+```
+Test Suites: 23 passed, 23 total
+Tests:       530 passed, 530 total
+```
+
+---
+
+### Previous (Jan 16, 2026) — SDK Cleanup & Documentation
 
 **SDK Improvements:**
 - Consolidated constants into `sdk/constants.ts` (router URL, timeouts, rate limits)
@@ -1265,7 +1307,7 @@ GET  /security/status/:id       - Full agent security status
 
 ---
 
-## 🔮 Advanced Features (v1.0.0)
+## 🔮 Advanced Features
 
 CAP-402 now includes **5 novel advanced features** that make it a complete agent infrastructure platform:
 

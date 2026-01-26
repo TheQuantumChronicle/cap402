@@ -725,5 +725,116 @@ await tester.disconnect();
 
 ---
 
-**Last Updated**: January 16, 2026  
-**CAP-402 Version**: 0.2.0
+---
+
+## 🤖 AI Inference (NEW)
+
+**Status**: ✅ Fully integrated  
+**Purpose**: Private AI model execution with encrypted inputs  
+**Capabilities**: `cap.ai.inference.v1`, `cap.ai.embedding.v1`
+
+### Overview
+Run AI models (sentiment analysis, classification, summarization, embeddings) with privacy guarantees. Your input data is encrypted before processing using Arcium MPC.
+
+### Supported Models
+| Model | Description | Output |
+|-------|-------------|--------|
+| `sentiment-analysis` | Analyze text sentiment | `{ sentiment, confidence, aspects }` |
+| `classification` | Classify text into categories | `{ label, confidence, all_labels }` |
+| `summarization` | Summarize long text | `{ summary, key_points }` |
+| `embeddings` | Generate vector embeddings | `{ embedding, dimensions }` |
+
+### Example Usage
+```typescript
+import { createClient } from '@cap402/sdk';
+
+const client = createClient('https://api.cap402.com');
+
+// Private sentiment analysis
+const result = await client.invokeCapability('cap.ai.inference.v1', {
+  model: 'sentiment-analysis',
+  input: 'This product is amazing!',
+  privacy_level: 2 // Confidential (MPC)
+});
+// { result: { sentiment: 'positive', confidence: 0.92 }, proof: '...' }
+
+// Private embeddings
+const embeddings = await client.invokeCapability('cap.ai.embedding.v1', {
+  texts: ['Hello world', 'Goodbye world'],
+  privacy_level: 2
+});
+// { embeddings: [[...], [...]], dimensions: 1536 }
+```
+
+---
+
+## 🔐 Private KYC Verification (NEW)
+
+**Status**: ✅ Fully integrated  
+**Purpose**: Prove KYC compliance without revealing personal data  
+**Capabilities**: `cap.zk.kyc.v1`, `cap.zk.credential.v1`
+
+### Overview
+Zero-knowledge proofs for identity verification. Prove you meet requirements (age, jurisdiction, accreditation) without revealing the underlying data.
+
+### Verification Types
+| Type | Proves | Without Revealing |
+|------|--------|-------------------|
+| `age` | User is above minimum age | Birthdate |
+| `jurisdiction` | User is in allowed country | Exact location |
+| `accreditation` | User is accredited investor | Net worth/income |
+| `aml` | User passes AML checks | Identity details |
+
+### Example Usage
+```typescript
+// Prove you're 18+ without revealing birthdate
+const result = await client.invokeCapability('cap.zk.kyc.v1', {
+  verification_type: 'age',
+  private_inputs: {
+    date_of_birth: '1990-05-15' // Never revealed
+  },
+  public_inputs: {
+    min_age: 18
+  }
+});
+// { compliant: true, proof: '0x...', verification_id: 'kyc_abc123' }
+// Verifier learns ONLY: "User is 18+" - nothing else
+```
+
+---
+
+## 🔗 Agent Framework Integrations (NEW)
+
+### LangChain
+```typescript
+import { CAP402Toolkit } from '@cap402/sdk/integrations/langchain';
+
+const toolkit = new CAP402Toolkit({ routerUrl: 'https://api.cap402.com' });
+const tools = await toolkit.getTools();
+// Use with LangChain agents
+```
+
+### AutoGPT
+```typescript
+import { CAP402AutoGPTPlugin } from '@cap402/sdk/integrations/autogpt';
+
+const plugin = new CAP402AutoGPTPlugin();
+const commands = plugin.getCommands();
+// 6 commands: get_price, verify_kyc, private_ai, confidential_swap, wallet_snapshot, zk_proof
+```
+
+### CrewAI
+```typescript
+import { CAP402CrewAgent } from '@cap402/sdk/integrations/crewai';
+
+const agent = new CAP402CrewAgent({
+  role: 'Market Analyst',
+  goal: 'Analyze crypto markets privately',
+  capabilities: ['cap.price.lookup.v1', 'cap.ai.inference.v1']
+});
+```
+
+---
+
+**Last Updated**: January 26, 2026  
+**CAP-402 Version**: 0.1.0

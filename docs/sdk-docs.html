@@ -134,6 +134,63 @@ const price = await cap402.price('SOL');           // $143.34
 const wallet = await cap402.wallet('address...');
 const swap = await cap402.swap('SOL', 'USDC', 10); // dry_run by default</pre>
     
+    <h2>New Capabilities (Jan 2026)</h2>
+    
+    <h3>Private AI Inference</h3>
+    <p>Run AI models with encrypted inputs - your data never exposed.</p>
+    <pre class="code-block">import { createClient } from '@cap402/sdk';
+
+const client = createClient('https://api.cap402.com');
+
+// Private sentiment analysis
+const result = await client.invokeCapability('cap.ai.inference.v1', {
+  model: 'sentiment-analysis',
+  input: 'This product is amazing!',
+  privacy_level: 2 // Confidential (Arcium MPC)
+});
+// { result: { sentiment: 'positive', confidence: 0.92 }, proof: '...' }
+
+// Private embeddings for RAG
+const embeddings = await client.invokeCapability('cap.ai.embedding.v1', {
+  texts: ['Hello world', 'Goodbye world'],
+  privacy_level: 2
+});
+// { embeddings: [[...], [...]], dimensions: 1536 }</pre>
+
+    <h3>Private KYC Verification</h3>
+    <p>Prove compliance without revealing personal data using zero-knowledge proofs.</p>
+    <pre class="code-block">// Prove you're 18+ without revealing birthdate
+const result = await client.invokeCapability('cap.zk.kyc.v1', {
+  verification_type: 'age',
+  private_inputs: {
+    date_of_birth: '1990-05-15' // NEVER revealed
+  },
+  public_inputs: {
+    min_age: 18
+  }
+});
+// { compliant: true, proof: '0x...', verification_id: 'kyc_abc123' }
+// Verifier learns ONLY: "User is 18+" - nothing else</pre>
+
+    <h3>Agent Framework Integrations</h3>
+    <p>Ready-to-use integrations for popular AI agent frameworks.</p>
+    <pre class="code-block">// LangChain
+import { CAP402Toolkit } from '@cap402/sdk/integrations/langchain';
+const toolkit = new CAP402Toolkit({ routerUrl: 'https://api.cap402.com' });
+const tools = await toolkit.getTools();
+
+// AutoGPT
+import { CAP402AutoGPTPlugin } from '@cap402/sdk/integrations/autogpt';
+const plugin = new CAP402AutoGPTPlugin();
+const commands = plugin.getCommands();
+
+// CrewAI
+import { CAP402CrewAgent } from '@cap402/sdk/integrations/crewai';
+const agent = new CAP402CrewAgent({
+  role: 'Market Analyst',
+  capabilities: ['cap.price.lookup.v1', 'cap.ai.inference.v1']
+});</pre>
+    
     <h2>Agent Templates</h2>
     <h3>Trading Agent</h3>
     <p>Monitors prices, generates signals, and prepares ready-to-sign swap transactions.</p>

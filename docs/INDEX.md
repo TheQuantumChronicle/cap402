@@ -47,13 +47,30 @@
    - Data flow diagrams
    - Security model
 
-7. **[STEALTHPUMP_INTEGRATION.md](STEALTHPUMP_INTEGRATION.md)** ⭐ NEW
+7. **[STEALTHPUMP_INTEGRATION.md](STEALTHPUMP_INTEGRATION.md)**
    - Complete StealthPump integration architecture
    - Privacy-first token launches on pump.fun
    - Cross-system event synchronization
    - Privacy scoring and anonymity tracking
    - **Arcium MPC**: ✅ Verified Working (Jan 2026)
    - API endpoints and security features
+
+### New Capabilities (Jan 2026)
+8. **Private AI Inference** (`cap.ai.inference.v1`, `cap.ai.embedding.v1`) ⭐ NEW
+   - Sentiment analysis, classification, summarization with encrypted inputs
+   - Private vector embeddings for semantic search/RAG
+   - Uses Arcium MPC for confidential execution
+
+9. **Private KYC Verification** (`cap.zk.kyc.v1`, `cap.zk.credential.v1`) ⭐ NEW
+   - Prove age, jurisdiction, accreditation WITHOUT revealing personal data
+   - Prove credentials (degrees, certifications) privately
+   - Uses Noir ZK proofs
+
+10. **Agent Framework Integrations** ⭐ NEW
+    - **LangChain**: `CAP402Toolkit` with ready-to-use tools
+    - **AutoGPT**: `CAP402AutoGPTPlugin` with 6 commands
+    - **CrewAI**: `CAP402CrewAgent` and `CAP402CrewTools`
+    - See `sdk/integrations/` for implementation
 
 8. **[AUDIT_REPORT.md](AUDIT_REPORT.md)** ⭐ NEW
    - Security & code quality audit

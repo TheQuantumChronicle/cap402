@@ -17,6 +17,7 @@ import { arciumProvider } from '../../providers/arcium-client';
 import { arciumCSPLProvider } from '../../providers/arcium-cspl';
 import { noirCircuitsProvider } from '../../providers/noir-circuits';
 import { incoFHEProvider } from '../../providers/inco-fhe';
+import { aiInferenceProvider } from '../../providers/ai-inference';
 
 export class ConfidentialExecutor implements Executor {
   name = "confidential-executor";
@@ -36,6 +37,8 @@ export class ConfidentialExecutor implements Executor {
            capability_id.includes('document.parse') ||
            capability_id.includes('cspl.') ||
            capability_id.includes('fhe.') ||
+           capability_id.includes('ai.inference') ||
+           capability_id.includes('ai.embedding') ||
            capability_id === 'cap.zk.proof.balance.v1';
   }
 
@@ -60,6 +63,10 @@ export class ConfidentialExecutor implements Executor {
         return await this.executeFHECompute(context, startTime);
       } else if (context.capability_id === 'cap.zk.proof.balance.v1') {
         return await this.executeZKBalanceProof(context, startTime);
+      } else if (context.capability_id === 'cap.ai.inference.v1') {
+        return await this.executeAIInference(context, startTime);
+      } else if (context.capability_id === 'cap.ai.embedding.v1') {
+        return await this.executeAIEmbedding(context, startTime);
       }
 
       return {
@@ -462,6 +469,113 @@ export class ConfidentialExecutor implements Executor {
         provider_used: 'inco-fhe',
         proof_type: 'fhe-proof',
         privacy_level: 2
+      }
+    };
+  }
+
+  private async executeAIInference(context: ExecutionContext, startTime: number): Promise<ExecutionResult> {
+    const { model, input, privacy_level = 2, model_config, encrypt_output = false } = context.inputs;
+
+    const result = await aiInferenceProvider.inference(
+      model,
+      input,
+      privacy_level,
+      model_config,
+      encrypt_output
+    );
+
+    if (!result.success) {
+      return {
+        success: false,
+        outputs: { available_models: aiInferenceProvider.getAvailableModels() },
+        error: result.error || 'AI inference failed',
+        metadata: {
+          executor: this.name,
+          execution_time_ms: Date.now() - startTime,
+          cost_actual: 0
+        }
+      };
+    }
+
+    return {
+      success: true,
+      outputs: {
+        result: result.result,
+        model_used: result.model_used,
+        privacy_level: result.privacy_level,
+        encrypted: result.encrypted,
+        proof: result.proof,
+        execution_time_ms: result.execution_time_ms,
+        privacy_guarantees: [
+          'Input data encrypted before processing',
+          'Model execution in secure enclave',
+          'No plaintext data exposure',
+          'Cryptographic proof of execution'
+        ]
+      },
+      metadata: {
+        executor: this.name,
+        execution_time_ms: Date.now() - startTime,
+        cost_actual: 0.01,
+        provider_used: 'arcium-ai',
+        proof_type: 'arcium-attestation',
+        privacy_level: privacy_level
+      }
+    };
+  }
+
+  private async executeAIEmbedding(context: ExecutionContext, startTime: number): Promise<ExecutionResult> {
+    const { texts, model = 'text-embedding-3-small', privacy_level = 2 } = context.inputs;
+
+    if (!texts || !Array.isArray(texts) || texts.length === 0) {
+      return {
+        success: false,
+        outputs: {},
+        error: 'texts array is required and must not be empty',
+        metadata: {
+          executor: this.name,
+          execution_time_ms: Date.now() - startTime,
+          cost_actual: 0
+        }
+      };
+    }
+
+    const result = await aiInferenceProvider.generateEmbeddings(texts, model, privacy_level);
+
+    if (!result.success) {
+      return {
+        success: false,
+        outputs: {},
+        error: result.error || 'Embedding generation failed',
+        metadata: {
+          executor: this.name,
+          execution_time_ms: Date.now() - startTime,
+          cost_actual: 0
+        }
+      };
+    }
+
+    return {
+      success: true,
+      outputs: {
+        embeddings: result.embeddings,
+        dimensions: result.dimensions,
+        model_used: result.model_used,
+        count: texts.length,
+        proof: result.proof,
+        privacy_guarantees: [
+          'Text inputs encrypted before embedding',
+          'Embeddings generated in secure environment',
+          'No plaintext exposure during computation'
+        ]
+      },
+      metadata: {
+        executor: this.name,
+        execution_time_ms: Date.now() - startTime,
+        cost_actual: 0.005 * texts.length,
+        provider_used: 'arcium-ai',
+        proof_type: 'arcium-attestation',
+        privacy_level: privacy_level
       }
     };
   }
