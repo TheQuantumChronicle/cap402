@@ -275,7 +275,7 @@ Operations are versioned, semantic contracts:
 
 ### StealthPump Integration
 
-Privacy-first token launches on [pump.fun](https://pump.fun) via [stealthpump.fun](https://stealthpump.fun):
+Privacy-first token launches on [pump.fun](https://pump.fun) via [pumpfun.fun](https://pumpfun.fun):
 
 ```bash
 # Unified privacy-first launch
@@ -288,10 +288,10 @@ curl -X POST https://cap402.com/unified/launch \
   }'
 
 # Get privacy score for a token
-curl https://cap402.com/stealthpump/privacy-score/TOKEN_MINT_ADDRESS
+curl https://cap402.com/pumpfun/privacy-score/TOKEN_MINT_ADDRESS
 
 # Check bonding curve progress (creator hidden until graduation)
-curl https://cap402.com/stealthpump/stealth/view/TOKEN_MINT_ADDRESS
+curl https://cap402.com/pumpfun/stealth/view/TOKEN_MINT_ADDRESS
 ```
 
 **Privacy Levels:**

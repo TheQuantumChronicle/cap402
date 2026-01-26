@@ -47,13 +47,12 @@
    - Data flow diagrams
    - Security model
 
-7. **[STEALTHPUMP_INTEGRATION.md](STEALTHPUMP_INTEGRATION.md)**
-   - Complete StealthPump integration architecture
+7. **Pump.fun Privacy Integration**
    - Privacy-first token launches on pump.fun
-   - Cross-system event synchronization
+   - Hidden creator until graduation
    - Privacy scoring and anonymity tracking
    - **Arcium MPC**: ✅ Verified Working (Jan 2026)
-   - API endpoints and security features
+   - API endpoints: `/pumpfun/*`
 
 ### New Capabilities (Jan 2026)
 8. **Private AI Inference** (`cap.ai.inference.v1`, `cap.ai.embedding.v1`) ⭐ NEW
@@ -217,10 +216,10 @@ Usage commitments emitted to Solana for verification
 - **Version**: 1.0.0
 - **Files**: 30+
 - **Lines of Code**: ~10,000
-- **Capabilities**: 15+ (including StealthPump)
-- **Execution Modes**: 3 (Public, Confidential, Stealth)
+- **Capabilities**: 20+ (including Pump.fun Privacy)
+- **Execution Modes**: 3 (Public, Confidential, Privacy)
 - **Payment Methods**: 3
-- **Integrations**: Arcium, Noir, Inco, Helius, [stealthpump.fun](https://stealthpump.fun)
+- **Integrations**: Arcium, Noir, Inco, Helius, [pumpfun.fun](https://pumpfun.fun)
 - **Status**: ✅ Production-Ready
 
 ## 🚀 Launch Commands

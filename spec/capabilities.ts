@@ -76,7 +76,7 @@ import {
   PUMPFUN_SELL_CAPABILITY, 
   PUMPFUN_QUOTE_CAPABILITY,
   BONDING_CURVE_INFO_CAPABILITY 
-} from './stealthpump-capability';
+} from './pumpfun-capability';
 
 export const CORE_CAPABILITIES: Capability[] = [
   {

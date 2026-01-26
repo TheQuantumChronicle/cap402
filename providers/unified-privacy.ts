@@ -529,7 +529,7 @@ interface UnifiedDashboardData {
 // ============================================
 
 export interface CrossSystemEvent {
-  source: 'cap402' | 'stealthpump' | 'pumpfun';
+  source: 'cap402' | 'pumpfun' | 'pumpfun';
   type: string;
   data: any;
   timestamp: number;
@@ -679,7 +679,7 @@ export function emitCAP402Event(type: string, data: any, correlationId?: string)
 
 // Helper to emit StealthPump events
 export function emitStealthPumpEvent(type: string, data: any, correlationId?: string): void {
-  eventBus.emit('stealthpump', type, data, correlationId);
+  eventBus.emit('pumpfun', type, data, correlationId);
 }
 
 // Helper to emit pump.fun events

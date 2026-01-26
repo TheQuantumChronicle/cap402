@@ -8270,11 +8270,11 @@ app.get('/execute/stats', async (req: Request, res: Response) => {
 });
 
 // ============================================
-// STEALTHPUMP / PUMP.FUN ENDPOINTS
+// PUMP.FUN PRIVACY LAUNCH ENDPOINTS
 // ============================================
 
-// Stealth launch a token on pump.fun
-app.post('/stealthpump/launch', async (req: Request, res: Response) => {
+// Privacy launch a token on pump.fun
+app.post('/pumpfun/launch', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { 
@@ -8338,7 +8338,7 @@ app.post('/stealthpump/launch', async (req: Request, res: Response) => {
 });
 
 // Buy tokens from pump.fun bonding curve
-app.post('/stealthpump/buy', async (req: Request, res: Response) => {
+app.post('/pumpfun/buy', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { mint_address, amount_sol, slippage_bps, mev_protection, payer_secret } = req.body;
@@ -8383,7 +8383,7 @@ app.post('/stealthpump/buy', async (req: Request, res: Response) => {
 });
 
 // Sell tokens back to pump.fun bonding curve
-app.post('/stealthpump/sell', async (req: Request, res: Response) => {
+app.post('/pumpfun/sell', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { mint_address, token_amount, slippage_bps, mev_protection, payer_secret } = req.body;
@@ -8428,7 +8428,7 @@ app.post('/stealthpump/sell', async (req: Request, res: Response) => {
 });
 
 // Get buy/sell quote from bonding curve
-app.get('/stealthpump/quote', async (req: Request, res: Response) => {
+app.get('/pumpfun/quote', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { mint_address, side, amount } = req.query;
@@ -8454,7 +8454,7 @@ app.get('/stealthpump/quote', async (req: Request, res: Response) => {
 });
 
 // Get bonding curve info
-app.get('/stealthpump/curve/:mint_address', async (req: Request, res: Response) => {
+app.get('/pumpfun/curve/:mint_address', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const info = await pumpFunProvider.getBondingCurveInfo(req.params.mint_address);
@@ -8479,7 +8479,7 @@ app.get('/stealthpump/curve/:mint_address', async (req: Request, res: Response) 
 });
 
 // Check if token has graduated to Raydium
-app.get('/stealthpump/graduated/:mint_address', async (req: Request, res: Response) => {
+app.get('/pumpfun/graduated/:mint_address', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const graduated = await pumpFunProvider.hasGraduated(req.params.mint_address);
@@ -8490,7 +8490,7 @@ app.get('/stealthpump/graduated/:mint_address', async (req: Request, res: Respon
 });
 
 // Generate stealth wallet
-app.post('/stealthpump/wallet/generate', async (req: Request, res: Response) => {
+app.post('/pumpfun/wallet/generate', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const wallet = pumpFunProvider.generateStealthWallet();
@@ -8500,8 +8500,8 @@ app.post('/stealthpump/wallet/generate', async (req: Request, res: Response) => 
   }
 });
 
-// Get StealthPump provider status
-app.get('/stealthpump/status', async (req: Request, res: Response) => {
+// Get PumpFun provider status
+app.get('/pumpfun/status', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const status = pumpFunProvider.getStatus();
@@ -8512,12 +8512,12 @@ app.get('/stealthpump/status', async (req: Request, res: Response) => {
 });
 
 // ============================================
-// STEALTH REGISTRY ENDPOINTS
+// PRIVACY REGISTRY ENDPOINTS
 // Hidden creator until graduation/reveal
 // ============================================
 
-// Register a stealth launch (hide creator until graduation)
-app.post('/stealthpump/stealth/register', async (req: Request, res: Response) => {
+// Register a privacy launch (hide creator until graduation)
+app.post('/pumpfun/stealth/register', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { mint_address, creator_wallet, name, symbol, description, image, initial_buy_amount, reveal_delay_seconds } = req.body;
@@ -8548,7 +8548,7 @@ app.post('/stealthpump/stealth/register', async (req: Request, res: Response) =>
 });
 
 // Get privacy-preserving bonding curve view (shows MC/progress, hides creator)
-app.get('/stealthpump/stealth/view/:mint_address', async (req: Request, res: Response) => {
+app.get('/pumpfun/stealth/view/:mint_address', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const view = await pumpFunProvider.getStealthBondingCurveView(req.params.mint_address);
@@ -8577,7 +8577,7 @@ app.get('/stealthpump/stealth/view/:mint_address', async (req: Request, res: Res
 });
 
 // Check graduation and auto-reveal if graduated
-app.get('/stealthpump/stealth/check-graduation/:mint_address', async (req: Request, res: Response) => {
+app.get('/pumpfun/stealth/check-graduation/:mint_address', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const result = await pumpFunProvider.checkAndRevealIfGraduated(req.params.mint_address);
@@ -8599,7 +8599,7 @@ app.get('/stealthpump/stealth/check-graduation/:mint_address', async (req: Reque
 });
 
 // Get all stealth launches (dashboard view)
-app.get('/stealthpump/stealth/launches', async (req: Request, res: Response) => {
+app.get('/pumpfun/stealth/launches', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { only_active, only_graduated, limit } = req.query;
@@ -8630,7 +8630,7 @@ app.get('/stealthpump/stealth/launches', async (req: Request, res: Response) => 
 });
 
 // Manually reveal a stealth launch (creator choice)
-app.post('/stealthpump/stealth/reveal', async (req: Request, res: Response) => {
+app.post('/pumpfun/stealth/reveal', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { mint_address, creator_signature } = req.body;
@@ -8657,7 +8657,7 @@ app.post('/stealthpump/stealth/reveal', async (req: Request, res: Response) => {
 });
 
 // Get stealth launch statistics
-app.get('/stealthpump/stealth/stats', async (req: Request, res: Response) => {
+app.get('/pumpfun/stealth/stats', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const stats = pumpFunProvider.getStealthStats();
@@ -8683,7 +8683,7 @@ app.get('/stealthpump/stealth/stats', async (req: Request, res: Response) => {
 // ============================================
 
 // Start monitoring a token for graduation
-app.post('/stealthpump/monitor/start', async (req: Request, res: Response) => {
+app.post('/pumpfun/monitor/start', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { mint_address, poll_interval_ms } = req.body;
@@ -8714,7 +8714,7 @@ app.post('/stealthpump/monitor/start', async (req: Request, res: Response) => {
 });
 
 // Stop monitoring a token
-app.post('/stealthpump/monitor/stop', async (req: Request, res: Response) => {
+app.post('/pumpfun/monitor/stop', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { mint_address } = req.body;
@@ -8736,7 +8736,7 @@ app.post('/stealthpump/monitor/stop', async (req: Request, res: Response) => {
 });
 
 // Get active monitors
-app.get('/stealthpump/monitor/active', async (req: Request, res: Response) => {
+app.get('/pumpfun/monitor/active', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const monitors = pumpFunProvider.getActiveMonitors();
@@ -8760,7 +8760,7 @@ app.get('/stealthpump/monitor/active', async (req: Request, res: Response) => {
 // ============================================
 
 // Launch with MEV protection
-app.post('/stealthpump/launch-protected', async (req: Request, res: Response) => {
+app.post('/pumpfun/launch-protected', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const {
@@ -8825,7 +8825,7 @@ app.post('/stealthpump/launch-protected', async (req: Request, res: Response) =>
 // ============================================
 
 // Initialize anonymity tracking for a token
-app.post('/stealthpump/anonymity/init', async (req: Request, res: Response) => {
+app.post('/pumpfun/anonymity/init', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { mint_address } = req.body;
@@ -8848,7 +8848,7 @@ app.post('/stealthpump/anonymity/init', async (req: Request, res: Response) => {
 });
 
 // Update anonymity set with holder data
-app.post('/stealthpump/anonymity/update', async (req: Request, res: Response) => {
+app.post('/pumpfun/anonymity/update', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { mint_address, total_holders, largest_holder_percent, top10_holders_percent, known_wallets } = req.body;
@@ -8884,7 +8884,7 @@ app.post('/stealthpump/anonymity/update', async (req: Request, res: Response) =>
 });
 
 // Get anonymity set info
-app.get('/stealthpump/anonymity/:mint_address', async (req: Request, res: Response) => {
+app.get('/pumpfun/anonymity/:mint_address', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const info = pumpFunProvider.getAnonymitySetInfo(req.params.mint_address);
@@ -8916,7 +8916,7 @@ app.get('/stealthpump/anonymity/:mint_address', async (req: Request, res: Respon
 // ============================================
 
 // Get comprehensive privacy score
-app.get('/stealthpump/privacy-score/:mint_address', async (req: Request, res: Response) => {
+app.get('/pumpfun/privacy-score/:mint_address', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const score = await pumpFunProvider.getPrivacyScore(req.params.mint_address);
@@ -8952,7 +8952,7 @@ app.get('/stealthpump/privacy-score/:mint_address', async (req: Request, res: Re
 // ============================================
 
 // Get pump.fun compatible token data (matches their API format)
-app.get('/stealthpump/pumpfun-data/:mint_address', async (req: Request, res: Response) => {
+app.get('/pumpfun/pumpfun-data/:mint_address', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { sol_price_usd } = req.query;
@@ -8978,7 +8978,7 @@ app.get('/stealthpump/pumpfun-data/:mint_address', async (req: Request, res: Res
 });
 
 // Get token metrics in pump.fun dashboard format
-app.get('/stealthpump/metrics/:mint_address', async (req: Request, res: Response) => {
+app.get('/pumpfun/metrics/:mint_address', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { sol_price_usd } = req.query;
@@ -9011,7 +9011,7 @@ app.get('/stealthpump/metrics/:mint_address', async (req: Request, res: Response
 });
 
 // Get privacy-aware display data for frontend
-app.get('/stealthpump/display/:mint_address', async (req: Request, res: Response) => {
+app.get('/pumpfun/display/:mint_address', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider } = await import('../providers/pumpfun');
     const { sol_price_usd } = req.query;
@@ -9035,7 +9035,7 @@ app.get('/stealthpump/display/:mint_address', async (req: Request, res: Response
 });
 
 // Get pump.fun constants (for frontend reference)
-app.get('/stealthpump/constants', async (req: Request, res: Response) => {
+app.get('/pumpfun/constants', async (req: Request, res: Response) => {
   try {
     const { PUMPFUN_CONSTANTS } = await import('../providers/pumpfun');
     
@@ -9063,7 +9063,7 @@ app.get('/stealthpump/constants', async (req: Request, res: Response) => {
 });
 
 // Calculate bonding curve progress for any token balance
-app.get('/stealthpump/calculate-progress', async (req: Request, res: Response) => {
+app.get('/pumpfun/calculate-progress', async (req: Request, res: Response) => {
   try {
     const { pumpFunProvider, PUMPFUN_CONSTANTS } = await import('../providers/pumpfun');
     const { real_token_reserves } = req.query;
@@ -9100,7 +9100,7 @@ app.get('/stealthpump/calculate-progress', async (req: Request, res: Response) =
 
 // ============================================
 // UNIFIED PRIVACY ORCHESTRATOR ENDPOINTS
-// Cohesive CAP-402 + StealthPump + Pump.fun
+// Cohesive CAP-402 + Pump.fun Privacy
 // ============================================
 
 // Execute unified privacy-first launch
@@ -9264,7 +9264,7 @@ app.get('/unified/status', async (req: Request, res: Response) => {
           version: '1.0.0',
           providers: ['arcium', 'inco', 'noir']
         },
-        stealthpump: {
+        pumpfun_privacy: {
           status: pumpFunStatus.initialized ? 'operational' : 'initializing',
           mode: pumpFunStatus.mode,
           stats: stealthStats
@@ -9305,7 +9305,7 @@ app.get('/unified/events', async (req: Request, res: Response) => {
     const { source, type, since, limit } = req.query;
 
     const events = eventBus.getRecentEvents({
-      source: source as 'cap402' | 'stealthpump' | 'pumpfun' | undefined,
+      source: source as 'cap402' | 'pumpfun' | undefined,
       type: type as string | undefined,
       since: since ? parseInt(since as string) : undefined,
       limit: limit ? parseInt(limit as string) : 50
@@ -9351,10 +9351,10 @@ app.post('/unified/events/emit', async (req: Request, res: Response) => {
       });
     }
 
-    if (!['cap402', 'stealthpump', 'pumpfun'].includes(source)) {
+    if (!['cap402', 'pumpfun'].includes(source)) {
       return res.status(400).json({
         success: false,
-        error: 'source must be cap402, stealthpump, or pumpfun'
+        error: 'source must be cap402 or pumpfun'
       });
     }
 
@@ -9378,12 +9378,11 @@ app.get('/unified/events/types', async (req: Request, res: Response) => {
     res.json({
       success: true,
       event_types: EventTypes,
-      sources: ['cap402', 'stealthpump', 'pumpfun'],
+      sources: ['cap402', 'pumpfun'],
       subscription_patterns: [
         '*:*           - All events from all sources',
         'cap402:*      - All CAP-402 events',
-        'stealthpump:* - All StealthPump events',
-        'pumpfun:*     - All pump.fun events',
+        'pumpfun:*     - All pump.fun privacy events',
         '*:launch_completed - Launch completed from any source'
       ]
     });

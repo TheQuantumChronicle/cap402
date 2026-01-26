@@ -223,7 +223,7 @@ class PrivacyAlertSystem {
     this.alerts.set(params.mintAddress, alerts);
 
     // Emit event to event bus
-    eventBus.emit('stealthpump', 'privacy_alert', {
+    eventBus.emit('pumpfun', 'privacy_alert', {
       alert,
       mintAddress: params.mintAddress
     });

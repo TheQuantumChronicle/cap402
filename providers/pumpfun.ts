@@ -1,5 +1,5 @@
 /**
- * Pump.fun Integration Provider for StealthPump
+ * Pump.fun Integration Provider for Pumpfun
  * 
  * Enables stealth token launches piggybacking off pump.fun's bonding curve.
  * Features:

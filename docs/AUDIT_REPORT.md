@@ -43,9 +43,9 @@ if (typeof mint_address !== 'string' || mint_address.length < 32 || mint_address
 ```
 
 **Found in**:
-- `/stealthpump/buy` ✅
-- `/stealthpump/sell` ✅
-- All 28 StealthPump endpoints ✅
+- `/pumpfun/buy` ✅
+- `/pumpfun/sell` ✅
+- All 28 Pump.fun Privacy endpoints ✅
 
 **Amount Validation** (Prevents overflow/underflow)
 ```typescript
@@ -139,7 +139,7 @@ private priceCache: Map<string, CacheEntry>
 
 ### ✅ Naming Conventions
 
-**Pattern**: `/stealthpump/{category}/{action}`
+**Pattern**: `/pumpfun/{category}/{action}`
 
 **Categories**:
 - Core: `launch`, `buy`, `sell`, `quote`, `curve`, `status`
@@ -320,7 +320,7 @@ router/
 
 **server.ts**: 9,437 lines
 - Recommendation: Consider splitting into domain-specific route modules
-- Example: `routes/stealthpump.ts`, `routes/unified-privacy.ts`
+- Example: `routes/pumpfun.ts`, `routes/unified-privacy.ts`
 
 ---
 
@@ -328,7 +328,7 @@ router/
 
 ### ✅ Comprehensive
 
-- `STEALTHPUMP_INTEGRATION.md` (404 lines) ✅
+- Pump.fun Privacy Integration (in server.ts) ✅
 - `AUDIT_REPORT.md` (this file) ✅
 - `INDEX.md` (updated) ✅
 - `api-docs.html` (Swagger UI) ✅
@@ -358,7 +358,7 @@ router/
 ### Medium Priority
 
 4. **Split server.ts into Modules**
-   - Create `routes/stealthpump/` directory
+   - Create `routes/pumpfun/` directory
    - Separate concerns by domain
 
 5. **Add Request Rate Limiting per IP**

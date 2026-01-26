@@ -100,14 +100,14 @@ tags:
       Advanced features including privacy gradient selection (4 levels from 
       public to ZK-verifiable), capability negotiation, intent graphs for 
       complex workflows, and verifiable execution receipts.
-  - name: StealthPump
+  - name: Pump.fun Privacy
     description: |
-      Privacy-first token launches on pump.fun via [stealthpump.fun](https://stealthpump.fun). 
+      Privacy-first token launches on pump.fun. 
       Features include hidden creator wallets (revealed only on graduation), MEV protection 
       via Jito bundles, timing obfuscation, holder anonymity tracking, and privacy scoring.
       
       **Privacy Levels:**
-      - `basic` — Hidden creator, stealth wallet
+      - `basic` — Hidden creator, privacy wallet
       - `enhanced` — + MEV protection, timing obfuscation, anonymity tracking
       - `maximum` — + No auto-reveal, Noir ZK proofs, full obfuscation
   - name: AI Inference
