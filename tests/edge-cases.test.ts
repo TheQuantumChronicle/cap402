@@ -285,7 +285,7 @@ describe('Edge Case & Error Handling Tests', () => {
     test('API version headers are present', async () => {
       const res = await request(app).get('/health');
 
-      expect(res.headers['x-api-version']).toBe('0.1.0');
+      expect(res.headers['x-api-version']).toBe('1.0.0');
       expect(res.headers['x-protocol']).toBe('CAP-402');
     });
   });
