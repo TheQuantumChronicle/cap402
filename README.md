@@ -271,9 +271,9 @@ Operations are versioned, semantic contracts:
 | `cap.fhe.compute.v1` | Compute on encrypted data via Inco FHE |
 | `cap.lightning.message.v1` | Encrypted agent-to-agent messaging |
 | `cap.stealth.launch.v1` | Privacy-first token launches via pump.fun |
-| `cap.stealth.buy.v1` | Hidden initial buys with MEV protection |
+| `cap.pumpfun.buy.v1` | Buy from pump.fun bonding curve with MEV protection |
 
-### StealthPump Integration
+### Pump.fun Privacy Integration
 
 Privacy-first token launches on [pump.fun](https://pump.fun) via [pumpfun.fun](https://pumpfun.fun):
 
@@ -282,7 +282,7 @@ Privacy-first token launches on [pump.fun](https://pump.fun) via [pumpfun.fun](h
 curl -X POST https://cap402.com/unified/launch \
   -H "Content-Type: application/json" \
   -d '{
-    "token": {"name": "MyToken", "symbol": "MTK", "description": "Stealth launch"},
+    "token": {"name": "MyToken", "symbol": "MTK", "description": "Privacy launch"},
     "initial_buy_sol": 1.5,
     "privacy_level": "enhanced"
   }'
@@ -291,11 +291,11 @@ curl -X POST https://cap402.com/unified/launch \
 curl https://cap402.com/pumpfun/privacy-score/TOKEN_MINT_ADDRESS
 
 # Check bonding curve progress (creator hidden until graduation)
-curl https://cap402.com/pumpfun/stealth/view/TOKEN_MINT_ADDRESS
+curl https://cap402.com/pumpfun/privacy-score/TOKEN_MINT_ADDRESS
 ```
 
 **Privacy Levels:**
-- `basic` — Hidden creator, stealth wallet
+- `basic` — Hidden creator, privacy wallet
 - `enhanced` — + MEV protection, timing obfuscation, anonymity tracking
 - `maximum` — + No auto-reveal, Noir ZK proofs, full obfuscation
 

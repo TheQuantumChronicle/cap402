@@ -1,10 +1,9 @@
 /**
- * Unified Privacy Layer for CAP-402 + StealthPump + Pump.fun
+ * Unified Privacy Layer for CAP-402 + Pump.fun
  * 
- * Provides cohesive privacy orchestration across all three systems:
+ * Provides cohesive privacy orchestration across systems:
  * - CAP-402: Privacy providers (Arcium MPC, Inco FHE, Noir ZK)
- * - StealthPump: Stealth launch coordination
- * - Pump.fun: Bonding curve integration
+ * - Pump.fun: Privacy launch coordination and bonding curve integration
  * 
  * Key Features:
  * - Unified privacy configuration
@@ -169,7 +168,7 @@ class UnifiedPrivacyOrchestrator {
 
   /**
    * Execute a unified privacy-first launch
-   * Orchestrates CAP-402, StealthPump, and Pump.fun
+   * Orchestrates CAP-402 and Pump.fun privacy features
    */
   async executeLaunch(request: UnifiedLaunchRequest): Promise<UnifiedLaunchResult> {
     const launchId = `launch_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
@@ -525,7 +524,7 @@ interface UnifiedDashboardData {
 
 // ============================================
 // CROSS-SYSTEM EVENT SYNCHRONIZATION
-// Enables real-time updates across CAP-402, StealthPump, and pump.fun
+// Enables real-time updates across CAP-402 and pump.fun
 // ============================================
 
 export interface CrossSystemEvent {
@@ -677,8 +676,8 @@ export function emitCAP402Event(type: string, data: any, correlationId?: string)
   eventBus.emit('cap402', type, data, correlationId);
 }
 
-// Helper to emit StealthPump events
-export function emitStealthPumpEvent(type: string, data: any, correlationId?: string): void {
+// Helper to emit Pumpfun Privacy events
+export function emitPumpfunPrivacyEvent(type: string, data: any, correlationId?: string): void {
   eventBus.emit('pumpfun', type, data, correlationId);
 }
 
