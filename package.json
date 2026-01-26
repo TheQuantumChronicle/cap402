@@ -1,6 +1,6 @@
 {
   "name": "cap-402",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Agent Infrastructure Standard - Semantic capability routing for autonomous agents with privacy-first design",
   "main": "router/server.ts",
   "scripts": {

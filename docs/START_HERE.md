@@ -122,7 +122,7 @@ curl -X POST https://cap402.com/invoke \
 - **Privacy-first** (Arcium integration)
 - **Non-custodial** (no intermediaries)
 - **Extensible** (pluggable executors, providers)
-- **Clear roadmap** (v0.1 → v1.0)
+- **Clear roadmap** (v1.0 → v2.0)
 
 ## 🏗️ Project Structure Overview
 
@@ -225,4 +225,4 @@ These are expected before dependencies are installed. After `npm install`, they 
 
 *Built for hackathons. Designed for production. Ready for the future.*
 
-**CAP-402 | Agent Infrastructure Standard | v0.1.0**
+**CAP-402 | Agent Infrastructure Standard | v1.0.0**

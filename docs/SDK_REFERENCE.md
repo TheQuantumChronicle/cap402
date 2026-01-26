@@ -837,4 +837,4 @@ const agent = new CAP402CrewAgent({
 ---
 
 **Last Updated**: January 26, 2026  
-**CAP-402 Version**: 0.1.0
+**CAP-402 Version**: 1.0.0

@@ -30,7 +30,7 @@ npm start
 
 You'll see:
 ```
-🚀 CAP-402 Reference Router v0.1.0
+🚀 CAP-402 Reference Router v1.0.0
 📡 Listening on https://cap402.com
 
 ✅ Real API Integrations:

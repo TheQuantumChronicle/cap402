@@ -307,10 +307,10 @@ CAP-402 makes Arcium a first-class execution mode, not an afterthought.
 
 ---
 
-## Key Metrics (v0.1)
+## Key Metrics (v1.0)
 
-- **Lines of Code**: ~2,500
-- **Capabilities**: 3 (price, wallet, document)
+- **Lines of Code**: ~15,000+
+- **Capabilities**: 20+ (price, wallet, swap, AI, KYC, and more)
 - **Execution Modes**: 2 (public, confidential)
 - **Payment Methods**: 3 (SOL, USDC, Privacy Cash)
 - **Latency**: 50-200ms (public), 500-1500ms (confidential)
@@ -358,6 +358,6 @@ Usage signals can be verified on-chain without revealing data.
 
 ---
 
-**CAP-402 | Agent Infrastructure Standard | v0.1.0**
+**CAP-402 | Agent Infrastructure Standard | v1.0.0**
 
 *"Agents don't call APIs. Agents call capabilities."*

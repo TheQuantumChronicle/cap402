@@ -336,7 +336,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // API versioning headers
 app.use((req: Request, res: Response, next: NextFunction) => {
-  res.setHeader('X-API-Version', '0.1.0');
+  res.setHeader('X-API-Version', '1.0.0');
   res.setHeader('X-Protocol', 'CAP-402');
   next();
 });
@@ -381,7 +381,7 @@ app.get('/api', async (req: Request, res: Response) => {
     name: 'CAP-402',
     tagline: 'Privacy-First Agent Infrastructure',
     description: 'Semantic capability routing for autonomous agents with native privacy support',
-    version: '0.1.0',
+    version: '1.0.0',
     protocol: 'CAP-402',
     status: 'operational',
     mission: 'Enable agents to access capabilities with privacy as a first-class routing decision',
@@ -422,7 +422,7 @@ app.get('/api', async (req: Request, res: Response) => {
 app.get('/openapi.json', (req: Request, res: Response) => {
   res.json({
     openapi: '3.0.3',
-    info: { title: 'CAP-402 API', version: '0.1.0', description: 'Privacy-First Agent Infrastructure' },
+    info: { title: 'CAP-402 API', version: '1.0.0', description: 'Privacy-First Agent Infrastructure' },
     servers: [{ url: 'https://cap402.com' }, { url: 'http://localhost:3001', description: 'Local development' }],
     paths: {
       '/invoke': {

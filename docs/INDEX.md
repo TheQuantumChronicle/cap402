@@ -280,6 +280,6 @@ Everything is built, documented, and ready to go.
 
 ---
 
-**CAP-402 | Agent Infrastructure Standard | v0.1.0**
+**CAP-402 | Agent Infrastructure Standard | v1.0.0**
 
 *"Agents don't call APIs. Agents call capabilities."*
