@@ -1171,9 +1171,9 @@ interface UsageMetadata {
 
 The CAP-402 reference router is implemented in TypeScript:
 
-- **58 TypeScript files**
-- **306 tests** (262 passing, 44 external API dependent)
-- **55+ API endpoints**
+- **60+ TypeScript files**
+- **530 tests** (all passing)
+- **75+ API endpoints**
 - **Production-ready** with Helmet.js security headers
 
 ### 11.2 Technology Stack
