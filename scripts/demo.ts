@@ -268,13 +268,14 @@ const capabilities: DemoCapability[] = [
     }
   },
   {
-    name: 'Pump.fun Quote',
-    description: 'Get bonding curve quote for token purchase',
+    name: 'Bonding Curve Info',
+    description: 'Get pump.fun bonding curve data for a token',
     method: 'GET',
-    endpoint: '/pumpfun/quote?mint_address=So11111111111111111111111111111111111111112&side=buy&amount=1.0',
+    endpoint: '/pumpfun/curve-info?mint_address=DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
     highlight: (data) => {
-      if (data.quote || data.tokens_out) {
-        printHighlight('Quote', data.quote || `${data.tokens_out} tokens`);
+      if (data.curve_info) {
+        printHighlight('Token', data.curve_info.name || 'Bonk');
+        printHighlight('Market Cap', data.curve_info.market_cap || 'Available');
       }
     }
   },
@@ -314,11 +315,11 @@ const capabilities: DemoCapability[] = [
     body: {
       capability_id: 'cap.confidential.swap.v1',
       inputs: {
-        token_in: 'SOL',
-        token_out: 'USDC',
+        input_token: 'SOL',
+        output_token: 'USDC',
         amount: 1.0,
         slippage_bps: 50,
-        wallet_address: 'demo_wallet'
+        wallet_address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg'
       }
     },
     highlight: (data) => {
