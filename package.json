@@ -21,7 +21,7 @@
     "test:integration": "jest tests/integration-flow.test.ts",
     "test:all": "jest tests/",
     "test:integrations": "ts-node test-real-integrations.ts",
-    "demo": "ts-node demo.ts",
+    "demo": "ts-node scripts/demo.ts",
     "demo:agent": "ts-node examples/production-agent.ts",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"**/*.ts\"",
