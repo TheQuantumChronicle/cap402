@@ -257,7 +257,7 @@ export const CORE_CAPABILITIES: Capability[] = [
   CSPL_WRAP_CAPABILITY,
   CSPL_TRANSFER_CAPABILITY,
   FHE_COMPUTE_CAPABILITY,
-  // StealthPump / Pump.fun capabilities
+  // Pump.fun Privacy capabilities
   STEALTH_LAUNCH_CAPABILITY,
   PUMPFUN_BUY_CAPABILITY,
   PUMPFUN_SELL_CAPABILITY,

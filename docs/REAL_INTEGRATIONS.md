@@ -174,7 +174,7 @@ Response:
 {
   "status": "healthy",
   "timestamp": 1704067200000,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "integrations": [
     {
       "service": "price-api",

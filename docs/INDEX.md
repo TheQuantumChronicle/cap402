@@ -197,12 +197,12 @@ CAP-402/
 Semantic contracts that define what can be done, not how to do it.
 - Defined in `spec/capabilities.ts`
 - Core: price_lookup, wallet_snapshot, swap, zk_proof, fhe_compute
-- StealthPump: stealth_launch, stealth_buy, privacy_score
+- Pump.fun Privacy: privacy_launch, pumpfun_buy, privacy_score
 
 ### Execution Modes
 - **Public**: Standard API/RPC execution
 - **Confidential**: Arcium MPC with proofs
-- **Stealth**: Hidden creator launches via StealthPump
+- **Privacy**: Hidden creator launches via Pump.fun Privacy
 
 ### Economic Layer
 - **X.402**: Payment hints with ephemeral addresses

@@ -1,6 +1,6 @@
 # CAP-402: Execution Monetization Layer for Autonomous Agents
 
-**Version 0.1.0** | Confidential execution infrastructure that agents must use once they scale.
+**Version 1.0.0** | Confidential execution infrastructure that agents must use once they scale.
 
 🌐 **Website**: [cap402.com](https://cap402.com) | 📄 [Whitepaper](docs/WHITEPAPER.md) | 🔌 [API Docs](docs/api-docs.html)
 
@@ -1094,7 +1094,7 @@ MIT License - See LICENSE file for details
 
 **Built for hackathons. Designed for production. Ready for the future.**
 
-CAP-402 | Agent Infrastructure Standard | v0.1.0
+CAP-402 | Agent Infrastructure Standard | v1.0.0
 
 ---
 

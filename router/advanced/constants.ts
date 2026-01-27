@@ -125,8 +125,8 @@ export const HEADERS = {
 
 // API Versions
 export const API_VERSION = {
-  CURRENT: '0.1.0',
-  ADVANCED_FEATURES: '1.0.0'
+  CURRENT: '1.0.0',
+  ADVANCED_FEATURES: '1.1.0'
 } as const;
 
 // Timeouts

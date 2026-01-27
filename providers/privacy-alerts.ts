@@ -1,5 +1,5 @@
 /**
- * Privacy Alert System for CAP-402 + StealthPump
+ * Privacy Alert System for CAP-402 + Pump.fun Privacy
  * 
  * Monitors privacy metrics and triggers alerts when thresholds are breached.
  * Features:

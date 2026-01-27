@@ -335,7 +335,7 @@ curl https://cap402.com/health | jq
 {
   "status": "healthy",
   "timestamp": 1704067200000,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "integrations": [
     {"service": "price-api", "status": "healthy", "latency_ms": 120},
     {"service": "wallet-api", "status": "healthy", "latency_ms": 450},
