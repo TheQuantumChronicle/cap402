@@ -400,21 +400,21 @@
         desc: 'Generate vector embeddings',
         method: 'POST',
         endpoint: '/invoke',
-        body: { capability_id: 'cap.ai.embedding.v1', inputs: { text: 'Privacy-first agent infrastructure', model: 'text-embedding-3-small' } }
+        body: { capability_id: 'cap.ai.embedding.v1', inputs: { texts: ['Privacy-first agent infrastructure'], model: 'text-embedding-3-small' } }
       },
       {
-        name: 'ZK Proof Generation',
-        desc: 'Generate zero-knowledge balance proof',
+        name: 'ZK Balance Proof',
+        desc: 'Prove balance threshold without revealing amount',
         method: 'POST',
         endpoint: '/invoke',
-        body: { capability_id: 'cap.zk.proof.v1', inputs: { circuit: 'balance_check', private_inputs: { balance: 10000 }, public_inputs: { min_balance: 1000 } } }
+        body: { capability_id: 'cap.zk.proof.balance.v1', inputs: { wallet: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg', threshold: 1000, currency: 'USD' } }
       },
       {
-        name: 'KYC Proof (Privacy L2)',
-        desc: 'Prove age without revealing data',
+        name: 'FHE Compute',
+        desc: 'Encrypted computation via Inco FHE',
         method: 'POST',
         endpoint: '/invoke',
-        body: { capability_id: 'cap.zk.kyc.v1', inputs: { verification_type: 'age', private_inputs: {}, public_inputs: { min_age: 18 } } }
+        body: { capability_id: 'cap.fhe.compute.v1', inputs: { operation: 'add', operands: [100, 50], encryption_type: 'euint32' } }
       },
       {
         name: 'MEV Analysis',
@@ -483,11 +483,11 @@
       }
     }
     
-    function formatJson(obj, indent = 2) {
-      const str = JSON.stringify(obj, null, indent);
-      const lines = str.split('\\n');
-      if (lines.length > 12) {
-        return lines.slice(0, 12).join('\\n') + '\\n  ... (' + (lines.length - 12) + ' more lines)';
+    function formatJson(obj, maxLines = 10) {
+      const str = JSON.stringify(obj, null, 2);
+      const lines = str.split('\n');
+      if (lines.length > maxLines) {
+        return lines.slice(0, maxLines).join('\n') + '\n  ... (' + (lines.length - maxLines) + ' more lines)';
       }
       return str;
     }
