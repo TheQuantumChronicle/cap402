@@ -121,6 +121,13 @@ const result = await client.invokeCapability('cap.ai.inference.v1', {
 | `cap.ai.embedding.v1` | Private vector embeddings | L2 |
 | `cap.zk.kyc.v1` | Private KYC verification | L2 |
 | `cap.zk.credential.v1` | Private credential proofs | L2 |
+| `cap.stealth.launch.v1` | Privacy token launch on pump.fun | L2 |
+| `cap.pumpfun.buy.v1` | Buy from pump.fun bonding curve | Public |
+| `cap.pumpfun.sell.v1` | Sell to pump.fun bonding curve | Public |
+| `cap.pumpfun.quote.v1` | Get pump.fun price quote | Public |
+| `cap.pumpfun.curve.v1` | Bonding curve info | Public |
+| `cap.document.parse.v1` | Confidential document parsing | L2 |
+| `cap.lightning.message.v1` | Encrypted agent messaging | L2 |
 
 ## Integration Examples
 

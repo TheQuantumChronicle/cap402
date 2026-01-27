@@ -1106,15 +1106,17 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
       <!-- Endpoint Selector -->
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 1.5rem;">
         <button class="playground-btn active" data-endpoint="price" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'><i data-lucide="coins" style="width:14px;height:14px;"></i> Price</button>
+        <button class="playground-btn" data-endpoint="wallet" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.wallet.snapshot.v1","inputs":{"address":"So11111111111111111111111111111111111111112"}}'><i data-lucide="wallet" style="width:14px;height:14px;"></i> Wallet</button>
+        <button class="playground-btn" data-endpoint="swap" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.confidential.swap.v1","inputs":{"token_in":"SOL","token_out":"USDC","amount":1.0,"slippage_bps":50}}'><i data-lucide="repeat" style="width:14px;height:14px;"></i> Swap</button>
+        <button class="playground-btn" data-endpoint="ai" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.ai.inference.v1","inputs":{"model":"sentiment-analysis","input":"This product is amazing!","privacy_level":2}}'><i data-lucide="brain" style="width:14px;height:14px;"></i> AI Inference</button>
+        <button class="playground-btn" data-endpoint="embedding" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.ai.embedding.v1","inputs":{"text":"Privacy-first agent infrastructure","model":"text-embedding-3-small"}}'><i data-lucide="sparkles" style="width:14px;height:14px;"></i> Embedding</button>
+        <button class="playground-btn" data-endpoint="kyc" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.zk.kyc.v1","inputs":{"verification_type":"age","private_inputs":{},"public_inputs":{"min_age":18}}}'><i data-lucide="shield-check" style="width:14px;height:14px;"></i> KYC Proof</button>
+        <button class="playground-btn" data-endpoint="zkproof" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.zk.proof.v1","inputs":{"circuit":"balance_check","private_inputs":{"balance":1000},"public_inputs":{"min_balance":100}}}'><i data-lucide="lock" style="width:14px;height:14px;"></i> ZK Proof</button>
+        <button class="playground-btn" data-endpoint="pumpfun" data-method="POST" data-url="/pumpfun/quote" data-body='{"mint_address":"So11111111111111111111111111111111111111112","side":"buy","amount_sol":1.0}'><i data-lucide="rocket" style="width:14px;height:14px;"></i> Pump.fun</button>
         <button class="playground-btn" data-endpoint="mev" data-method="POST" data-url="/mev/analyze" data-body='{"token_in":"SOL","token_out":"USDC","amount":10000,"slippage":0.5}'><i data-lucide="shield" style="width:14px;height:14px;"></i> MEV</button>
-        <button class="playground-btn" data-endpoint="arbitrage" data-method="GET" data-url="/alpha/arbitrage?min_profit_bps=5" data-body=""><i data-lucide="trending-up" style="width:14px;height:14px;"></i> Arbitrage</button>
         <button class="playground-btn" data-endpoint="whales" data-method="GET" data-url="/alpha/whale-tracker" data-body=""><i data-lucide="fish" style="width:14px;height:14px;"></i> Whales</button>
-        <button class="playground-btn" data-endpoint="smartmoney" data-method="GET" data-url="/alpha/smart-money?token=SOL" data-body=""><i data-lucide="gem" style="width:14px;height:14px;"></i> Smart Money</button>
-        <button class="playground-btn" data-endpoint="liquidations" data-method="GET" data-url="/alpha/liquidations" data-body=""><i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Liquidations</button>
-        <button class="playground-btn" data-endpoint="capabilities" data-method="GET" data-url="/capabilities" data-body=""><i data-lucide="list" style="width:14px;height:14px;"></i> Capabilities</button>
-        <button class="playground-btn" data-endpoint="health" data-method="GET" data-url="/sponsors/health" data-body=""><i data-lucide="heart-pulse" style="width:14px;height:14px;"></i> Health</button>
-        <button class="playground-btn" data-endpoint="ai" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.ai.inference.v1","inputs":{"model":"sentiment-analysis","input":"This product is amazing!","privacy_level":2}}'><i data-lucide="brain" style="width:14px;height:14px;"></i> AI</button>
-        <button class="playground-btn" data-endpoint="kyc" data-method="POST" data-url="/invoke" data-body='{"capability_id":"cap.zk.kyc.v1","inputs":{"verification_type":"age","private_inputs":{},"public_inputs":{"min_age":18}}}'><i data-lucide="shield-check" style="width:14px;height:14px;"></i> KYC</button>
+        <button class="playground-btn" data-endpoint="capabilities" data-method="GET" data-url="/capabilities" data-body=""><i data-lucide="list" style="width:14px;height:14px;"></i> All Caps</button>
+        <button class="playground-btn" data-endpoint="health" data-method="GET" data-url="/health" data-body=""><i data-lucide="heart-pulse" style="width:14px;height:14px;"></i> Health</button>
       </div>
       
       <!-- Request/Response -->
@@ -1144,6 +1146,19 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
           </div>
           <pre id="res-body" style="padding: 1rem; font-size: 0.75rem; color: var(--text-primary); background: rgba(0,0,0,0.2); margin: 0; overflow-x: auto; font-family: 'JetBrains Mono', monospace; white-space: pre-wrap; max-height: 200px; min-height: 150px;">Click "Run Request" to see live response...</pre>
         </div>
+      </div>
+      
+      <!-- Curl Command -->
+      <div style="margin-top: 1rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Quick Copy cURL</span>
+          <button id="copy-curl" style="background: rgba(108,68,252,0.15); border: 1px solid var(--arcium-purple); color: var(--arcium-purple); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+            <i data-lucide="copy" style="width:12px;height:12px;"></i> Copy
+          </button>
+        </div>
+        <pre id="curl-command" style="font-size: 0.7rem; color: var(--text-secondary); background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; white-space: pre-wrap; margin: 0;">curl -X POST https://cap402.com/invoke \
+  -H "Content-Type: application/json" \
+  -d '{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'</pre>
       </div>
       
       <!-- Run Button -->
@@ -1199,6 +1214,24 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
       body: '{"capability_id":"cap.price.lookup.v1","inputs":{"base_token":"SOL"}}'
     };
     
+    function generateCurlCommand(method, url, body) {
+      const fullUrl = 'https://cap402.com' + url;
+      if (method === 'GET') {
+        return `curl ${fullUrl}`;
+      }
+      return `curl -X ${method} ${fullUrl} \\
+  -H "Content-Type: application/json" \\
+  -d '${body}'`;
+    }
+    
+    function updateCurlCommand() {
+      document.getElementById('curl-command').textContent = generateCurlCommand(
+        playgroundState.method, 
+        playgroundState.url, 
+        playgroundState.body
+      );
+    }
+    
     document.querySelectorAll('.playground-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         document.querySelectorAll('.playground-btn').forEach(b => b.classList.remove('active'));
@@ -1218,6 +1251,26 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
         document.getElementById('res-status').style.background = 'rgba(136,136,136,0.2)';
         document.getElementById('res-status').style.color = '#888';
         document.getElementById('latency').textContent = '';
+        updateCurlCommand();
+      });
+    });
+    
+    document.getElementById('copy-curl').addEventListener('click', function() {
+      const curlText = document.getElementById('curl-command').textContent;
+      navigator.clipboard.writeText(curlText).then(() => {
+        const btn = this;
+        btn.innerHTML = '<i data-lucide="check" style="width:12px;height:12px;"></i> Copied!';
+        btn.style.background = 'rgba(34,197,94,0.2)';
+        btn.style.borderColor = '#22c55e';
+        btn.style.color = '#22c55e';
+        lucide.createIcons();
+        setTimeout(() => {
+          btn.innerHTML = '<i data-lucide="copy" style="width:12px;height:12px;"></i> Copy';
+          btn.style.background = 'rgba(108,68,252,0.15)';
+          btn.style.borderColor = 'var(--arcium-purple)';
+          btn.style.color = 'var(--arcium-purple)';
+          lucide.createIcons();
+        }, 2000);
       });
     });
     
