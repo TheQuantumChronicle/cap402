@@ -384,11 +384,22 @@
     <!-- Video -->
     <section class="video-section">
       <div class="video-container">
-        <span class="video-label">📹 Pitch Video</span>
-        <video controls preload="metadata" poster="/CAP402logo.png">
+        <span class="video-label">📹 Pitch Video (~3 min)</span>
+        <!-- Option 1: YouTube Embed (recommended - replace VIDEO_ID) -->
+        <!-- <iframe width="100%" height="500" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> -->
+        
+        <!-- Option 2: Direct video file -->
+        <video controls preload="metadata" poster="/CAP402logo.png" style="width: 100%;">
           <source src="/hackathon-pitch.mp4" type="video/mp4">
           Your browser does not support the video tag.
         </video>
+        
+        <!-- Fallback: Direct download link -->
+        <div style="text-align: center; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 0 0 12px 12px;">
+          <a href="https://docs.intym.xyz/investors" target="_blank" style="color: #14F195; text-decoration: none; font-size: 14px;">
+            📥 Can't see video? Watch on docs.intym.xyz/investors →
+          </a>
+        </div>
       </div>
     </section>
 
