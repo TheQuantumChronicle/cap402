@@ -77,6 +77,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
+      mediaSrc: ["'self'"],
       connectSrc: ["'self'", "https://api.helius.xyz", "https://mainnet.helius-rpc.com", "https://pro-api.coinmarketcap.com"]
     }
   },
@@ -108,6 +109,11 @@ app.use('/privacy-analytics', privacyAnalyticsRouter);
 // Redirect /docs to /docs/api-docs.html
 app.get('/docs', (req: Request, res: Response) => {
   res.redirect('/docs/api-docs.html');
+});
+
+// Hackathon submission page
+app.get('/hackathon', (req: Request, res: Response) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'hackathon.html'));
 });
 
 // OpenAPI JSON endpoint for Swagger UI

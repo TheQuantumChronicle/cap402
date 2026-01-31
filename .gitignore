@@ -9,3 +9,5 @@ dist/
 .idea/
 coverage/
 .nyc_output/
+public/hackathon-pitch.mp4
+*.mp4

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAP-402 | Solana Privacy Hackathon Submission</title>
+  
+  <!-- Meta Tags -->
+  <meta name="description" content="CAP-402: Agent Infrastructure Standard for Privacy-First Autonomous AI. Solana Privacy Hackathon 2026 Submission.">
+  <meta property="og:title" content="CAP-402 | Solana Privacy Hackathon">
+  <meta property="og:description" content="The TCP/IP of the Agent Economy. Privacy-first capability routing using Arcium MPC, Noir ZK, and Inco FHE.">
+  <meta property="og:image" content="https://cap402.com/CAP402logo.png">
+  <meta property="og:url" content="https://cap402.com/hackathon">
+  <meta name="twitter:card" content="summary_large_image">
+  
+  <link rel="icon" href="/favicon.ico">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #0a0a0f 0%, #0d0d1a 50%, #0a0a0f 100%);
+      color: #ffffff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    /* Animated background */
+    .bg-gradient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    
+    .bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      animation: float 20s ease-in-out infinite;
+    }
+    
+    .bg-orb-1 {
+      width: 400px;
+      height: 400px;
+      background: #14F195;
+      top: 10%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+    
+    .bg-orb-2 {
+      width: 500px;
+      height: 500px;
+      background: #9945FF;
+      bottom: 10%;
+      right: 10%;
+      animation-delay: -7s;
+    }
+    
+    .bg-orb-3 {
+      width: 300px;
+      height: 300px;
+      background: #00D1FF;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: -14s;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(30px, -30px) scale(1.1); }
+      50% { transform: translate(-20px, 20px) scale(0.95); }
+      75% { transform: translate(20px, 30px) scale(1.05); }
+    }
+    
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(20, 241, 149, 0.1);
+      border: 1px solid rgba(20, 241, 149, 0.3);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #14F195;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 24px;
+    }
+    
+    .badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #14F195;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 40px rgba(20, 241, 149, 0.3);
+    }
+    
+    h1 {
+      font-size: 48px;
+      font-weight: 200;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 0%, #14F195 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 8px;
+    }
+    
+    .tagline {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.4);
+      font-style: italic;
+    }
+    
+    /* Video Section */
+    .video-section {
+      margin-bottom: 40px;
+    }
+    
+    .video-container {
+      position: relative;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    
+    .video-container video {
+      width: 100%;
+      display: block;
+    }
+    
+    .video-label {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      padding: 6px 12px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #14F195;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    /* Info Cards */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    
+    .info-card {
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    
+    .info-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(20, 241, 149, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .info-card h3 {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    
+    .info-card p {
+      font-size: 16px;
+      color: #ffffff;
+      line-height: 1.5;
+    }
+    
+    .info-card a {
+      color: #14F195;
+      text-decoration: none;
+    }
+    
+    .info-card a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Tech Stack */
+    .tech-section {
+      margin-bottom: 40px;
+    }
+    
+    .tech-section h2 {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    
+    .tech-grid {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    .tech-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .tech-badge img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+    }
+    
+    .tech-badge.arcium { border-color: rgba(153, 69, 255, 0.3); }
+    .tech-badge.noir { border-color: rgba(255, 255, 255, 0.2); }
+    .tech-badge.inco { border-color: rgba(0, 209, 255, 0.3); }
+    .tech-badge.helius { border-color: rgba(255, 165, 0, 0.3); }
+    
+    /* Links */
+    .links-section {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    
+    .link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 24px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .link-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .link-btn.primary {
+      background: linear-gradient(135deg, #14F195 0%, #0ea66a 100%);
+      border: none;
+      color: #000000;
+      font-weight: 600;
+    }
+    
+    .link-btn.primary:hover {
+      box-shadow: 0 8px 30px rgba(20, 241, 149, 0.3);
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .footer-logo img {
+      height: 28px;
+      opacity: 0.8;
+    }
+    
+    .footer p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+    
+    /* Responsive */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 32px;
+      }
+      
+      .container {
+        padding: 24px 16px;
+      }
+      
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-gradient">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="badge">Solana Privacy Hackathon 2026</div>
+      <img src="/CAP402logo.png" alt="CAP-402" class="logo">
+      <h1>CAP-402</h1>
+      <p class="subtitle">Agent Infrastructure Standard for Privacy-First Autonomous AI</p>
+      <p class="tagline">The TCP/IP of the Agent Economy</p>
+    </header>
+
+    <!-- Video -->
+    <section class="video-section">
+      <div class="video-container">
+        <span class="video-label">📹 Pitch Video</span>
+        <video controls preload="metadata" poster="/CAP402logo.png">
+          <source src="/hackathon-pitch.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </section>
+
+    <!-- Info Cards -->
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>Project</h3>
+        <p>CAP-402 Protocol + ATRACKS MVP</p>
+      </div>
+      <div class="info-card">
+        <h3>Team</h3>
+        <p>Intym Labs</p>
+      </div>
+      <div class="info-card">
+        <h3>Category</h3>
+        <p>Privacy Infrastructure</p>
+      </div>
+      <div class="info-card">
+        <h3>Live Demo</h3>
+        <p><a href="https://atracks.xyz" target="_blank">atracks.xyz →</a></p>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <section class="tech-section">
+      <h2>Built With</h2>
+      <div class="tech-grid">
+        <div class="tech-badge arcium">
+          <img src="/arcium.svg" alt="Arcium">
+          <span>Arcium MPC</span>
+        </div>
+        <div class="tech-badge noir">
+          <img src="/noir.png" alt="Noir">
+          <span>Noir ZK</span>
+        </div>
+        <div class="tech-badge inco">
+          <img src="/inco.png" alt="Inco">
+          <span>Inco FHE</span>
+        </div>
+        <div class="tech-badge helius">
+          <img src="/helius.svg" alt="Helius">
+          <span>Helius RPC</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Links -->
+    <div class="links-section">
+      <a href="https://atracks.xyz" target="_blank" class="link-btn primary">
+        🚀 Try Live Demo
+      </a>
+      <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" class="link-btn">
+        📦 GitHub Repo
+      </a>
+      <a href="https://docs.intym.xyz" target="_blank" class="link-btn">
+        📚 Documentation
+      </a>
+      <a href="/" class="link-btn">
+        🏠 CAP-402 Home
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-logo">
+        <img src="/intymlogo2.png" alt="Intym Labs">
+      </div>
+      <p>Built by Intym Labs for the Solana Privacy Hackathon 2026</p>
+    </footer>
+  </div>
+</body>
+</html>
