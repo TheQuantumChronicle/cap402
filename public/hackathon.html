@@ -3,31 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAP-402 | Solana Privacy Hackathon Submission</title>
+  <title>CAP-402 | Solana Privacy Hackathon 2026</title>
   
   <!-- Meta Tags -->
-  <meta name="description" content="CAP-402: Agent Infrastructure Standard for Privacy-First Autonomous AI. Solana Privacy Hackathon 2026 Submission.">
-  <meta property="og:title" content="CAP-402 | Solana Privacy Hackathon">
+  <meta name="description" content="CAP-402: Agent Infrastructure Standard for Privacy-First Autonomous AI. Solana Privacy Hackathon 2026 Submission by Intym Labs.">
+  <meta property="og:title" content="CAP-402 | Solana Privacy Hackathon 2026">
   <meta property="og:description" content="The TCP/IP of the Agent Economy. Privacy-first capability routing using Arcium MPC, Noir ZK, and Inco FHE.">
   <meta property="og:image" content="https://cap402.com/CAP402logo.png">
   <meta property="og:url" content="https://cap402.com/hackathon">
   <meta name="twitter:card" content="summary_large_image">
   
   <link rel="icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: linear-gradient(135deg, #0a0a0f 0%, #0d0d1a 50%, #0a0a0f 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #050508;
       color: #ffffff;
       min-height: 100vh;
-      overflow-x: hidden;
+      line-height: 1.6;
     }
     
     /* Animated background */
@@ -42,74 +41,49 @@
     .bg-orb {
       position: absolute;
       border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.15;
-      animation: float 20s ease-in-out infinite;
+      filter: blur(100px);
+      opacity: 0.12;
+      animation: float 25s ease-in-out infinite;
     }
     
-    .bg-orb-1 {
-      width: 400px;
-      height: 400px;
-      background: #14F195;
-      top: 10%;
-      left: 10%;
-      animation-delay: 0s;
-    }
-    
-    .bg-orb-2 {
-      width: 500px;
-      height: 500px;
-      background: #9945FF;
-      bottom: 10%;
-      right: 10%;
-      animation-delay: -7s;
-    }
-    
-    .bg-orb-3 {
-      width: 300px;
-      height: 300px;
-      background: #00D1FF;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      animation-delay: -14s;
-    }
+    .bg-orb-1 { width: 500px; height: 500px; background: #14F195; top: -10%; left: -5%; }
+    .bg-orb-2 { width: 600px; height: 600px; background: #9945FF; bottom: -15%; right: -10%; animation-delay: -10s; }
+    .bg-orb-3 { width: 400px; height: 400px; background: #00D1FF; top: 40%; left: 60%; animation-delay: -18s; }
     
     @keyframes float {
       0%, 100% { transform: translate(0, 0) scale(1); }
-      25% { transform: translate(30px, -30px) scale(1.1); }
-      50% { transform: translate(-20px, 20px) scale(0.95); }
-      75% { transform: translate(20px, 30px) scale(1.05); }
+      33% { transform: translate(40px, -30px) scale(1.05); }
+      66% { transform: translate(-30px, 40px) scale(0.95); }
     }
     
     .container {
       position: relative;
       z-index: 1;
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
-      padding: 40px 20px;
+      padding: 40px 24px;
     }
     
     /* Header */
     .header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 48px;
     }
     
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      background: rgba(20, 241, 149, 0.1);
-      border: 1px solid rgba(20, 241, 149, 0.3);
+      gap: 10px;
+      padding: 10px 20px;
+      background: rgba(20, 241, 149, 0.08);
+      border: 1px solid rgba(20, 241, 149, 0.25);
       border-radius: 100px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       color: #14F195;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 24px;
+      letter-spacing: 0.08em;
+      margin-bottom: 28px;
     }
     
     .badge::before {
@@ -122,193 +96,276 @@
     }
     
     @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.2); }
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(20, 241, 149, 0.4); }
+      50% { opacity: 0.6; box-shadow: 0 0 0 8px rgba(20, 241, 149, 0); }
     }
     
     .logo {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 20px;
-      border-radius: 20px;
-      box-shadow: 0 0 40px rgba(20, 241, 149, 0.3);
+      width: 100px;
+      height: 100px;
+      margin-bottom: 24px;
+      border-radius: 24px;
+      box-shadow: 0 0 60px rgba(20, 241, 149, 0.25);
     }
     
     h1 {
-      font-size: 48px;
-      font-weight: 200;
-      letter-spacing: -0.02em;
-      margin-bottom: 12px;
-      background: linear-gradient(135deg, #ffffff 0%, #14F195 100%);
+      font-size: 56px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #ffffff 0%, #14F195 50%, #9945FF 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     
     .subtitle {
-      font-size: 18px;
-      color: rgba(255, 255, 255, 0.6);
+      font-size: 20px;
+      color: rgba(255, 255, 255, 0.7);
       margin-bottom: 8px;
+      font-weight: 400;
     }
     
     .tagline {
-      font-size: 14px;
+      font-size: 15px;
       color: rgba(255, 255, 255, 0.4);
       font-style: italic;
     }
     
+    /* Section titles */
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
     /* Video Section */
     .video-section {
-      margin-bottom: 40px;
+      margin-bottom: 56px;
     }
     
     .video-container {
       position: relative;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
     }
     
-    .video-container video {
+    .video-container iframe {
       width: 100%;
+      aspect-ratio: 16/9;
       display: block;
+      border: none;
     }
     
-    .video-label {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      padding: 6px 12px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 6px;
-      font-size: 11px;
+    /* TL;DR Section */
+    .tldr-section {
+      margin-bottom: 56px;
+      padding: 32px;
+      background: linear-gradient(135deg, rgba(20, 241, 149, 0.05) 0%, rgba(153, 69, 255, 0.05) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+    }
+    
+    .tldr-section h2 {
+      font-size: 18px;
       font-weight: 600;
       color: #14F195;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+    
+    .tldr-section p {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.8;
+    }
+    
+    .tldr-section strong {
+      color: #ffffff;
     }
     
     /* Info Cards */
     .info-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
-      margin-bottom: 40px;
+      margin-bottom: 56px;
+    }
+    
+    @media (max-width: 768px) {
+      .info-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    @media (max-width: 480px) {
+      .info-grid { grid-template-columns: 1fr; }
     }
     
     .info-card {
       padding: 24px;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 12px;
+      border-radius: 16px;
+      text-align: center;
       transition: all 0.3s ease;
     }
     
     .info-card:hover {
       background: rgba(255, 255, 255, 0.04);
       border-color: rgba(20, 241, 149, 0.2);
-      transform: translateY(-2px);
+      transform: translateY(-4px);
     }
     
     .info-card h3 {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
       color: rgba(255, 255, 255, 0.4);
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       margin-bottom: 8px;
     }
     
     .info-card p {
-      font-size: 16px;
+      font-size: 15px;
       color: #ffffff;
-      line-height: 1.5;
+      font-weight: 500;
     }
     
     .info-card a {
       color: #14F195;
       text-decoration: none;
+      transition: color 0.2s;
     }
     
-    .info-card a:hover {
-      text-decoration: underline;
+    .info-card a:hover { color: #0ea66a; }
+    
+    /* What We Built */
+    .features-section {
+      margin-bottom: 56px;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+    
+    .feature-card {
+      padding: 28px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+      border-color: rgba(153, 69, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .feature-card h3 span {
+      font-size: 20px;
+    }
+    
+    .feature-card p {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.6;
     }
     
     /* Tech Stack */
     .tech-section {
-      margin-bottom: 40px;
-    }
-    
-    .tech-section h2 {
-      font-size: 12px;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.4);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 16px;
-      text-align: center;
+      margin-bottom: 56px;
     }
     
     .tech-grid {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 16px;
     }
     
     .tech-badge {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 16px;
+      gap: 10px;
+      padding: 14px 20px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+      transition: all 0.3s ease;
+    }
+    
+    .tech-badge:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.2);
     }
     
     .tech-badge img {
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       object-fit: contain;
     }
     
     .tech-badge.arcium { border-color: rgba(153, 69, 255, 0.3); }
-    .tech-badge.noir { border-color: rgba(255, 255, 255, 0.2); }
+    .tech-badge.arcium:hover { background: rgba(153, 69, 255, 0.1); }
+    .tech-badge.noir { border-color: rgba(244, 114, 182, 0.3); }
+    .tech-badge.noir:hover { background: rgba(244, 114, 182, 0.1); }
     .tech-badge.inco { border-color: rgba(0, 209, 255, 0.3); }
+    .tech-badge.inco:hover { background: rgba(0, 209, 255, 0.1); }
     .tech-badge.helius { border-color: rgba(255, 165, 0, 0.3); }
+    .tech-badge.helius:hover { background: rgba(255, 165, 0, 0.1); }
     
     /* Links */
     .links-section {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 40px;
+      gap: 14px;
+      margin-bottom: 56px;
     }
     
     .link-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 14px 24px;
-      background: rgba(255, 255, 255, 0.05);
+      gap: 10px;
+      padding: 16px 28px;
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
+      border-radius: 12px;
       color: #ffffff;
       text-decoration: none;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 500;
       transition: all 0.3s ease;
     }
     
     .link-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       border-color: rgba(255, 255, 255, 0.2);
-      transform: translateY(-2px);
+      transform: translateY(-3px);
     }
     
     .link-btn.primary {
@@ -319,13 +376,13 @@
     }
     
     .link-btn.primary:hover {
-      box-shadow: 0 8px 30px rgba(20, 241, 149, 0.3);
+      box-shadow: 0 12px 40px rgba(20, 241, 149, 0.35);
     }
     
     /* Footer */
     .footer {
       text-align: center;
-      padding-top: 20px;
+      padding-top: 32px;
       border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
     
@@ -334,32 +391,25 @@
       align-items: center;
       justify-content: center;
       gap: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
     
     .footer-logo img {
-      height: 28px;
-      opacity: 0.8;
+      height: 32px;
+      opacity: 0.9;
     }
     
     .footer p {
-      font-size: 13px;
+      font-size: 14px;
       color: rgba(255, 255, 255, 0.4);
     }
     
     /* Responsive */
     @media (max-width: 600px) {
-      h1 {
-        font-size: 32px;
-      }
-      
-      .container {
-        padding: 24px 16px;
-      }
-      
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
+      h1 { font-size: 36px; }
+      .subtitle { font-size: 16px; }
+      .container { padding: 24px 16px; }
+      .tldr-section { padding: 24px; }
     }
   </style>
 </head>
@@ -378,36 +428,42 @@
       <img src="/CAP402logo.png" alt="CAP-402" class="logo">
       <h1>CAP-402</h1>
       <p class="subtitle">Agent Infrastructure Standard for Privacy-First Autonomous AI</p>
-      <p class="tagline">The TCP/IP of the Agent Economy</p>
+      <p class="tagline">"The TCP/IP of the Agent Economy"</p>
     </header>
 
     <!-- Video -->
     <section class="video-section">
+      <p class="section-title">Pitch Video</p>
       <div class="video-container">
-        <span class="video-label">📹 Pitch Video (~3 min)</span>
-        <!-- Option 1: YouTube Embed (recommended - replace VIDEO_ID) -->
-        <!-- <iframe width="100%" height="500" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> -->
-        
-        <!-- Option 2: Direct video file -->
-        <video controls preload="metadata" poster="/CAP402logo.png" style="width: 100%;">
-          <source src="/hackathon-pitch.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-        
-        <!-- Fallback: Direct download link -->
-        <div style="text-align: center; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 0 0 12px 12px;">
-          <a href="https://docs.intym.xyz/investors" target="_blank" style="color: #14F195; text-decoration: none; font-size: 14px;">
-            📥 Can't see video? Watch on docs.intym.xyz/investors →
-          </a>
-        </div>
+        <iframe 
+          src="https://www.youtube.com/embed/f2y9gvYY42E" 
+          title="CAP-402 Hackathon Pitch"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          allowfullscreen>
+        </iframe>
       </div>
     </section>
 
+    <!-- TL;DR -->
+    <section class="tldr-section">
+      <h2>TL;DR</h2>
+      <p>
+        <strong>CAP-402</strong> is a semantic capability standard that lets AI agents invoke privacy-preserving operations 
+        (MPC trades, ZK proofs, FHE compute) through a single unified interface. Instead of integrating 10 different APIs, 
+        agents call <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">cap.swap.confidential.v1</code> 
+        and the router handles execution via <strong>Arcium</strong>, <strong>Noir</strong>, or <strong>Inco</strong> based on the request.
+        <br><br>
+        <strong>ATRACKS</strong> is our live MVP — a privacy-first agent reputation system where trading agents log performance 
+        with FHE-encrypted metrics and ZK-verified proofs. No doxxing your alpha.
+      </p>
+    </section>
+
     <!-- Info Cards -->
+    <p class="section-title">Submission Details</p>
     <div class="info-grid">
       <div class="info-card">
         <h3>Project</h3>
-        <p>CAP-402 Protocol + ATRACKS MVP</p>
+        <p>CAP-402 + ATRACKS</p>
       </div>
       <div class="info-card">
         <h3>Team</h3>
@@ -423,9 +479,32 @@
       </div>
     </div>
 
+    <!-- What We Built -->
+    <section class="features-section">
+      <p class="section-title">What We Built</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3><span>🔐</span> Confidential Swaps</h3>
+          <p>Execute large trades via Arcium MPC without MEV extraction. Dark pool liquidity for autonomous agents.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span>🛡️</span> ZK Attestations</h3>
+          <p>Noir-powered proofs for balance checks, KYC compliance, and reputation — without revealing sensitive data.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span>🔒</span> FHE Compute</h3>
+          <p>Run sensitive logic over encrypted data using Inco. Private voting, sealed auctions, encrypted metrics.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span>📊</span> Agent Reputation</h3>
+          <p>ATRACKS: Privacy-preserving PnL tracking and leaderboards. Prove performance without leaking strategy.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Tech Stack -->
     <section class="tech-section">
-      <h2>Built With</h2>
+      <p class="section-title">Built With Sponsor Tech</p>
       <div class="tech-grid">
         <div class="tech-badge arcium">
           <img src="/arcium.svg" alt="Arcium">
@@ -452,10 +531,10 @@
         🚀 Try Live Demo
       </a>
       <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" class="link-btn">
-        📦 GitHub Repo
+        📦 GitHub
       </a>
       <a href="https://docs.intym.xyz" target="_blank" class="link-btn">
-        📚 Documentation
+        📚 Docs
       </a>
       <a href="/" class="link-btn">
         🏠 CAP-402 Home
