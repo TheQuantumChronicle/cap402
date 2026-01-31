@@ -59,37 +59,40 @@
     .container {
       position: relative;
       z-index: 1;
-      max-width: 1000px;
+      max-width: 900px;
       margin: 0 auto;
-      padding: 40px 24px;
+      padding: 20px 20px;
     }
     
     /* Header */
     .header {
       text-align: center;
-      margin-bottom: 48px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 20px;
+      gap: 8px;
+      padding: 6px 14px;
       background: rgba(20, 241, 149, 0.08);
       border: 1px solid rgba(20, 241, 149, 0.25);
       border-radius: 100px;
-      font-size: 13px;
+      font-size: 10px;
       font-weight: 600;
       color: #14F195;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      margin-bottom: 28px;
+      margin-bottom: 16px;
     }
     
     .badge::before {
       content: '';
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       background: #14F195;
       border-radius: 50%;
       animation: pulse 2s ease-in-out infinite;
@@ -97,22 +100,22 @@
     
     @keyframes pulse {
       0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(20, 241, 149, 0.4); }
-      50% { opacity: 0.6; box-shadow: 0 0 0 8px rgba(20, 241, 149, 0); }
+      50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(20, 241, 149, 0); }
     }
     
     .logo {
-      width: 100px;
-      height: 100px;
-      margin-bottom: 24px;
-      border-radius: 24px;
-      box-shadow: 0 0 60px rgba(20, 241, 149, 0.25);
+      width: 60px;
+      height: 60px;
+      margin-bottom: 12px;
+      border-radius: 16px;
+      box-shadow: 0 0 40px rgba(20, 241, 149, 0.2);
     }
     
     h1 {
-      font-size: 56px;
+      font-size: 32px;
       font-weight: 700;
-      letter-spacing: -0.03em;
-      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
       background: linear-gradient(135deg, #ffffff 0%, #14F195 50%, #9945FF 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -120,14 +123,14 @@
     }
     
     .subtitle {
-      font-size: 20px;
+      font-size: 14px;
       color: rgba(255, 255, 255, 0.7);
-      margin-bottom: 8px;
+      margin-bottom: 4px;
       font-weight: 400;
     }
     
     .tagline {
-      font-size: 15px;
+      font-size: 12px;
       color: rgba(255, 255, 255, 0.4);
       font-style: italic;
     }
@@ -145,16 +148,16 @@
     
     /* Video Section */
     .video-section {
-      margin-bottom: 56px;
+      margin-bottom: 32px;
     }
     
     .video-container {
       position: relative;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
     }
     
     .video-container iframe {
@@ -166,24 +169,24 @@
     
     /* TL;DR Section */
     .tldr-section {
-      margin-bottom: 56px;
-      padding: 32px;
+      margin-bottom: 32px;
+      padding: 20px;
       background: linear-gradient(135deg, rgba(20, 241, 149, 0.05) 0%, rgba(153, 69, 255, 0.05) 100%);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
+      border-radius: 12px;
     }
     
     .tldr-section h2 {
-      font-size: 18px;
+      font-size: 14px;
       font-weight: 600;
       color: #14F195;
-      margin-bottom: 16px;
+      margin-bottom: 10px;
     }
     
     .tldr-section p {
-      font-size: 16px;
+      font-size: 13px;
       color: rgba(255, 255, 255, 0.8);
-      line-height: 1.8;
+      line-height: 1.7;
     }
     
     .tldr-section strong {
@@ -194,8 +197,8 @@
     .info-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 56px;
+      gap: 12px;
+      margin-bottom: 32px;
     }
     
     @media (max-width: 768px) {
@@ -203,14 +206,14 @@
     }
     
     @media (max-width: 480px) {
-      .info-grid { grid-template-columns: 1fr; }
+      .info-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     }
     
     .info-card {
-      padding: 24px;
+      padding: 16px;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
+      border-radius: 10px;
       text-align: center;
       transition: all 0.3s ease;
     }
@@ -218,20 +221,19 @@
     .info-card:hover {
       background: rgba(255, 255, 255, 0.04);
       border-color: rgba(20, 241, 149, 0.2);
-      transform: translateY(-4px);
     }
     
     .info-card h3 {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 600;
       color: rgba(255, 255, 255, 0.4);
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      margin-bottom: 8px;
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
     }
     
     .info-card p {
-      font-size: 15px;
+      font-size: 13px;
       color: #ffffff;
       font-weight: 500;
     }
@@ -239,133 +241,111 @@
     .info-card a {
       color: #14F195;
       text-decoration: none;
-      transition: color 0.2s;
     }
-    
-    .info-card a:hover { color: #0ea66a; }
     
     /* What We Built */
     .features-section {
-      margin-bottom: 56px;
+      margin-bottom: 32px;
     }
     
     .features-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
+      gap: 12px;
     }
     
     @media (max-width: 600px) {
-      .features-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     }
     
     .feature-card {
-      padding: 28px;
+      padding: 16px;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
-      transition: all 0.3s ease;
-    }
-    
-    .feature-card:hover {
-      border-color: rgba(153, 69, 255, 0.3);
-      transform: translateY(-2px);
+      border-radius: 10px;
     }
     
     .feature-card h3 {
-      font-size: 16px;
+      font-size: 13px;
       font-weight: 600;
       color: #ffffff;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
     }
     
     .feature-card h3 span {
-      font-size: 20px;
+      font-size: 14px;
     }
     
     .feature-card p {
-      font-size: 14px;
+      font-size: 11px;
       color: rgba(255, 255, 255, 0.6);
-      line-height: 1.6;
+      line-height: 1.5;
     }
     
     /* Tech Stack */
     .tech-section {
-      margin-bottom: 56px;
+      margin-bottom: 32px;
     }
     
     .tech-grid {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 10px;
     }
     
     .tech-badge {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 14px 20px;
+      gap: 6px;
+      padding: 8px 12px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      font-size: 14px;
+      border-radius: 8px;
+      font-size: 12px;
       font-weight: 500;
       color: rgba(255, 255, 255, 0.9);
-      transition: all 0.3s ease;
-    }
-    
-    .tech-badge:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255, 255, 255, 0.2);
     }
     
     .tech-badge img {
-      width: 24px;
-      height: 24px;
+      width: 18px;
+      height: 18px;
       object-fit: contain;
     }
     
     .tech-badge.arcium { border-color: rgba(153, 69, 255, 0.3); }
-    .tech-badge.arcium:hover { background: rgba(153, 69, 255, 0.1); }
     .tech-badge.noir { border-color: rgba(244, 114, 182, 0.3); }
-    .tech-badge.noir:hover { background: rgba(244, 114, 182, 0.1); }
     .tech-badge.inco { border-color: rgba(0, 209, 255, 0.3); }
-    .tech-badge.inco:hover { background: rgba(0, 209, 255, 0.1); }
     .tech-badge.helius { border-color: rgba(255, 165, 0, 0.3); }
-    .tech-badge.helius:hover { background: rgba(255, 165, 0, 0.1); }
     
     /* Links */
     .links-section {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 14px;
-      margin-bottom: 56px;
+      gap: 10px;
+      margin-bottom: 32px;
     }
     
     .link-btn {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      padding: 16px 28px;
+      gap: 6px;
+      padding: 10px 16px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
+      border-radius: 8px;
       color: #ffffff;
       text-decoration: none;
-      font-size: 15px;
+      font-size: 12px;
       font-weight: 500;
-      transition: all 0.3s ease;
     }
     
     .link-btn:hover {
       background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.2);
-      transform: translateY(-3px);
     }
     
     .link-btn.primary {
@@ -375,14 +355,10 @@
       font-weight: 600;
     }
     
-    .link-btn.primary:hover {
-      box-shadow: 0 12px 40px rgba(20, 241, 149, 0.35);
-    }
-    
     /* Footer */
     .footer {
       text-align: center;
-      padding-top: 32px;
+      padding-top: 20px;
       border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
     
@@ -390,26 +366,28 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-bottom: 8px;
     }
     
     .footer-logo img {
-      height: 32px;
+      height: 24px;
       opacity: 0.9;
     }
     
     .footer p {
-      font-size: 14px;
+      font-size: 11px;
       color: rgba(255, 255, 255, 0.4);
     }
     
     /* Responsive */
     @media (max-width: 600px) {
-      h1 { font-size: 36px; }
-      .subtitle { font-size: 16px; }
-      .container { padding: 24px 16px; }
-      .tldr-section { padding: 24px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 12px; }
+      .container { padding: 16px 12px; }
+      .tldr-section { padding: 16px; }
+      .tldr-section p { font-size: 12px; }
+      .section-title { font-size: 9px; margin-bottom: 12px; }
     }
   </style>
 </head>
