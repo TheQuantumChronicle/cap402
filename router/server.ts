@@ -78,7 +78,7 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com"],
+      frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com", "https://www.youtube-nocookie.com"],
       connectSrc: ["'self'", "https://api.helius.xyz", "https://mainnet.helius-rpc.com", "https://pro-api.coinmarketcap.com"]
     }
   },
