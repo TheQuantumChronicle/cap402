@@ -6476,6 +6476,9 @@ app.post('/constraints', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'agent_id and constraints required');
     return res.status(err.status).json(err.body);
   }
+  if (Array.isArray(constraints) && constraints.length > 50) {
+    return res.status(400).json({ success: false, error: 'Maximum 50 constraints per agent' });
+  }
   router.setConstraints(agent_id, constraints);
   res.json({ success: true, agent_id, constraints_count: constraints.length });
 });
