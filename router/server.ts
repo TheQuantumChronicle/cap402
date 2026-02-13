@@ -8434,11 +8434,15 @@ app.post('/pumpfun/launch', async (req: Request, res: Response) => {
       });
     }
     
-    if (initial_buy_sol < 0.01) {
+    if (typeof initial_buy_sol !== 'number' || initial_buy_sol < 0.01 || initial_buy_sol > 100) {
       return res.status(400).json({ 
         success: false, 
-        error: 'initial_buy_sol must be at least 0.01 SOL' 
+        error: 'initial_buy_sol must be between 0.01 and 100 SOL' 
       });
+    }
+
+    if (name.length > 100 || symbol.length > 20 || description.length > 2000) {
+      return res.status(400).json({ success: false, error: 'Token name (100), symbol (20), or description (2000) exceeds max length' });
     }
     
     // SECURITY: In production, NEVER accept private keys via API
