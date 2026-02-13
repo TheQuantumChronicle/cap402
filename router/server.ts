@@ -1205,18 +1205,22 @@ app.get('/router/status', (req: Request, res: Response) => {
 
 // Reset circuit breaker for a capability (admin)
 app.post('/router/circuit-breaker/:capability_id/reset', (req: Request, res: Response) => {
-  const { router } = require('./router');
-  const { capability_id } = req.params;
-  
-  const reset = router.resetCircuitBreaker(capability_id);
-  
-  res.json({
-    success: reset,
-    capability_id,
-    message: reset 
-      ? `Circuit breaker reset for ${capability_id}` 
-      : `No circuit breaker found for ${capability_id}`
-  });
+  try {
+    const { router } = require('./router');
+    const { capability_id } = req.params;
+    
+    const reset = router.resetCircuitBreaker(capability_id);
+    
+    res.json({
+      success: reset,
+      capability_id,
+      message: reset 
+        ? `Circuit breaker reset for ${capability_id}` 
+        : `No circuit breaker found for ${capability_id}`
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Circuit breaker reset failed' });
+  }
 });
 
 // Router stats - internal router statistics
