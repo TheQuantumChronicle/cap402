@@ -64,6 +64,25 @@ class AgentSocialManager {
   private delegations: Map<string, CapabilityDelegation> = new Map();
   private messages: Map<string, AgentMessage[]> = new Map();
   private publicWorkflows: Map<string, { agent_id: string; workflow: any }> = new Map();
+  private readonly MAX_MESSAGES_PER_AGENT = 500;
+  private readonly MAX_DELEGATIONS = 10000;
+
+  constructor() {
+    // Periodic cleanup of expired delegations and old messages
+    setInterval(() => {
+      const now = Date.now();
+      for (const [id, del] of this.delegations) {
+        if (del.expires_at && now > del.expires_at) this.delegations.delete(id);
+        if (del.uses_remaining !== undefined && del.uses_remaining <= 0) this.delegations.delete(id);
+      }
+      // Trim message arrays per agent
+      for (const [agentId, msgs] of this.messages) {
+        if (msgs.length > this.MAX_MESSAGES_PER_AGENT) {
+          this.messages.set(agentId, msgs.slice(-this.MAX_MESSAGES_PER_AGENT));
+        }
+      }
+    }, 5 * 60 * 1000).unref();
+  }
 
   /**
    * Get leaderboard by category
