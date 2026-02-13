@@ -6887,9 +6887,14 @@ app.post('/system/maintenance', (req: Request, res: Response) => {
 // NOTE: /trace/:trace_id is defined earlier in the file (line ~5582)
 
 app.post('/invoke/traced', async (req: Request, res: Response) => {
-  const { capability_id, inputs, trace_id } = req.body;
-  const result = await router.tracedInvoke({ capability_id, inputs }, trace_id);
-  res.json(result);
+  try {
+    const { capability_id, inputs, trace_id } = req.body;
+    if (!capability_id) return res.status(400).json({ success: false, error: 'capability_id required' });
+    const result = await router.tracedInvoke({ capability_id, inputs }, trace_id);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Traced invoke failed' });
+  }
 });
 
 // ============================================
@@ -6902,9 +6907,14 @@ app.get('/capabilities/:id/dependencies', (req: Request, res: Response) => {
 });
 
 app.post('/invoke/with-dependencies', async (req: Request, res: Response) => {
-  const { capability_id, inputs } = req.body;
-  const result = await router.invokeWithDependencies({ capability_id, inputs });
-  res.json({ success: true, ...result });
+  try {
+    const { capability_id, inputs } = req.body;
+    if (!capability_id) return res.status(400).json({ success: false, error: 'capability_id required' });
+    const result = await router.invokeWithDependencies({ capability_id, inputs });
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Dependency invoke failed' });
+  }
 });
 
 // ============================================
@@ -6912,9 +6922,14 @@ app.post('/invoke/with-dependencies', async (req: Request, res: Response) => {
 // ============================================
 
 app.post('/invoke/with-failover', async (req: Request, res: Response) => {
-  const { capability_id, inputs, preferred_provider } = req.body;
-  const result = await router.invokeWithFailover({ capability_id, inputs }, preferred_provider);
-  res.json(result);
+  try {
+    const { capability_id, inputs, preferred_provider } = req.body;
+    if (!capability_id) return res.status(400).json({ success: false, error: 'capability_id required' });
+    const result = await router.invokeWithFailover({ capability_id, inputs }, preferred_provider);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failover invoke failed' });
+  }
 });
 
 // ============================================
