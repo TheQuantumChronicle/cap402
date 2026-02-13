@@ -6005,6 +6005,9 @@ app.post('/aliases', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'alias and capability_id required');
     return res.status(err.status).json(err.body);
   }
+  if (typeof alias !== 'string' || alias.length > 100) {
+    return res.status(400).json({ success: false, error: 'alias must be a string of 100 characters or less' });
+  }
   router.addAlias(alias, capability_id);
   res.json({ success: true, alias, capability_id });
 });
