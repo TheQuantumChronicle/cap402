@@ -7218,6 +7218,13 @@ app.post('/trading/auction/create', async (req: Request, res: Response) => {
         error: 'Required: agent_id, token, amount'
       });
     }
+
+    if (typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ success: false, error: 'amount must be a positive number' });
+    }
+    if (bidding_duration_seconds !== undefined && (bidding_duration_seconds < 60 || bidding_duration_seconds > 86400)) {
+      return res.status(400).json({ success: false, error: 'bidding_duration_seconds must be between 60 and 86400' });
+    }
     
     const auction = sealedAuction.createAuction(
       agent_id,
