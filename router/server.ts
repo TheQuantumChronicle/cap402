@@ -6049,6 +6049,12 @@ app.post('/budgets', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'org_id and limit required');
     return res.status(err.status).json(err.body);
   }
+  if (typeof limit !== 'number' || limit <= 0 || limit > 1000000) {
+    return res.status(400).json({ success: false, error: 'limit must be a positive number up to 1000000' });
+  }
+  if (period && !['daily', 'weekly', 'monthly'].includes(period)) {
+    return res.status(400).json({ success: false, error: 'period must be daily, weekly, or monthly' });
+  }
   router.setBudget(org_id, limit, period || 'daily');
   res.json({ success: true, org_id, limit, period: period || 'daily' });
 });
