@@ -6246,6 +6246,9 @@ app.post('/agents/:agent_id/tags', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'tags array required');
     return res.status(err.status).json(err.body);
   }
+  if (tags.length > 20) {
+    return res.status(400).json({ success: false, error: 'Maximum 20 tags per agent' });
+  }
   router.tagAgent(req.params.agent_id, tags);
   res.json({ success: true });
 });
