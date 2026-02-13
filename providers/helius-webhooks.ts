@@ -83,7 +83,8 @@ class HeliusWebhookManager {
           transactionTypes,
           accountAddresses: [wallet],
           webhookType: 'enhanced'
-        }
+        },
+        { timeout: 10000 }
       );
 
       const webhook: HeliusWebhook = {
@@ -115,7 +116,8 @@ class HeliusWebhookManager {
 
     try {
       await axios.delete(
-        `https://api.helius.xyz/v0/webhooks/${webhook.webhookId}?api-key=${this.apiKey}`
+        `https://api.helius.xyz/v0/webhooks/${webhook.webhookId}?api-key=${this.apiKey}`,
+        { timeout: 10000 }
       );
       
       this.webhooks.delete(wallet);

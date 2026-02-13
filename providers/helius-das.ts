@@ -126,7 +126,7 @@ class HeliusDASProvider {
         id: 'helius-das',
         method: 'getAsset',
         params: { id: assetId }
-      });
+      }, { timeout: 10000 });
 
       return response.data.result;
     } catch (error) {
@@ -156,7 +156,7 @@ class HeliusDASProvider {
             showNativeBalance: true
           }
         }
-      });
+      }, { timeout: 10000 });
 
       return {
         items: response.data.result.items || [],
@@ -186,7 +186,7 @@ class HeliusDASProvider {
           page: options.page || 1,
           limit: options.limit || 100
         }
-      });
+      }, { timeout: 10000 });
 
       return {
         items: response.data.result.items || [],
@@ -219,7 +219,7 @@ class HeliusDASProvider {
           limit: params.limit || 100,
           sortBy: params.sortBy ? { sortBy: params.sortBy, sortDirection: params.sortDirection || 'desc' } : undefined
         }
-      });
+      }, { timeout: 10000 });
 
       return {
         items: response.data.result.items || [],
@@ -247,7 +247,7 @@ class HeliusDASProvider {
         id: 'helius-das',
         method: 'getAssetProof',
         params: { id: assetId }
-      });
+      }, { timeout: 10000 });
 
       return response.data.result;
     } catch (error) {

@@ -343,8 +343,9 @@ app.get('/openapi.json', (req: Request, res: Response) => {
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, X-Request-ID');
-  res.setHeader('Access-Control-Expose-Headers', 'X-Request-ID, X-RateLimit-Remaining, X-RateLimit-Limit, X-Agent-Trust-Level');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, X-Request-ID, X-Cap402-Signature, X-Cap402-Timestamp');
+  res.setHeader('Access-Control-Expose-Headers', 'X-Request-ID, X-RateLimit-Remaining, X-RateLimit-Limit, X-RateLimit-Reset, X-Agent-Trust-Level, X-API-Version, X-Cache');
+  res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight for 24h
   
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
@@ -436,35 +437,7 @@ app.get('/api', async (req: Request, res: Response) => {
   });
 });
 
-// OpenAPI schema for interoperability
-app.get('/openapi.json', (req: Request, res: Response) => {
-  res.json({
-    openapi: '3.0.3',
-    info: { title: 'CAP-402 API', version: '1.0.0', description: 'Privacy-First Agent Infrastructure' },
-    servers: [{ url: 'https://cap402.com' }, { url: 'http://localhost:3001', description: 'Local development' }],
-    paths: {
-      '/invoke': {
-        post: {
-          summary: 'Invoke a capability',
-          requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/InvokeRequest' } } } },
-          responses: { '200': { description: 'Success' }, '400': { description: 'Validation error' }, '429': { description: 'Rate limited' } }
-        }
-      },
-      '/capabilities': { get: { summary: 'List all capabilities', responses: { '200': { description: 'Capability list' } } } },
-      '/capabilities/{id}': { get: { summary: 'Get capability by ID', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }] } },
-      '/queue/invoke': { post: { summary: 'Priority queue invoke', requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/QueueInvokeRequest' } } } } } },
-      '/system/health': { get: { summary: 'System health status' } },
-      '/system/metrics': { get: { summary: 'Performance metrics' } }
-    },
-    components: {
-      schemas: {
-        InvokeRequest: { type: 'object', required: ['capability_id'], properties: { capability_id: { type: 'string' }, inputs: { type: 'object' }, preferences: { type: 'object' } } },
-        QueueInvokeRequest: { type: 'object', required: ['capability_id'], properties: { capability_id: { type: 'string' }, inputs: { type: 'object' }, priority: { type: 'string', enum: ['critical', 'high', 'normal', 'low'] } } },
-        Error: { type: 'object', properties: { success: { type: 'boolean' }, error: { type: 'object', properties: { code: { type: 'string' }, message: { type: 'string' }, details: { type: 'object' } } } } }
-      }
-    }
-  });
-});
+// NOTE: Duplicate /openapi.json route removed - the primary one is defined above (line ~132)
 
 app.get('/capabilities', (req: Request, res: Response) => {
   observability.info('server', 'Capability discovery request');
