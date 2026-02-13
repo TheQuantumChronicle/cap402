@@ -1607,6 +1607,9 @@ app.post('/agents/register', async (req: Request, res: Response) => {
     if (capabilities_provided && capabilities_provided.length > 50) {
       return res.status(400).json({ success: false, error: 'Maximum 50 capabilities_provided allowed' });
     }
+    if (capabilities_required && capabilities_required.length > 50) {
+      return res.status(400).json({ success: false, error: 'Maximum 50 capabilities_required allowed' });
+    }
     
     const { agentRegistry } = await import('./agent-registry');
     const agent = agentRegistry.registerAgent(
