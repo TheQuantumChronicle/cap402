@@ -1530,6 +1530,9 @@ app.post('/discover', async (req: Request, res: Response) => {
     if (!query || typeof query !== 'string') {
       return res.status(400).json({ success: false, error: 'query is required and must be a string' });
     }
+    if (query.length > 500) {
+      return res.status(400).json({ success: false, error: 'query must be 500 characters or less' });
+    }
     
     const { semanticDiscovery } = await import('./semantic-discovery');
     const results = await semanticDiscovery.discover(req.body);
