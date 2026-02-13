@@ -1043,15 +1043,49 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
+// Readiness probe - checks if server is ready to accept traffic
+app.get('/health/ready', (req: Request, res: Response) => {
+  const mem = process.memoryUsage();
+  const heapUsage = mem.heapUsed / mem.heapTotal;
+  
+  // Not ready if memory is critically high
+  if (heapUsage > 0.95) {
+    return res.status(503).json({
+      status: 'not_ready',
+      reason: 'memory_pressure',
+      heap_percent: Math.round(heapUsage * 100)
+    });
+  }
+  
+  res.status(200).json({
+    status: 'ready',
+    timestamp: Date.now(),
+    uptime_seconds: Math.round(process.uptime())
+  });
+});
+
+// Liveness probe - checks if server is alive
+app.get('/health/live', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'alive', timestamp: Date.now() });
+});
+
 // Detailed health check with integration status
 app.get('/health/detailed', (req: Request, res: Response) => {
   const integrations = integrationManager.getHealthStatus();
   const allHealthy = integrations.every(i => i.status === 'healthy');
+  const mem = process.memoryUsage();
   
   res.json({
     status: allHealthy ? 'healthy' : 'degraded',
     timestamp: Date.now(),
     version: '1.0.0',
+    uptime_seconds: Math.round(process.uptime()),
+    memory: {
+      heap_used_mb: Math.round(mem.heapUsed / 1024 / 1024),
+      heap_total_mb: Math.round(mem.heapTotal / 1024 / 1024),
+      heap_percent: Math.round(mem.heapUsed / mem.heapTotal * 100),
+      rss_mb: Math.round(mem.rss / 1024 / 1024)
+    },
     integrations: integrations
   });
 });
@@ -5281,6 +5315,11 @@ export function startServer(port?: number): Promise<any> {
     capabilityTokenManager.startCleanup(60000);
     
     server = app.listen(Number(actualPort), HOST, async () => {
+      // Production server timeouts for stability
+      server.keepAliveTimeout = 65000;
+      server.headersTimeout = 66000;
+      server.requestTimeout = 30000;
+      server.timeout = 120000;
       resolve(server);
     });
   });
@@ -5300,6 +5339,12 @@ export { app };
 
 function startServerLegacy(): void {
   server = app.listen(Number(PORT), HOST, async () => {
+    // Production server timeouts for stability
+    server.keepAliveTimeout = 65000; // Slightly higher than ALB/nginx default (60s)
+    server.headersTimeout = 66000; // Must be higher than keepAliveTimeout
+    server.requestTimeout = 30000; // 30s max request time
+    server.timeout = 120000; // 2 min socket timeout
+    
     observability.info('server', `CAP-402 Router listening on ${HOST}:${PORT}`);
     console.log(`\n🚀 CAP-402 Reference Router v0.1.0`);
     console.log(`📡 Listening on http://localhost:${PORT}`);
@@ -9455,6 +9500,41 @@ async function gracefulShutdown(signal: string) {
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// ============================================
+// PRODUCTION STABILITY: Unhandled Error Handlers
+// ============================================
+process.on('uncaughtException', (error: Error) => {
+  console.error('💥 UNCAUGHT EXCEPTION:', error.message);
+  console.error(error.stack);
+  observability.error('server', 'Uncaught exception', { error: error.message, stack: error.stack });
+  // Log but don't crash - let the process manager restart if needed
+  // For critical errors, you may want to: gracefulShutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+  console.error('💥 UNHANDLED REJECTION:', reason);
+  observability.error('server', 'Unhandled promise rejection', { reason: String(reason) });
+  // Log but don't crash
+});
+
+// Memory pressure warning
+const MEMORY_WARNING_THRESHOLD = 0.85; // 85% heap usage
+setInterval(() => {
+  const mem = process.memoryUsage();
+  const heapUsage = mem.heapUsed / mem.heapTotal;
+  if (heapUsage > MEMORY_WARNING_THRESHOLD) {
+    console.warn(`⚠️ HIGH MEMORY USAGE: ${Math.round(heapUsage * 100)}% heap used (${Math.round(mem.heapUsed / 1024 / 1024)}MB)`);
+    observability.warn('server', 'High memory usage', { 
+      heap_percent: Math.round(heapUsage * 100),
+      heap_used_mb: Math.round(mem.heapUsed / 1024 / 1024),
+      rss_mb: Math.round(mem.rss / 1024 / 1024)
+    });
+    // Trigger garbage collection hint and cache cleanup
+    if (global.gc) global.gc();
+    responseCache.cleanup();
+  }
+}, 60000).unref(); // Check every minute, don't keep process alive
 
 if (require.main === module) {
   startServerLegacy();
