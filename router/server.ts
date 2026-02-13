@@ -9245,6 +9245,13 @@ app.post('/unified/launch', async (req: Request, res: Response) => {
       });
     }
 
+    if (token.name.length > 100 || token.symbol.length > 20 || token.description.length > 2000) {
+      return res.status(400).json({ success: false, error: 'Token name (100), symbol (20), or description (2000) exceeds max length' });
+    }
+    if (typeof initial_buy_sol !== 'number' || initial_buy_sol <= 0 || initial_buy_sol > 100) {
+      return res.status(400).json({ success: false, error: 'initial_buy_sol must be between 0 and 100 SOL' });
+    }
+
     // Resolve privacy config
     let privacyConfig = privacy_config;
     if (!privacyConfig && privacy_level) {
