@@ -275,6 +275,15 @@ export function detectInjectionAttempts(req: Request, res: Response, next: NextF
  * Rate limit by IP for unauthenticated requests
  */
 const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
+const IP_RATE_LIMIT_MAX_ENTRIES = 10000;
+
+// Periodic cleanup of expired IP rate limit entries
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of ipRequestCounts) {
+    if (now > record.resetAt) ipRequestCounts.delete(ip);
+  }
+}, 60000).unref();
 
 export function ipRateLimit(maxRequests: number = 100, windowMs: number = 60000) {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -283,6 +292,12 @@ export function ipRateLimit(maxRequests: number = 100, windowMs: number = 60000)
     
     let record = ipRequestCounts.get(ip);
     if (!record || now > record.resetAt) {
+      // Enforce size limit to prevent memory exhaustion
+      if (ipRequestCounts.size >= IP_RATE_LIMIT_MAX_ENTRIES) {
+        for (const [key, val] of ipRequestCounts) {
+          if (now > val.resetAt) ipRequestCounts.delete(key);
+        }
+      }
       record = { count: 0, resetAt: now + windowMs };
       ipRequestCounts.set(ip, record);
     }

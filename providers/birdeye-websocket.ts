@@ -18,8 +18,9 @@ class BirdEyeWebSocketClient {
   private apiKey: string;
   private wsUrl: string;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
+  private maxReconnectAttempts = 10;
   private reconnectDelay = 5000;
+  private maxReconnectDelay = 60000;
   private subscribers: Map<string, Set<PriceUpdateCallback>> = new Map();
   private isConnecting = false;
 
@@ -101,11 +102,12 @@ class BirdEyeWebSocketClient {
     this.reconnectAttempts++;
     console.log(`Reconnecting to BirdEye WebSocket (attempt ${this.reconnectAttempts})...`);
 
+    const delay = Math.min(this.reconnectDelay * this.reconnectAttempts, this.maxReconnectDelay);
     setTimeout(() => {
       this.connect().catch(err => {
         console.error('Reconnection failed:', err);
       });
-    }, this.reconnectDelay * this.reconnectAttempts);
+    }, delay);
   }
 
   subscribe(token: string, callback: PriceUpdateCallback): void {

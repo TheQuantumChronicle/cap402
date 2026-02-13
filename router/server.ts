@@ -93,10 +93,21 @@ app.use(express.json({ limit: '1mb' })); // Limit request body size
 app.use(compression({ threshold: 1024 })); // Compress responses > 1KB
 
 // Serve frontend static files - use process.cwd() for correct path in Railway
-app.use(express.static(path.join(process.cwd(), 'frontend')));
-app.use('/public', express.static(path.join(process.cwd(), 'public')));
+app.use(express.static(path.join(process.cwd(), 'frontend'), {
+  maxAge: '1h',
+  etag: true,
+  lastModified: true
+}));
+app.use('/public', express.static(path.join(process.cwd(), 'public'), {
+  maxAge: '7d',
+  etag: true,
+  immutable: true
+}));
 // Also serve public files at root for favicon.ico etc
-app.use(express.static(path.join(process.cwd(), 'public')));
+app.use(express.static(path.join(process.cwd(), 'public'), {
+  maxAge: '7d',
+  etag: true
+}));
 // Serve docs folder for API documentation (Swagger)
 app.use('/docs', express.static(path.join(process.cwd(), 'docs')));
 // Privacy Alerts API
@@ -9452,6 +9463,13 @@ let server: any;
 async function gracefulShutdown(signal: string) {
   console.log(`\n🛑 ${signal} received, shutting down gracefully...`);
   
+  // Force exit after 10 seconds if graceful shutdown hangs
+  const forceExitTimeout = setTimeout(() => {
+    console.error('⚠️ Graceful shutdown timed out after 10s, forcing exit');
+    process.exit(1);
+  }, 10000);
+  forceExitTimeout.unref();
+  
   // Stop accepting new connections
   if (server) {
     server.close(() => {
@@ -9491,9 +9509,10 @@ async function gracefulShutdown(signal: string) {
     privacyAnalytics.stopAllTracking();
     console.log('   Privacy analytics cleaned up');
   } catch (e) {
-    // Ignore cleanup errors
+    console.error('   Cleanup error (non-fatal):', e);
   }
   
+  clearTimeout(forceExitTimeout);
   console.log('✅ Graceful shutdown complete');
   process.exit(0);
 }
