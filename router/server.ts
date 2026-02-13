@@ -2073,8 +2073,11 @@ app.post('/suggest-workflow', async (req: Request, res: Response) => {
     const { recommendationEngine } = await import('./recommendation-engine');
     const { goal } = req.body;
     
-    if (!goal) {
-      return res.status(400).json({ success: false, error: 'Provide a goal description' });
+    if (!goal || typeof goal !== 'string') {
+      return res.status(400).json({ success: false, error: 'Provide a goal description as a string' });
+    }
+    if (goal.length > 500) {
+      return res.status(400).json({ success: false, error: 'goal must be 500 characters or less' });
     }
 
     const suggestions = recommendationEngine.suggestWorkflows(goal);
