@@ -3566,6 +3566,9 @@ app.post('/a2a/swarm', async (req: Request, res: Response) => {
         error: 'coordinator_agent, task object, and agents array required'
       });
     }
+    if (agents.length > 20) {
+      return res.status(400).json({ success: false, error: 'Maximum 20 agents per swarm' });
+    }
 
     const swarmId = `swarm_${Date.now().toString(36)}`;
     const startTime = Date.now();
