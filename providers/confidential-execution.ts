@@ -137,6 +137,26 @@ class ConfidentialExecutionPipeline {
   // Active orderbooks and auctions
   private orderbooks: Map<string, EncryptedOrderbook> = new Map();
   private auctions: Map<string, PrivateAuctionState> = new Map();
+  private readonly MAX_ORDERBOOKS = 1000;
+  private readonly MAX_AUCTIONS = 1000;
+
+  constructor() {
+    // Periodic cleanup: evict oldest orderbooks/auctions when over limit
+    setInterval(() => {
+      if (this.orderbooks.size > this.MAX_ORDERBOOKS) {
+        let removed = 0;
+        const toRemove = Math.floor(this.MAX_ORDERBOOKS * 0.3);
+        for (const key of this.orderbooks.keys()) {
+          if (removed >= toRemove) break;
+          this.orderbooks.delete(key);
+          removed++;
+        }
+      }
+      for (const [id, auc] of this.auctions) {
+        if (auc.status === 'completed') this.auctions.delete(id);
+      }
+    }, 5 * 60 * 1000).unref();
+  }
   
   /**
    * Determine required execution tier based on amount
