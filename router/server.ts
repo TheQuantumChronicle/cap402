@@ -4468,6 +4468,9 @@ app.post('/social/messages', async (req: Request, res: Response) => {
         error: 'from_agent, to_agent, subject, and content required' 
       });
     }
+    if (subject.length > 200 || content.length > 5000) {
+      return res.status(400).json({ success: false, error: 'subject max 200 chars, content max 5000 chars' });
+    }
     
     const message = agentSocialManager.sendMessage(from_agent, to_agent, { subject, content, type });
     res.json({ success: true, message });
