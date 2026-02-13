@@ -6937,13 +6937,20 @@ app.post('/invoke/with-failover', async (req: Request, res: Response) => {
 // ============================================
 
 app.post('/invoke/smart-batch', async (req: Request, res: Response) => {
-  const { requests } = req.body;
-  if (!requests || !Array.isArray(requests)) {
-    const err = apiError('VALIDATION_ERROR', 'requests array required');
-    return res.status(err.status).json(err.body);
+  try {
+    const { requests } = req.body;
+    if (!requests || !Array.isArray(requests)) {
+      const err = apiError('VALIDATION_ERROR', 'requests array required');
+      return res.status(err.status).json(err.body);
+    }
+    if (requests.length > 10) {
+      return res.status(400).json({ success: false, error: 'Maximum 10 requests per smart batch' });
+    }
+    const results = await router.smartBatch(requests);
+    res.json({ success: true, results, count: results.length });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Smart batch failed' });
   }
-  const results = await router.smartBatch(requests);
-  res.json({ success: true, results, count: results.length });
 });
 
 // ============================================
@@ -6955,30 +6962,34 @@ app.post('/invoke/smart-batch', async (req: Request, res: Response) => {
 
 // Batch invoke - group multiple requests
 app.post('/batch/invoke', async (req: Request, res: Response) => {
-  const { requests } = req.body;
-  if (!requests || !Array.isArray(requests)) {
-    const err = apiError('VALIDATION_ERROR', 'requests array required');
-    return res.status(err.status).json(err.body);
+  try {
+    const { requests } = req.body;
+    if (!requests || !Array.isArray(requests)) {
+      const err = apiError('VALIDATION_ERROR', 'requests array required');
+      return res.status(err.status).json(err.body);
+    }
+    if (requests.length > 10) {
+      const err = apiError('VALIDATION_ERROR', 'Maximum 10 requests per batch');
+      return res.status(err.status).json(err.body);
+    }
+    
+    const results = await Promise.allSettled(
+      requests.map((r: any) => router.invoke({ capability_id: r.capability_id, inputs: r.inputs || {} }))
+    );
+    
+    res.json({
+      success: true,
+      results: results.map((r, i) => ({
+        index: i,
+        success: r.status === 'fulfilled' && r.value.success,
+        data: r.status === 'fulfilled' ? r.value : { error: 'Failed' }
+      })),
+      total: requests.length,
+      succeeded: results.filter(r => r.status === 'fulfilled' && (r.value as any).success).length
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Batch invoke failed' });
   }
-  if (requests.length > 10) {
-    const err = apiError('VALIDATION_ERROR', 'Maximum 10 requests per batch');
-    return res.status(err.status).json(err.body);
-  }
-  
-  const results = await Promise.allSettled(
-    requests.map((r: any) => router.invoke({ capability_id: r.capability_id, inputs: r.inputs || {} }))
-  );
-  
-  res.json({
-    success: true,
-    results: results.map((r, i) => ({
-      index: i,
-      success: r.status === 'fulfilled' && r.value.success,
-      data: r.status === 'fulfilled' ? r.value : { error: 'Failed' }
-    })),
-    total: requests.length,
-    succeeded: results.filter(r => r.status === 'fulfilled' && (r.value as any).success).length
-  });
 });
 
 // Comprehensive system health with adaptive load factor
