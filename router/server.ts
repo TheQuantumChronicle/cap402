@@ -6815,6 +6815,12 @@ app.post('/agents/capabilities', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'agent_id and capabilities required');
     return res.status(err.status).json(err.body);
   }
+  if (Array.isArray(capabilities) && capabilities.length > 50) {
+    return res.status(400).json({ success: false, error: 'Maximum 50 capabilities per agent' });
+  }
+  if (Array.isArray(tags) && tags.length > 20) {
+    return res.status(400).json({ success: false, error: 'Maximum 20 tags per agent' });
+  }
   router.registerAgentCapabilities(agent_id, capabilities, tags || []);
   res.json({ success: true, agent_id });
 });
