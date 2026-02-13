@@ -1986,6 +1986,12 @@ app.post('/agents/:agent_id/messages', async (req: Request, res: Response) => {
   try {
     const { agentSocialManager } = await import('./agent-social');
     const { to_agent, subject, content, type } = req.body;
+    if (!to_agent || !subject || !content) {
+      return res.status(400).json({ success: false, error: 'to_agent, subject, and content required' });
+    }
+    if (subject.length > 200 || content.length > 5000) {
+      return res.status(400).json({ success: false, error: 'subject max 200 chars, content max 5000 chars' });
+    }
     
     const message = agentSocialManager.sendMessage(
       req.params.agent_id,
