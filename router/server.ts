@@ -2453,6 +2453,13 @@ app.post('/marketplace/listings', async (req: Request, res: Response) => {
       });
     }
 
+    if (name.length > 200) {
+      return res.status(400).json({ success: false, error: 'name must be 200 characters or less' });
+    }
+    if (description && description.length > 2000) {
+      return res.status(400).json({ success: false, error: 'description must be 2000 characters or less' });
+    }
+
     const listing = capabilityMarketplace.createListing(
       provider_agent,
       capability_id,
