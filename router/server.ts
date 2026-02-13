@@ -1988,6 +1988,12 @@ app.post('/a2a/message', async (req: Request, res: Response) => {
     if (!from_agent || !to_agent || !payload) {
       return res.status(400).json({ success: false, error: 'from_agent, to_agent, and payload required' });
     }
+
+    // Validate payload size
+    const payloadStr = typeof payload === 'string' ? payload : JSON.stringify(payload);
+    if (payloadStr.length > 10000) {
+      return res.status(400).json({ success: false, error: 'payload must be 10000 characters or less' });
+    }
     
     const message = agentSocialManager.sendMessage(
       from_agent,
