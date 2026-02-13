@@ -6584,6 +6584,12 @@ app.post('/intents', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'agent_id, type, and description required');
     return res.status(err.status).json(err.body);
   }
+  if (description.length > 1000) {
+    return res.status(400).json({ success: false, error: 'description must be 1000 characters or less' });
+  }
+  if (ttl_minutes !== undefined && (typeof ttl_minutes !== 'number' || ttl_minutes < 1 || ttl_minutes > 1440)) {
+    return res.status(400).json({ success: false, error: 'ttl_minutes must be between 1 and 1440' });
+  }
   const intentId = router.broadcastIntent(agent_id, { type, description, requirements, max_cost, ttl_minutes });
   res.json({ success: true, intent_id: intentId });
 });
