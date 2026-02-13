@@ -6494,10 +6494,17 @@ app.get('/reputation/basic/:agent_id', (req: Request, res: Response) => {
 });
 
 app.post('/reputation/basic/:agent_id', (req: Request, res: Response) => {
-  const { success, weight } = req.body;
-  router.updateReputation(req.params.agent_id, success !== false, weight || 1);
-  const rep = router.getReputation(req.params.agent_id);
-  res.json({ success: true, agent_id: req.params.agent_id, reputation: rep });
+  try {
+    const { success, weight } = req.body;
+    if (weight !== undefined && (typeof weight !== 'number' || weight < 0 || weight > 10)) {
+      return res.status(400).json({ success: false, error: 'weight must be between 0 and 10' });
+    }
+    router.updateReputation(req.params.agent_id, success !== false, weight || 1);
+    const rep = router.getReputation(req.params.agent_id);
+    res.json({ success: true, agent_id: req.params.agent_id, reputation: rep });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Reputation update failed' });
+  }
 });
 
 app.get('/reputation/basic/top', (req: Request, res: Response) => {
