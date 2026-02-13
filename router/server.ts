@@ -6846,6 +6846,9 @@ app.post('/subscriptions', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'agent_id and topic required');
     return res.status(err.status).json(err.body);
   }
+  if (typeof topic !== 'string' || topic.length > 200) {
+    return res.status(400).json({ success: false, error: 'topic must be a string of 200 characters or less' });
+  }
   const subId = router.subscribe(agent_id, topic, filter);
   res.json({ success: true, subscription_id: subId });
 });
