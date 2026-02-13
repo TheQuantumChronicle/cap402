@@ -3189,6 +3189,12 @@ app.post('/agents/:agent_id/rate', async (req: Request, res: Response) => {
     if (!from_agent || rating === undefined) {
       return res.status(400).json({ success: false, error: 'from_agent and rating required' });
     }
+    if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, error: 'rating must be a number between 1 and 5' });
+    }
+    if (comment && typeof comment === 'string' && comment.length > 1000) {
+      return res.status(400).json({ success: false, error: 'comment must be 1000 characters or less' });
+    }
 
     const success = agentRegistry.addPeerRating(
       req.params.agent_id,
