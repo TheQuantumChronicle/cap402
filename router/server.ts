@@ -79,17 +79,47 @@ app.use(helmet({
       imgSrc: ["'self'", "data:", "https:"],
       mediaSrc: ["'self'"],
       frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com", "https://www.youtube-nocookie.com"],
-      connectSrc: ["'self'", "https://api.helius.xyz", "https://mainnet.helius-rpc.com", "https://pro-api.coinmarketcap.com"]
+      connectSrc: ["'self'", "https://api.helius.xyz", "https://mainnet.helius-rpc.com", "https://pro-api.coinmarketcap.com"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'self'"]
     }
   },
   crossOriginEmbedderPolicy: false, // Allow embedding for dashboard
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin asset loading
   hsts: {
     maxAge: 31536000,
-    includeSubDomains: true
-  }
+    includeSubDomains: true,
+    preload: true
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
+// Prevent MIME type sniffing (defense-in-depth beyond Helmet defaults)
+app.disable('x-powered-by');
+
 app.use(express.json({ limit: '1mb' })); // Limit request body size
+
+// Handle malformed JSON gracefully
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({
+      success: false,
+      error: 'Malformed JSON in request body',
+      request_id: req.requestId
+    });
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      success: false,
+      error: 'Request body too large (max 1MB)',
+      request_id: req.requestId
+    });
+  }
+  next(err);
+});
+
 app.use(compression({ threshold: 1024 })); // Compress responses > 1KB
 
 // Serve frontend static files - use process.cwd() for correct path in Railway
