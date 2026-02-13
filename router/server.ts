@@ -611,39 +611,43 @@ app.get('/capabilities/:id', (req: Request, res: Response) => {
 
 // Batch capability lookup - get multiple capabilities at once
 app.post('/capabilities/batch', (req: Request, res: Response) => {
-  const { capability_ids } = req.body;
-  
-  if (!capability_ids || !Array.isArray(capability_ids)) {
-    return res.status(400).json({
-      success: false,
-      error: 'capability_ids array required'
-    });
-  }
+  try {
+    const { capability_ids } = req.body;
+    
+    if (!capability_ids || !Array.isArray(capability_ids)) {
+      return res.status(400).json({
+        success: false,
+        error: 'capability_ids array required'
+      });
+    }
 
-  if (capability_ids.length > 100) {
-    return res.status(400).json({
-      success: false,
-      error: 'Maximum 100 capability_ids per batch request'
+    if (capability_ids.length > 100) {
+      return res.status(400).json({
+        success: false,
+        error: 'Maximum 100 capability_ids per batch request'
+      });
+    }
+    
+    const results = capability_ids.map(id => {
+      const capability = registry.getCapability(id);
+      const sponsor = capability ? registry.getSponsor(id) : null;
+      return {
+        id,
+        found: !!capability,
+        capability,
+        sponsor
+      };
     });
+    
+    res.json({
+      success: true,
+      count: results.length,
+      found: results.filter(r => r.found).length,
+      capabilities: results
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Batch lookup failed' });
   }
-  
-  const results = capability_ids.map(id => {
-    const capability = registry.getCapability(id);
-    const sponsor = capability ? registry.getSponsor(id) : null;
-    return {
-      id,
-      found: !!capability,
-      capability,
-      sponsor
-    };
-  });
-  
-  res.json({
-    success: true,
-    count: results.length,
-    found: results.filter(r => r.found).length,
-    capabilities: results
-  });
 });
 
 // Capability examples - show how to invoke each capability
