@@ -619,6 +619,13 @@ app.post('/capabilities/batch', (req: Request, res: Response) => {
       error: 'capability_ids array required'
     });
   }
+
+  if (capability_ids.length > 100) {
+    return res.status(400).json({
+      success: false,
+      error: 'Maximum 100 capability_ids per batch request'
+    });
+  }
   
   const results = capability_ids.map(id => {
     const capability = registry.getCapability(id);
