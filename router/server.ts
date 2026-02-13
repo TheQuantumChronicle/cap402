@@ -8674,6 +8674,13 @@ app.post('/pumpfun/stealth/register', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'mint_address, creator_wallet, name, symbol required' });
     }
 
+    if (typeof mint_address !== 'string' || mint_address.length < 32 || mint_address.length > 44) {
+      return res.status(400).json({ success: false, error: 'Invalid mint_address format' });
+    }
+    if (name.length > 100 || symbol.length > 20) {
+      return res.status(400).json({ success: false, error: 'name (100) or symbol (20) exceeds max length' });
+    }
+
     const record = pumpFunProvider.registerStealthLaunch(
       mint_address,
       creator_wallet,
