@@ -4538,6 +4538,12 @@ app.post('/social/workflows/share', async (req: Request, res: Response) => {
         error: 'agent_id, name, and capabilities required' 
       });
     }
+    if (name.length > 200 || (description && description.length > 2000)) {
+      return res.status(400).json({ success: false, error: 'name max 200 chars, description max 2000 chars' });
+    }
+    if (Array.isArray(capabilities) && capabilities.length > 50) {
+      return res.status(400).json({ success: false, error: 'Maximum 50 capabilities per shared workflow' });
+    }
     
     const workflowId = agentSocialManager.shareWorkflow(agent_id, { 
       name, description, capabilities, template 
