@@ -2281,6 +2281,10 @@ app.post('/agents/delegate', async (req: Request, res: Response) => {
       });
     }
 
+    if (expires_in_hours !== undefined && (typeof expires_in_hours !== 'number' || expires_in_hours < 1 || expires_in_hours > 720)) {
+      return res.status(400).json({ success: false, error: 'expires_in_hours must be between 1 and 720' });
+    }
+
     const delegation = agentRegistry.createDelegation(
       from_agent,
       to_agent,
