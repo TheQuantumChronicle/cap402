@@ -6537,6 +6537,9 @@ app.post('/optimize/composition', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'steps array required');
     return res.status(err.status).json(err.body);
   }
+  if (steps.length > 50) {
+    return res.status(400).json({ success: false, error: 'Maximum 50 steps per composition' });
+  }
   const result = router.optimizeComposition(steps);
   res.json({ success: true, ...result });
 });
