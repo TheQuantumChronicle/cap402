@@ -5834,13 +5834,17 @@ app.post('/collab/:session_id/join', (req: Request, res: Response) => {
 });
 
 app.post('/collab/:session_id/invoke', async (req: Request, res: Response) => {
-  const { agent_id, capability_id, inputs } = req.body;
-  if (!agent_id || !capability_id) {
-    const err = apiError('VALIDATION_ERROR', 'agent_id and capability_id required');
-    return res.status(err.status).json(err.body);
+  try {
+    const { agent_id, capability_id, inputs } = req.body;
+    if (!agent_id || !capability_id) {
+      const err = apiError('VALIDATION_ERROR', 'agent_id and capability_id required');
+      return res.status(err.status).json(err.body);
+    }
+    const result = await router.collaborativeInvoke(req.params.session_id, agent_id, { capability_id, inputs: inputs || {} });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Collaborative invoke failed' });
   }
-  const result = await router.collaborativeInvoke(req.params.session_id, agent_id, { capability_id, inputs: inputs || {} });
-  res.json(result);
 });
 
 app.get('/collab/:session_id', (req: Request, res: Response) => {
@@ -6061,12 +6065,16 @@ app.get('/debug/requests', (req: Request, res: Response) => {
 });
 
 app.post('/debug/replay/:request_id', async (req: Request, res: Response) => {
-  const result = await router.replayRequest(req.params.request_id);
-  if (!result) {
-    const err = apiError('NOT_FOUND', 'Request not found in log');
-    return res.status(err.status).json(err.body);
+  try {
+    const result = await router.replayRequest(req.params.request_id);
+    if (!result) {
+      const err = apiError('NOT_FOUND', 'Request not found in log');
+      return res.status(err.status).json(err.body);
+    }
+    res.json({ success: true, replayed: true, result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Replay failed' });
   }
-  res.json({ success: true, replayed: true, result });
 });
 
 // ============================================
@@ -6102,13 +6110,17 @@ app.put('/sessions/:session_id/context', (req: Request, res: Response) => {
 });
 
 app.post('/sessions/:session_id/invoke', async (req: Request, res: Response) => {
-  const { capability_id, inputs } = req.body;
-  if (!capability_id) {
-    const err = apiError('VALIDATION_ERROR', 'capability_id required');
-    return res.status(err.status).json(err.body);
+  try {
+    const { capability_id, inputs } = req.body;
+    if (!capability_id) {
+      const err = apiError('VALIDATION_ERROR', 'capability_id required');
+      return res.status(err.status).json(err.body);
+    }
+    const result = await router.sessionInvoke(req.params.session_id, { capability_id, inputs: inputs || {} });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Session invoke failed' });
   }
-  const result = await router.sessionInvoke(req.params.session_id, { capability_id, inputs: inputs || {} });
-  res.json(result);
 });
 
 // ============================================
@@ -6197,8 +6209,12 @@ app.post('/pipelines', (req: Request, res: Response) => {
 });
 
 app.post('/pipelines/:id/execute', async (req: Request, res: Response) => {
-  const result = await router.executePipeline(req.params.id, req.body);
-  res.json(result);
+  try {
+    const result = await router.executePipeline(req.params.id, req.body);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Pipeline execution failed' });
+  }
 });
 
 // ============================================
@@ -6235,13 +6251,17 @@ app.get('/agents/:agent_id/recommendations', (req: Request, res: Response) => {
 // ============================================
 
 app.post('/simulate', async (req: Request, res: Response) => {
-  const { capability_id, inputs } = req.body;
-  if (!capability_id) {
-    const err = apiError('VALIDATION_ERROR', 'capability_id required');
-    return res.status(err.status).json(err.body);
+  try {
+    const { capability_id, inputs } = req.body;
+    if (!capability_id) {
+      const err = apiError('VALIDATION_ERROR', 'capability_id required');
+      return res.status(err.status).json(err.body);
+    }
+    const result = await router.simulate({ capability_id, inputs: inputs || {} });
+    res.json({ success: true, simulation: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Simulation failed' });
   }
-  const result = await router.simulate({ capability_id, inputs: inputs || {} });
-  res.json({ success: true, simulation: result });
 });
 
 // ============================================
@@ -6369,20 +6389,24 @@ app.get('/negotiations/agent/:agent_id', (req: Request, res: Response) => {
 // ============================================
 
 app.post('/execute', async (req: Request, res: Response) => {
-  const { agent_id, capability_type, inputs, policy, counterparty, fallbacks } = req.body;
-  if (!agent_id || !capability_type) {
-    const err = apiError('VALIDATION_ERROR', 'agent_id and capability_type required');
-    return res.status(err.status).json(err.body);
+  try {
+    const { agent_id, capability_type, inputs, policy, counterparty, fallbacks } = req.body;
+    if (!agent_id || !capability_type) {
+      const err = apiError('VALIDATION_ERROR', 'agent_id and capability_type required');
+      return res.status(err.status).json(err.body);
+    }
+    const result = await router.executeWithPolicy({
+      agent_id,
+      capability_type,
+      inputs: inputs || {},
+      policy,
+      counterparty,
+      fallbacks
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Execution failed' });
   }
-  const result = await router.executeWithPolicy({
-    agent_id,
-    capability_type,
-    inputs: inputs || {},
-    policy,
-    counterparty,
-    fallbacks
-  });
-  res.json(result);
 });
 
 // ============================================
@@ -6837,13 +6861,17 @@ app.get('/workflows/:id', (req: Request, res: Response) => {
 });
 
 app.post('/workflows/:id/execute', async (req: Request, res: Response) => {
-  const { agent_id, inputs } = req.body;
-  if (!agent_id) {
-    const err = apiError('VALIDATION_ERROR', 'agent_id required');
-    return res.status(err.status).json(err.body);
+  try {
+    const { agent_id, inputs } = req.body;
+    if (!agent_id) {
+      const err = apiError('VALIDATION_ERROR', 'agent_id required');
+      return res.status(err.status).json(err.body);
+    }
+    const result = await router.executeWorkflow(req.params.id, agent_id, inputs || {});
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Workflow execution failed' });
   }
-  const result = await router.executeWorkflow(req.params.id, agent_id, inputs || {});
-  res.json(result);
 });
 
 // ============================================
