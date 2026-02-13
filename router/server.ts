@@ -6004,13 +6004,17 @@ app.get('/webhooks', (req: Request, res: Response) => {
 });
 
 app.post('/webhooks', (req: Request, res: Response) => {
-  const { id, url, events, secret } = req.body;
-  if (!id || !url || !events) {
-    const err = apiError('VALIDATION_ERROR', 'id, url, and events required');
-    return res.status(err.status).json(err.body);
+  try {
+    const { id, url, events, secret } = req.body;
+    if (!id || !url || !events) {
+      const err = apiError('VALIDATION_ERROR', 'id, url, and events required');
+      return res.status(err.status).json(err.body);
+    }
+    router.registerWebhook(id, url, events, secret);
+    res.json({ success: true, webhook_id: id });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Webhook registration failed' });
   }
-  router.registerWebhook(id, url, events, secret);
-  res.json({ success: true, id, url, events: events });
 });
 
 app.delete('/webhooks/:id', (req: Request, res: Response) => {
