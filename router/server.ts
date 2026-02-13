@@ -4387,6 +4387,9 @@ app.post('/security/trust/endorse', async (req: Request, res: Response) => {
     if (!from_agent || !to_agent) {
       return res.status(400).json({ success: false, error: 'from_agent and to_agent required' });
     }
+    if (reason && typeof reason === 'string' && reason.length > 500) {
+      return res.status(400).json({ success: false, error: 'reason must be 500 characters or less' });
+    }
 
     const success = trustNetwork.addEndorsement(from_agent, to_agent, reason || 'Peer endorsement');
 
