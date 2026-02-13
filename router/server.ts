@@ -8250,6 +8250,12 @@ app.post('/coordination/auction', async (req: Request, res: Response) => {
     if (!auctioneer_agent_id || !flow_type || !description || !min_bid_usd) {
       return res.status(400).json({ success: false, error: 'auctioneer_agent_id, flow_type, description, min_bid_usd required' });
     }
+    if (description.length > 2000) {
+      return res.status(400).json({ success: false, error: 'description must be 2000 characters or less' });
+    }
+    if (typeof min_bid_usd !== 'number' || min_bid_usd <= 0 || min_bid_usd > 1000000) {
+      return res.status(400).json({ success: false, error: 'min_bid_usd must be a positive number up to 1000000' });
+    }
     const auction = darkCoordinationManager.createFlowAuction(
       auctioneer_agent_id, flow_type, description, min_bid_usd, bidding_duration_ms, reveal_duration_ms
     );
