@@ -9662,11 +9662,15 @@ setInterval(() => {
     // Trigger garbage collection hint and cache cleanup
     if (global.gc) global.gc();
     responseCache.cleanup();
-    // Cleanup pumpfun stale entries under memory pressure
+    // Cleanup stale entries under memory pressure
     try {
       const { pumpFunProvider } = require('../providers/pumpfun');
       pumpFunProvider.cleanupStealthRegistry();
       pumpFunProvider.cleanupAnonymitySets();
+      const { privacyAlertSystem } = require('../providers/privacy-alerts');
+      privacyAlertSystem.cleanupOldAlerts();
+      const { privacyAnalytics } = require('../providers/privacy-analytics');
+      privacyAnalytics.cleanupOldSnapshots();
     } catch {}
   }
 }, 60000).unref(); // Check every minute, don't keep process alive
