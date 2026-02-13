@@ -2673,8 +2673,11 @@ app.post('/discover/agent', async (req: Request, res: Response) => {
     const { semanticDiscovery } = await import('./semantic-discovery');
     const { query, agent_id, capabilities_used, trust_level, specialization } = req.body;
 
-    if (!query) {
-      return res.status(400).json({ success: false, error: 'query required' });
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ success: false, error: 'query required and must be a string' });
+    }
+    if (query.length > 500) {
+      return res.status(400).json({ success: false, error: 'query must be 500 characters or less' });
     }
 
     const results = await semanticDiscovery.discoverForAgent(query, {
