@@ -49,9 +49,25 @@ export interface WorkflowExecution {
 class AgentWorkflowEngine {
   private templates: Map<string, WorkflowTemplate> = new Map();
   private executions: Map<string, WorkflowExecution> = new Map();
+  private readonly MAX_EXECUTIONS = 5000;
 
   constructor() {
     this.registerBuiltInTemplates();
+    
+    // Periodic cleanup of old completed/failed executions
+    setInterval(() => {
+      if (this.executions.size > this.MAX_EXECUTIONS) {
+        let removed = 0;
+        const toRemove = Math.floor(this.MAX_EXECUTIONS * 0.3);
+        for (const [key, exec] of this.executions) {
+          if (removed >= toRemove) break;
+          if (exec.status === 'completed' || exec.status === 'failed') {
+            this.executions.delete(key);
+            removed++;
+          }
+        }
+      }
+    }, 5 * 60 * 1000).unref();
   }
 
   private registerBuiltInTemplates(): void {

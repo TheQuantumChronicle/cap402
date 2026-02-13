@@ -683,9 +683,27 @@ app.get('/invoke/:capability_id', async (req: Request, res: Response) => {
 app.post('/invoke', async (req: Request, res: Response) => {
   const invokeRequest: InvokeRequest = req.body;
   const startTime = Date.now();
+
+  // Input validation - capability_id is required
+  if (!invokeRequest || !invokeRequest.capability_id || typeof invokeRequest.capability_id !== 'string') {
+    return res.status(400).json({
+      success: false,
+      error: 'capability_id is required and must be a string',
+      request_id: req.requestId
+    });
+  }
+
+  // Validate capability_id format (prevent injection via cache key)
+  if (!/^[a-zA-Z0-9._-]{1,128}$/.test(invokeRequest.capability_id)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid capability_id format',
+      request_id: req.requestId
+    });
+  }
   
   // FAST PATH: Check cache before any middleware processing
-  const cacheKey = `${invokeRequest.capability_id}:${JSON.stringify(invokeRequest.inputs)}`;
+  const cacheKey = `${invokeRequest.capability_id}:${JSON.stringify(invokeRequest.inputs || {})}`;
   const cached = responseCache.get(cacheKey);
   if (cached && !req.headers['x-no-cache']) {
     return res.json({ ...cached, request_id: `req_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`, _cached: true });
