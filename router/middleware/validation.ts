@@ -17,6 +17,7 @@ interface ValidationRule {
   max?: number;
   pattern?: RegExp;
   enum?: any[];
+  maxItems?: number;
 }
 
 interface ValidationError {
@@ -87,6 +88,14 @@ export function validateBody(rules: ValidationRule[]) {
             message: `${rule.field} must be at most ${rule.max}` 
           });
         }
+      }
+
+      // Array length validation
+      if (rule.type === 'array' && rule.maxItems && Array.isArray(value) && value.length > rule.maxItems) {
+        errors.push({ 
+          field: rule.field, 
+          message: `${rule.field} must have at most ${rule.maxItems} items` 
+        });
       }
 
       // Enum validation
@@ -188,7 +197,7 @@ export const quickInvokeValidation = validateBody([
 
 export const batchValidation = validateBody([
   { field: 'agent_id', type: 'string', required: true, pattern: AGENT_ID_PATTERN },
-  { field: 'operations', type: 'array', required: true }
+  { field: 'operations', type: 'array', required: true, maxItems: 20 }
 ]);
 
 export const messageValidation = validateBody([
