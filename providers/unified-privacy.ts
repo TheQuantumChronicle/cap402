@@ -165,6 +165,20 @@ export interface UnifiedLaunchResult {
 class UnifiedPrivacyOrchestrator {
   private eventListeners: Map<string, ((event: PrivacyEvent) => void)[]> = new Map();
   private activeLaunches: Map<string, LaunchState> = new Map();
+  private readonly MAX_LAUNCHES = 1000;
+
+  constructor() {
+    // Periodic cleanup of completed/failed launches
+    setInterval(() => {
+      if (this.activeLaunches.size > this.MAX_LAUNCHES) {
+        for (const [id, state] of this.activeLaunches) {
+          if (state.phase === 'completed' || state.phase === 'failed') {
+            this.activeLaunches.delete(id);
+          }
+        }
+      }
+    }, 5 * 60 * 1000).unref();
+  }
 
   /**
    * Execute a unified privacy-first launch
