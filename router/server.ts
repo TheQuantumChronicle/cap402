@@ -7760,6 +7760,12 @@ app.post('/inco/message', async (req: Request, res: Response) => {
     if (!sender || !recipient || !message) {
       return res.status(400).json({ success: false, error: 'sender, recipient, message required' });
     }
+    if (typeof message === 'string' && message.length > 10000) {
+      return res.status(400).json({ success: false, error: 'message must be 10000 characters or less' });
+    }
+    if (ttl_seconds !== undefined && (typeof ttl_seconds !== 'number' || ttl_seconds < 1 || ttl_seconds > 86400)) {
+      return res.status(400).json({ success: false, error: 'ttl_seconds must be between 1 and 86400' });
+    }
     const result = await incoFHEProvider.sendConfidentialMessage(sender, recipient, message, ttl_seconds);
     res.json({ success: true, ...result });
   } catch (error) {
