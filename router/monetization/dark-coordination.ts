@@ -89,6 +89,7 @@ class DarkCoordinationManager {
   private flowAuctions: Map<string, FlowAuction> = new Map();
   private signalListings: Map<string, SignalListing> = new Map();
   private executionSplits: Map<string, ExecutionSplit> = new Map();
+  private readonly MAX_ENTRIES = 5000;
   
   private stats = {
     totalMatchedVolumeUsd: 0,
@@ -98,6 +99,33 @@ class DarkCoordinationManager {
     matchCount: 0,
     auctionCount: 0
   };
+
+  constructor() {
+    // Periodic cleanup of expired/settled entries
+    setInterval(() => {
+      const now = Date.now();
+      for (const [id, pool] of this.darkPools) {
+        if (pool.status === 'settled' || pool.status === 'expired' || now > pool.expires_at) {
+          this.darkPools.delete(id);
+        }
+      }
+      for (const [id, auction] of this.flowAuctions) {
+        if (auction.status === 'settled' || auction.status === 'cancelled') {
+          this.flowAuctions.delete(id);
+        }
+      }
+      for (const [id, listing] of this.signalListings) {
+        if (!listing.active) {
+          this.signalListings.delete(id);
+        }
+      }
+      for (const [id, split] of this.executionSplits) {
+        if (split.status === 'completed' || split.status === 'failed') {
+          this.executionSplits.delete(id);
+        }
+      }
+    }, 5 * 60 * 1000).unref();
+  }
   
   // ============================================
   // DARK POOL OTC MATCHING
