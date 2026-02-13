@@ -6787,6 +6787,9 @@ app.post('/multi-party', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'initiator, participants, and workflow required');
     return res.status(err.status).json(err.body);
   }
+  if (!Array.isArray(participants) || participants.length > 20) {
+    return res.status(400).json({ success: false, error: 'participants must be an array with max 20 entries' });
+  }
   const txId = router.createMultiPartyTransaction(initiator, participants, workflow);
   res.json({ success: true, tx_id: txId });
 });
