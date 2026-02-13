@@ -4857,6 +4857,9 @@ app.post('/security/tokens/revoke', async (req: Request, res: Response) => {
     if (!token_id || typeof token_id !== 'string') {
       return res.status(400).json({ success: false, error: 'token_id required' });
     }
+    if (reason && typeof reason === 'string' && reason.length > 500) {
+      return res.status(400).json({ success: false, error: 'reason must be 500 characters or less' });
+    }
 
     const revoked = capabilityTokenManager.revokeToken(token_id, reason || 'api_revocation');
 
