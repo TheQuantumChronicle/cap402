@@ -6010,6 +6010,12 @@ app.post('/webhooks', (req: Request, res: Response) => {
       const err = apiError('VALIDATION_ERROR', 'id, url, and events required');
       return res.status(err.status).json(err.body);
     }
+    if (typeof url !== 'string' || !url.startsWith('https://')) {
+      return res.status(400).json({ success: false, error: 'url must be a valid HTTPS URL' });
+    }
+    if (!Array.isArray(events) || events.length > 20) {
+      return res.status(400).json({ success: false, error: 'events must be an array with max 20 entries' });
+    }
     router.registerWebhook(id, url, events, secret);
     res.json({ success: true, webhook_id: id });
   } catch (error) {
