@@ -7059,6 +7059,10 @@ app.post('/trading/instant-swap', async (req: Request, res: Response) => {
       });
     }
 
+    if (typeof amount !== 'number' || amount <= 0 || amount > 1000) {
+      return res.status(400).json({ success: false, error: 'amount must be between 0 and 1000' });
+    }
+
     // Skip MEV analysis for speed - go straight to execution
     const { swapProvider } = await import('../providers/swap');
     
