@@ -3299,6 +3299,9 @@ app.post('/agents/consensus', async (req: Request, res: Response) => {
         error: 'from_agent, target_agents array, and capability_id required' 
       });
     }
+    if (!Array.isArray(target_agents) || target_agents.length > 20) {
+      return res.status(400).json({ success: false, error: 'target_agents must be an array with max 20 entries' });
+    }
 
     const response = await agentCoordinator.requestWithConsensus(
       { from_agent, to_agent: '', capability_id, inputs: inputs || {}, context: {} },
