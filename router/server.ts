@@ -6798,6 +6798,9 @@ app.post('/escrow/:escrow_id/dispute', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'agent_id and reason required');
     return res.status(err.status).json(err.body);
   }
+  if (typeof reason === 'string' && reason.length > 1000) {
+    return res.status(400).json({ success: false, error: 'reason must be 1000 characters or less' });
+  }
   const success = router.disputeEscrow(req.params.escrow_id, agent_id, reason);
   res.json({ success });
 });
