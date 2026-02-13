@@ -2581,6 +2581,13 @@ app.post('/marketplace/listings/:listing_id/review', async (req: Request, res: R
       });
     }
 
+    if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, error: 'rating must be a number between 1 and 5' });
+    }
+    if (comment && comment.length > 1000) {
+      return res.status(400).json({ success: false, error: 'comment must be 1000 characters or less' });
+    }
+
     const review = capabilityMarketplace.addReview(
       req.params.listing_id,
       reviewer_agent,
