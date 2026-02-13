@@ -3101,7 +3101,7 @@ app.post('/unified/register', async (req: Request, res: Response) => {
 // Get all agents with unified view
 app.get('/unified/agents', async (req: Request, res: Response) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 50;
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
     const agents = unifiedAgentService.getAllAgents(limit);
     res.json({ success: true, count: agents.length, agents });
   } catch (error) {
