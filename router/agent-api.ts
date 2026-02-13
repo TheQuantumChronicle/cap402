@@ -45,6 +45,20 @@ export interface BatchResult {
 
 class AgentAPI {
   private sessions: Map<string, AgentSession> = new Map();
+  private readonly MAX_SESSIONS = 10000;
+  private readonly SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+  constructor() {
+    // Periodic cleanup of stale sessions
+    setInterval(() => {
+      const now = Date.now();
+      for (const [id, session] of this.sessions) {
+        if (now - session.created_at > this.SESSION_TTL_MS) {
+          this.sessions.delete(id);
+        }
+      }
+    }, 5 * 60 * 1000).unref();
+  }
 
   /**
    * Quick start - register and get a session in one call

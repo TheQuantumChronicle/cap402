@@ -176,10 +176,39 @@ class MEVProtectionService {
   // Real market data cache (fetched from providers)
   private marketDataCache: Map<string, { volatility: 'low' | 'medium' | 'high'; liquidity: number; timestamp: number }> = new Map();
   private readonly CACHE_TTL_MS = 30000; // 30 second cache
+  private readonly MAX_ANALYSES = 5000;
+  private readonly MAX_EXECUTIONS = 5000;
 
   constructor() {
     // Known MEV bot addresses from on-chain analysis
     this.initializeKnownBots();
+    
+    // Periodic cleanup of stale analyses and market data cache
+    setInterval(() => this.cleanup(), 5 * 60 * 1000).unref();
+  }
+
+  private cleanup(): void {
+    const now = Date.now();
+    // Evict old analyses (older than 10 minutes)
+    if (this.recentAnalyses.size > this.MAX_ANALYSES) {
+      const sorted = [...this.recentAnalyses.entries()].sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toRemove = sorted.slice(0, Math.floor(this.MAX_ANALYSES * 0.3));
+      for (const [key] of toRemove) this.recentAnalyses.delete(key);
+    }
+    // Evict oldest executions (Map preserves insertion order)
+    if (this.executions.size > this.MAX_EXECUTIONS) {
+      let removed = 0;
+      const toRemove = Math.floor(this.MAX_EXECUTIONS * 0.3);
+      for (const key of this.executions.keys()) {
+        if (removed >= toRemove) break;
+        this.executions.delete(key);
+        removed++;
+      }
+    }
+    // Evict stale market data
+    for (const [key, val] of this.marketDataCache) {
+      if (now - val.timestamp > this.CACHE_TTL_MS * 2) this.marketDataCache.delete(key);
+    }
   }
 
   private initializeKnownBots(): void {

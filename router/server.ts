@@ -9427,6 +9427,17 @@ app.get('/unified/events/types', async (req: Request, res: Response) => {
   }
 });
 
+// 404 catch-all for unknown routes (before error handler)
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    error: 'Not found',
+    message: `No route matches ${req.method} ${req.path}`,
+    request_id: req.requestId,
+    hint: 'Try GET /capabilities or GET /openapi.json for available endpoints'
+  });
+});
+
 // Error handler middleware (must be last)
 app.use(errorHandler);
 

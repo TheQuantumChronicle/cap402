@@ -104,12 +104,27 @@ export function requestContext(req: Request, res: Response, next: NextFunction) 
 }
 
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
-  console.error(`[${new Date().toISOString()}] ERROR ${req.requestId}:`, err.message);
+  const isDev = process.env.NODE_ENV === 'development';
   
-  res.status(500).json({
+  // Avoid double-sending if headers already sent
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  // Determine status code from common error patterns
+  let statusCode = 500;
+  if (err.message?.includes('not found')) statusCode = 404;
+  else if (err.message?.includes('unauthorized') || err.message?.includes('invalid token')) statusCode = 401;
+  else if (err.message?.includes('forbidden')) statusCode = 403;
+  else if (err.message?.includes('validation') || err.message?.includes('invalid')) statusCode = 400;
+
+  console.error(`[${new Date().toISOString()}] ERROR ${req.requestId} [${statusCode}]:`, err.message);
+  if (isDev && err.stack) console.error(err.stack);
+  
+  res.status(statusCode).json({
     success: false,
-    error: 'Internal server error',
+    error: statusCode === 500 ? 'Internal server error' : err.message,
     request_id: req.requestId,
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    ...(isDev && { message: err.message, stack: err.stack })
   });
 }
