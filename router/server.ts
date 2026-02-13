@@ -5815,6 +5815,9 @@ app.post('/collab/start', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'agents array required');
     return res.status(err.status).json(err.body);
   }
+  if (agents.length > 20) {
+    return res.status(400).json({ success: false, error: 'Maximum 20 agents per collaboration session' });
+  }
   const id = router.startCollaboration(session_id, agents, context);
   res.json({ success: true, session_id: id, agents });
 });
