@@ -6245,13 +6245,21 @@ app.post('/simulate', async (req: Request, res: Response) => {
 // ============================================
 
 app.post('/messages', (req: Request, res: Response) => {
-  const { from, to, type, payload } = req.body;
-  if (!from || !to || !type) {
-    const err = apiError('VALIDATION_ERROR', 'from, to, and type required');
-    return res.status(err.status).json(err.body);
+  try {
+    const { from, to, type, payload } = req.body;
+    if (!from || !to || !type) {
+      const err = apiError('VALIDATION_ERROR', 'from, to, and type required');
+      return res.status(err.status).json(err.body);
+    }
+    const payloadStr = payload ? JSON.stringify(payload) : '{}';
+    if (payloadStr.length > 10000) {
+      return res.status(400).json({ success: false, error: 'payload must be 10000 characters or less' });
+    }
+    const msgId = router.sendMessage(from, to, type, payload || {});
+    res.json({ success: true, message_id: msgId });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Message send failed' });
   }
-  const msgId = router.sendMessage(from, to, type, payload || {});
-  res.json({ success: true, message_id: msgId });
 });
 
 app.get('/messages/:agent_id', (req: Request, res: Response) => {
