@@ -96,7 +96,8 @@ export function requestContext(req: Request, res: Response, next: NextFunction) 
     // Log (skip health checks)
     if (!path.startsWith('/health') && path !== '/metrics') {
       const statusEmoji = status < 400 ? '✓' : status < 500 ? '⚠' : '✗';
-      console.log(`[${new Date().toISOString()}] ${statusEmoji} ${method} ${path} - ${status} - ${duration}ms`);
+      const slowTag = duration > 5000 ? ' [SLOW]' : duration > 2000 ? ' [WARN]' : '';
+      console.log(`[${new Date().toISOString()}] ${statusEmoji} ${method} ${path} - ${status} - ${duration}ms${slowTag}`);
     }
   });
 
