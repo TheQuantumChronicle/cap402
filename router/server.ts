@@ -6396,6 +6396,9 @@ app.post('/negotiations/:neg_id/respond', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'agent_id and response required');
     return res.status(err.status).json(err.body);
   }
+  if (!['accept', 'reject', 'counter'].includes(response)) {
+    return res.status(400).json({ success: false, error: 'response must be accept, reject, or counter' });
+  }
   const result = router.respondToNegotiation(req.params.neg_id, agent_id, response, counter_proposal);
   res.json(result);
 });
