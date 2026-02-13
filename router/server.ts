@@ -6207,6 +6207,12 @@ app.post('/pipelines', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'id, name, and steps required');
     return res.status(err.status).json(err.body);
   }
+  if (!Array.isArray(steps) || steps.length > 20) {
+    return res.status(400).json({ success: false, error: 'steps must be an array with max 20 entries' });
+  }
+  if (name.length > 200 || (description && description.length > 2000)) {
+    return res.status(400).json({ success: false, error: 'name (200) or description (2000) exceeds max length' });
+  }
   router.addPipeline(id, name, steps, description || '');
   res.json({ success: true, id });
 });
