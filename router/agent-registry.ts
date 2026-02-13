@@ -85,6 +85,8 @@ class AgentRegistry {
   private capabilityIndex: Map<string, Set<string>> = new Map(); // capability -> agent_ids
   private delegationCache: Map<string, AgentDelegation | null> = new Map(); // agent:cap -> delegation
   private readonly CACHE_TTL_MS = 5000; // 5 second cache
+  private readonly MAX_AGENTS = 10000;
+  private readonly MAX_DELEGATIONS = 50000;
   private lastCacheClean = Date.now();
 
   /**
@@ -110,6 +112,11 @@ class AgentRegistry {
       if (!validateCapabilityId(cap)) {
         throw new Error(`Invalid capability_id: ${cap}`);
       }
+    }
+
+    // Enforce agent limit
+    if (!this.agents.has(agentId) && this.agents.size >= this.MAX_AGENTS) {
+      throw new Error(`Agent registry full (max ${this.MAX_AGENTS}). Contact admin for capacity increase.`);
     }
 
     // Check for duplicate
