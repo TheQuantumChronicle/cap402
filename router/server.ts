@@ -6441,6 +6441,9 @@ app.post('/plugins', (req: Request, res: Response) => {
     const err = apiError('VALIDATION_ERROR', 'id, name, and type required');
     return res.status(err.status).json(err.body);
   }
+  if (typeof name !== 'string' || name.length > 200) {
+    return res.status(400).json({ success: false, error: 'name must be a string of 200 characters or less' });
+  }
   router.registerPlugin({ id, name, type, enabled: true, config: config || {} });
   res.json({ success: true, id });
 });
