@@ -826,12 +826,15 @@ app.post('/invoke', async (req: Request, res: Response) => {
   const rateCheck = agentRateLimiter.checkAndRecord(agentId, trustLevel);
   
   if (!rateCheck.allowed) {
+    const retryAfterSec = Math.ceil((rateCheck.reset_at - Date.now()) / 1000);
+    res.setHeader('Retry-After', Math.max(1, retryAfterSec).toString());
     return res.status(429).json({
       success: false,
       error: rateCheck.reason,
       rate_limit: {
         remaining: rateCheck.remaining,
         reset_at: new Date(rateCheck.reset_at).toISOString(),
+        retry_after_seconds: Math.max(1, retryAfterSec),
         upgrade_hint: trustLevel === 'anonymous' 
           ? 'Register an agent to get higher rate limits'
           : 'Upgrade trust level for higher limits'
@@ -2703,11 +2706,13 @@ const apiRateLimitMiddleware = async (req: Request, res: Response, next: NextFun
   const check = agentRateLimiter.checkAndRecord(agentId, trustLevel);
   
   if (!check.allowed) {
+    const retryAfterSec = Math.ceil((check.reset_at - Date.now()) / 1000);
+    res.setHeader('Retry-After', Math.max(1, retryAfterSec).toString());
     return res.status(429).json({
       success: false,
       error: 'Rate limit exceeded',
       reason: check.reason,
-      retry_after_ms: check.reset_at - Date.now()
+      retry_after_seconds: Math.max(1, retryAfterSec)
     });
   }
   
