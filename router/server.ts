@@ -2141,6 +2141,9 @@ app.post('/estimate', async (req: Request, res: Response) => {
     const { capability_id, capability_ids, trust_level = 'anonymous' } = req.body;
 
     if (capability_ids && Array.isArray(capability_ids)) {
+      if (capability_ids.length > 50) {
+        return res.status(400).json({ success: false, error: 'Maximum 50 capability_ids per estimate' });
+      }
       // Composition estimate
       const estimate = costEstimator.estimateComposition(capability_ids, trust_level);
       res.json({ success: true, type: 'composition', estimate });
