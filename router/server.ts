@@ -4258,6 +4258,9 @@ app.post('/security/tokens/issue', async (req: Request, res: Response) => {
     if (capabilities && !Array.isArray(capabilities)) {
       return res.status(400).json({ success: false, error: 'capabilities must be an array' });
     }
+    if (capabilities && capabilities.length > 50) {
+      return res.status(400).json({ success: false, error: 'Maximum 50 capabilities per token' });
+    }
     
     // SECURITY: Validate expires_in_hours
     if (expires_in_hours !== undefined && (typeof expires_in_hours !== 'number' || expires_in_hours < 1 || expires_in_hours > 720)) {
