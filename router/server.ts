@@ -3330,6 +3330,9 @@ app.post('/agents/chain', async (req: Request, res: Response) => {
         error: 'initiator_agent and chain array required' 
       });
     }
+    if (chain.length > 10) {
+      return res.status(400).json({ success: false, error: 'Maximum 10 steps per capability chain' });
+    }
 
     const response = await agentCoordinator.chainCapabilities(
       initiator_agent,
