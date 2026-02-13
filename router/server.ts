@@ -1504,6 +1504,11 @@ app.post('/compose', async (req: Request, res: Response) => {
       composition = { steps, stop_on_error: true };
     }
     
+    // Validate composition size
+    if (composition.steps && Array.isArray(composition.steps) && composition.steps.length > 50) {
+      return res.status(400).json({ success: false, error: 'Maximum 50 steps per composition' });
+    }
+
     // Validate composition
     const validation = validateComposition(composition);
     if (!validation.valid) {
