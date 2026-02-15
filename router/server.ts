@@ -174,6 +174,8 @@ app.get('/openapi.json', (req: Request, res: Response) => {
       { name: 'MEV Protection', description: 'MEV analysis and protected execution' },
       { name: 'Trading Alpha', description: 'Arbitrage, whale tracking, liquidations' },
       { name: 'Agents', description: 'Agent registration and management' },
+      { name: 'x402 Protocol', description: 'HTTP 402 payment flow for agent commerce' },
+      { name: 'Explorer', description: 'Public capability explorer dashboard' },
       { name: 'System', description: 'Health and monitoring' }
     ],
     paths: {
@@ -362,6 +364,51 @@ app.get('/openapi.json', (req: Request, res: Response) => {
           summary: 'System dashboard',
           description: 'Real-time overview of system status and metrics',
           responses: { '200': { description: 'Dashboard data' } }
+        }
+      },
+      '/explorer': {
+        get: {
+          tags: ['Explorer'],
+          summary: 'Public Capability Explorer',
+          description: 'Interactive HTML dashboard showing all capabilities, pricing, trust scores, and x402 payment info',
+          responses: { '200': { description: 'HTML dashboard page', content: { 'text/html': { schema: { type: 'string' } } } } }
+        }
+      },
+      '/x402/info': {
+        get: {
+          tags: ['x402 Protocol'],
+          summary: 'x402 protocol info',
+          description: 'Get protocol version, supported networks, currencies, payment methods, and live stats',
+          responses: { '200': { description: 'Protocol info and stats' } }
+        }
+      },
+      '/x402/payments/{payment_id}': {
+        get: {
+          tags: ['x402 Protocol'],
+          summary: 'Payment lookup',
+          description: 'Get details of a specific payment by ID',
+          parameters: [{ name: 'payment_id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { '200': { description: 'Payment record' }, '404': { description: 'Payment not found' } }
+        }
+      },
+      '/x402/agents/{agent_id}/payments': {
+        get: {
+          tags: ['x402 Protocol'],
+          summary: 'Agent payment history',
+          description: 'Get payment history for a specific agent',
+          parameters: [
+            { name: 'agent_id', in: 'path', required: true, schema: { type: 'string' } },
+            { name: 'limit', in: 'query', schema: { type: 'integer', default: 20, maximum: 100 } }
+          ],
+          responses: { '200': { description: 'List of agent payments' } }
+        }
+      },
+      '/x402/revenue': {
+        get: {
+          tags: ['x402 Protocol'],
+          summary: 'Revenue dashboard',
+          description: 'Get revenue statistics including totals by currency, top capabilities, and top agents',
+          responses: { '200': { description: 'Revenue statistics' } }
         }
       }
     }

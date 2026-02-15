@@ -756,11 +756,11 @@
     </a>
     <div class="nav-links">
       <a href="#capabilities">Capabilities</a>
+      <a href="/explorer" style="color: #22d3ee; font-weight: 500;">Explorer</a>
+      <a href="#x402">x402</a>
       <a href="#sdk">SDK</a>
-      <a href="#infrastructure">Infrastructure</a>
       <a href="/docs">Docs</a>
       <a href="/demo.html" class="demo-link" style="color: #22c55e; font-weight: 500;">Demo</a>
-      <a href="/hackathon" style="color: #14F195; font-weight: 600; display: flex; align-items: center; gap: 6px;">🏆 Hackathon</a>
       <a href="https://github.com/TheQuantumChronicle/CAP402" target="_blank" rel="noopener noreferrer" class="nav-cta" style="display: flex; align-items: center; padding: 0.5rem;" title="GitHub">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
       </a>
@@ -901,6 +901,68 @@
         <h3 class="scramble" style="font-size: 1rem; margin: 0.5rem 0; color: var(--arcium-purple); opacity: 0.8;">Agent Templates</h3>
         <span class="scramble" style="font-size: 0.8rem; opacity: 0.8; line-height: 1.5;">Pre-built trading, monitoring, and analytics agents. Deploy in minutes with real data.</span>
       </div>
+    </div>
+  </section>
+
+  <div class="separator"></div>
+
+  <!-- x402 Protocol Section -->
+  <section id="x402" style="padding: 6vh 6vw;">
+    <p style="text-align: center; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1rem;">Payment Protocol</p>
+    <h2 style="text-align: center; font-size: 1.5rem; margin-bottom: 0.75rem; color: var(--text-primary);">Native <span style="color: #22d3ee;">x402</span> Protocol</h2>
+    <p style="text-align: center; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2.5rem; max-width: 600px; margin-left: auto; margin-right: auto;">Every paid capability supports HTTP 402. Agents pay per invocation with USDC, SOL, or credits. No API keys needed. Settlement on Solana and Base.</p>
+
+    <div style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1.25rem; text-align: center;">
+        <div style="font-size: 1.5rem; font-weight: 700; color: #22d3ee; margin-bottom: 0.25rem;">1</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Invoke</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">POST /invoke with capability_id</div>
+      </div>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1.25rem; text-align: center;">
+        <div style="font-size: 1.5rem; font-weight: 700; color: #22d3ee; margin-bottom: 0.25rem;">2</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">402 Response</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Receive payment requirements</div>
+      </div>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1.25rem; text-align: center;">
+        <div style="font-size: 1.5rem; font-weight: 700; color: #22d3ee; margin-bottom: 0.25rem;">3</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Pay</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">USDC on Solana/Base, SOL, or credits</div>
+      </div>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1.25rem; text-align: center;">
+        <div style="font-size: 1.5rem; font-weight: 700; color: #22d3ee; margin-bottom: 0.25rem;">4</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Execute</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Resubmit with proof, instant execution</div>
+      </div>
+    </div>
+
+    <div style="max-width: 900px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden;">
+      <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 0.5rem;">
+        <span style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444;"></span>
+        <span style="width: 12px; height: 12px; border-radius: 50%; background: #eab308;"></span>
+        <span style="width: 12px; height: 12px; border-radius: 50%; background: #22c55e;"></span>
+        <span style="margin-left: auto; font-size: 0.7rem; color: var(--text-muted);">x402-payment.sh</span>
+      </div>
+      <pre style="padding: 1rem; font-size: 0.75rem; color: var(--text-primary); margin: 0; overflow-x: auto; font-family: 'JetBrains Mono', monospace; line-height: 1.6;"><span style="color: #888;"># Step 1: Invoke a paid capability (no payment proof)</span>
+<span style="color: #7dd3fc;">curl</span> -X POST https://cap402.com/invoke \
+  -H <span style="color: #a5d6ff;">"Content-Type: application/json"</span> \
+  -d <span style="color: #a5d6ff;">'{"capability_id":"cap.confidential.swap.v1","inputs":{...}}'</span>
+
+<span style="color: #888;"># Response: HTTP 402 with payment requirements</span>
+<span style="color: #888;"># { "protocol": "x402", "payment": { "amount": 0.01, "currency": "SOL", ... } }</span>
+
+<span style="color: #888;"># Step 2: Resubmit with payment proof</span>
+<span style="color: #7dd3fc;">curl</span> -X POST https://cap402.com/invoke \
+  -H <span style="color: #a5d6ff;">"Content-Type: application/json"</span> \
+  -H <span style="color: #a5d6ff;">'X-Payment-Proof: {"payment_id":"pay_...","method":"usdc_solana","transaction_hash":"...","nonce":"..."}'</span> \
+  -d <span style="color: #a5d6ff;">'{"capability_id":"cap.confidential.swap.v1","inputs":{...}}'</span>
+
+<span style="color: #888;"># Capability executes, settlement recorded on-chain</span></pre>
+    </div>
+
+    <div style="text-align: center; margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center;">
+      <a href="/explorer" style="padding: 0.6rem 1.4rem; background: linear-gradient(135deg, #22d3ee, #06b6d4); border-radius: 8px; color: #0a0a0c; font-size: 0.85rem; font-weight: 600; text-decoration: none;">Explore Capabilities</a>
+      <a href="/x402/info" style="padding: 0.6rem 1.4rem; background: var(--bg-card); border: 1px solid rgba(34,211,238,0.3); border-radius: 8px; color: #22d3ee; font-size: 0.85rem; font-weight: 500; text-decoration: none;">x402 Protocol Info</a>
+      <a href="/x402/revenue" style="padding: 0.6rem 1.4rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; text-decoration: none;">Revenue Dashboard</a>
     </div>
   </section>
 
@@ -1531,7 +1593,7 @@ console.<span style="color: #7dd3fc;">log</span>(<span style="color: #a5d6ff;">`
     
     /* Responsive nav */
     @media (max-width: 768px) {
-      .nav-links a:not([href="/docs"]) { display: none; }
+      .nav-links a:not([href="/docs"]):not([href="/explorer"]) { display: none; }
       .nav-links { gap: 0.5rem; }
       .stats-row { gap: 2rem; }
       

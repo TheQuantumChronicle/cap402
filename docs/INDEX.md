@@ -54,8 +54,21 @@
    - **Arcium MPC**: ✅ Verified Working (Jan 2026)
    - API endpoints: `/pumpfun/*`
 
+### New Features (Feb 2026)
+7. **x402 Protocol Handler** ⭐ NEW
+   - Native HTTP 402 payment flow in `/invoke`
+   - Payment verification, settlement tracking, revenue dashboard
+   - Endpoints: `/x402/info`, `/x402/payments/:id`, `/x402/agents/:id/payments`, `/x402/revenue`
+   - See `router/payments/x402-protocol.ts`
+
+8. **Public Capability Explorer** ⭐ NEW
+   - Live dashboard at [`/explorer`](https://cap402.com/explorer)
+   - Search, filter by mode/x402/composable, live stats
+   - x402 payment flow explainer, try-it curl commands
+   - See `router/explorer.ts`
+
 ### New Capabilities (Jan 2026)
-8. **Private AI Inference** (`cap.ai.inference.v1`, `cap.ai.embedding.v1`) ⭐ NEW
+9. **Private AI Inference** (`cap.ai.inference.v1`, `cap.ai.embedding.v1`) ⭐ NEW
    - Sentiment analysis, classification, summarization with encrypted inputs
    - Private vector embeddings for semantic search/RAG
    - Uses Arcium MPC for confidential execution
@@ -129,7 +142,8 @@ CAP-402/
 │       │   ├── public-executor.ts
 │       │   └── arcium-executor.ts
 │       └── payments/
-│           ├── x402.ts
+│           ├── x402.ts              ← Payment hint generator
+│           ├── x402-protocol.ts     ← Full x402 HTTP 402 protocol handler
 │           └── privacy-cash.ts
 │
 ├── 🔌 Providers
@@ -205,7 +219,8 @@ Semantic contracts that define what can be done, not how to do it.
 - **Privacy**: Hidden creator launches via Pump.fun Privacy
 
 ### Economic Layer
-- **X.402**: Payment hints with ephemeral addresses
+- **x402 Protocol**: Native HTTP 402 payment flow with proof verification and settlement
+- **X.402 Hints**: Payment hints with ephemeral addresses (legacy, included in all responses)
 - **Privacy Cash**: Private payment notes
 
 ### Chain Signals
@@ -218,7 +233,7 @@ Usage commitments emitted to Solana for verification
 - **Lines of Code**: ~10,000
 - **Capabilities**: 20+ (including Pump.fun Privacy)
 - **Execution Modes**: 3 (Public, Confidential, Privacy)
-- **Payment Methods**: 3
+- **Payment Methods**: 5 (USDC Solana, USDC Base, SOL, credits, privacy cash)
 - **Integrations**: Arcium, Noir, Inco, Helius, [pumpfun.fun](https://pumpfun.fun)
 - **Status**: ✅ Production-Ready
 

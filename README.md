@@ -477,13 +477,15 @@ MANDATORY for all agents:
 
 | Metric | Count |
 |--------|-------|
-| **Total Capabilities** | 13 |
+| **Total Capabilities** | 22+ |
 | **Confidential Capabilities** | 10 |
 | **Noir ZK Circuits** | 10 |
-| **API Endpoints** | 100+ |
+| **API Endpoints** | 110+ |
 | **Sponsor Integrations** | 4 (Arcium, Noir, Helius, Inco) |
 | **A2A Protocol Endpoints** | 5 |
 | **Trading Alpha Endpoints** | 8 |
+| **x402 Payment Endpoints** | 4 |
+| **Public Explorer** | [/explorer](https://cap402.com/explorer) |
 
 ---
 
@@ -939,9 +941,54 @@ Example confidential execution flow:
 
 ## Economic Model
 
-### X.402 Payment Hints
+### x402 Protocol — Native HTTP 402 Payment Flow
 
-Based on the X.402 protocol concept:
+CAP-402 implements the **x402 protocol** for autonomous agent commerce. Capabilities with mandatory settlement return HTTP 402 with full payment requirements.
+
+**Payment Flow:**
+1. Agent calls `POST /invoke` with a paid capability
+2. Server returns **HTTP 402** with payment requirements (amount, networks, methods, nonce, expiry)
+3. Agent executes payment on-chain (USDC on Solana/Base, SOL) or uses credits
+4. Agent resubmits `/invoke` with `X-Payment-Proof` header
+5. Server verifies proof, executes capability, records settlement
+
+```bash
+# Step 1: Invoke (no payment proof)
+curl -X POST https://cap402.com/invoke \
+  -d '{"capability_id":"cap.confidential.swap.v1","inputs":{...}}'
+# → HTTP 402 with payment requirements
+
+# Step 2: Resubmit with payment proof
+curl -X POST https://cap402.com/invoke \
+  -H 'X-Payment-Proof: {"payment_id":"pay_...","method":"usdc_solana","transaction_hash":"...","nonce":"..."}' \
+  -d '{"capability_id":"cap.confidential.swap.v1","inputs":{...}}'
+# → Capability executes, settlement recorded
+```
+
+**Payment Methods:**
+- **USDC on Solana** — SPL token transfer with payment_id in memo
+- **USDC on Base** — ERC-20 transfer on Base L2
+- **Native SOL** — Direct transfer with memo
+- **Credits** — Internal agent balance, instant settlement
+- **Privacy Cash** — ZK-compatible private notes
+
+**Settlement Logic:**
+- `settlement_optional: true` — Payment encouraged but not required (most capabilities)
+- `settlement_optional: false` — HTTP 402 enforced for anonymous/verified agents
+- Trusted/premium agents bypass mandatory payment
+- Capability tokens bypass payment entirely
+
+**x402 API Endpoints:**
+```bash
+GET  /x402/info                        # Protocol info and stats
+GET  /x402/payments/:payment_id        # Payment lookup
+GET  /x402/agents/:agent_id/payments   # Agent payment history
+GET  /x402/revenue                     # Revenue dashboard
+```
+
+### X.402 Payment Hints (Legacy)
+
+All responses include x402 payment hints for backward compatibility:
 - **Ephemeral addresses**: Generated per-request
 - **Suggested amounts**: Not enforced
 - **Settlement optional**: Agents can choose to pay or not
@@ -1100,7 +1147,38 @@ CAP-402 | Agent Infrastructure Standard | v1.0.0
 
 ## 📋 Recent Updates
 
-### Latest (Jan 26, 2026) — AI Inference, KYC Proofs & Agent Framework Integrations
+### Latest (Feb 15, 2026) — x402 Protocol Handler & Public Capability Explorer
+
+**x402 Protocol Handler:**
+- ✅ **Native HTTP 402 payment flow** in `/invoke` — agents receive payment requirements, submit proofs, settle on-chain
+- ✅ **Payment verification** with nonce replay protection, amount validation, expiry checks
+- ✅ **Multi-network settlement** — USDC on Solana/Base, native SOL, internal credits
+- ✅ **Revenue tracking** by capability and agent with full payment history
+- ✅ **4 new API endpoints**: `/x402/info`, `/x402/payments/:id`, `/x402/agents/:id/payments`, `/x402/revenue`
+- ✅ Reuses existing `x402.ts` hint generator via `legacy_hint` field (zero duplication)
+
+**Public Capability Explorer:**
+- ✅ **`GET /explorer`** — Self-contained HTML dashboard at [cap402.com/explorer](https://cap402.com/explorer)
+- ✅ Live stats from `/capabilities` and `/health/detailed`
+- ✅ Search + filters (mode, x402-enabled, composable)
+- ✅ x402 payment flow explainer section
+- ✅ Try-it curl commands per capability
+- ✅ Dark theme, responsive, no external dependencies
+
+**Frontend Updates:**
+- ✅ Added Explorer and x402 nav links to landing page
+- ✅ New x402 Protocol section with 4-step flow diagram and code example
+- ✅ CTA buttons for Explorer, x402 Info, and Revenue Dashboard
+
+**Test Coverage:**
+```
+Test Suites: 23 passed, 23 total
+Tests:       530 passed, 530 total
+```
+
+---
+
+### Previous (Jan 26, 2026) — AI Inference, KYC Proofs & Agent Framework Integrations
 
 **New Capabilities:**
 - ✅ **Private AI Inference** (`cap.ai.inference.v1`) - Run sentiment analysis, classification, summarization with encrypted inputs
@@ -1259,6 +1337,8 @@ curl https://cap402.com/trace/trace_abc123
 | **Sponsors** | `/sponsors`, `/sponsors/:name`, `/sponsors/:name/security` |
 | **Security** | `/security/tokens/*`, `/security/trust/*`, `/security/handshake/*`, `/security/audit` |
 | **Economics** | `/estimate`, `/estimate/:id/compare`, `/verify-proof` |
+| **x402 Protocol** | `/x402/info`, `/x402/payments/:id`, `/x402/agents/:id/payments`, `/x402/revenue` |
+| **Explorer** | `/explorer` (Public Capability Explorer dashboard) |
 | **Interop** | `/openapi.json` (OpenAPI 3.0 schema) |
 
 ### 🔐 Security Layer (Secret Sauce)
@@ -1474,6 +1554,11 @@ CAP-402/
 │   ├── metrics.ts             # Performance metrics with auto-aggregation
 │   ├── rate-limiter.ts        # Adaptive rate limiting
 │   │
+│   ├── payments/
+│   │   ├── x402.ts                # Payment hint generator
+│   │   ├── x402-protocol.ts       # Full x402 HTTP 402 protocol handler
+│   │   └── privacy-cash.ts        # Privacy cash notes
+│   │
 │   ├── execution/             # Executors
 │   │   ├── types.ts           # Execution types & interfaces
 │   │   ├── public-executor.ts # Public capability execution
@@ -1499,7 +1584,8 @@ CAP-402/
 │   ├── intent-graph.ts        # Multi-step atomic workflows
 │   ├── composition.ts         # Capability chaining
 │   ├── composition-templates.ts # Pre-built workflows
-│   └── capability-analytics.ts # Usage analytics
+│   ├── capability-analytics.ts # Usage analytics
+│   └── explorer.ts            # Public Capability Explorer (HTML dashboard)
 │
 ├── providers/                 # External integrations
 │   ├── integration-manager.ts # Unified API with caching + coalescing
