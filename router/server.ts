@@ -866,6 +866,48 @@ app.post('/invoke', async (req: Request, res: Response) => {
     });
   }
   
+  // ============================================
+  // x402 PROTOCOL: Payment Required Check
+  // ============================================
+  if (capability) {
+    const { x402Protocol } = await import('./payments/x402-protocol');
+    const paymentProof = x402Protocol.parsePaymentProof(req);
+
+    if (x402Protocol.shouldRequirePayment(capability.economics, trustLevel, !!capabilityToken)) {
+      if (!paymentProof) {
+        // No payment proof — return HTTP 402 with payment requirements
+        const requirement = x402Protocol.generatePaymentRequirement(
+          capability.id, capability.name, capability.description, capability.economics
+        );
+        if (requirement) {
+          const resp = x402Protocol.build402Response(requirement);
+          for (const [key, value] of Object.entries(resp.headers)) {
+            res.setHeader(key, value);
+          }
+          return res.status(402).json(resp.body);
+        }
+      } else {
+        // Verify the payment proof
+        const verification = x402Protocol.verifyPaymentProof(paymentProof);
+        if (!verification.valid) {
+          return res.status(402).json({
+            success: false,
+            error: 'Payment verification failed',
+            reason: verification.reason,
+            hint: 'Resubmit with a valid payment proof'
+          });
+        }
+        // Record the payment
+        x402Protocol.recordPayment(
+          paymentProof.payment_id, capability.id, agentId,
+          paymentProof, verification, req.requestId
+        );
+        res.setHeader('X-Payment-Status', verification.settlement_status);
+        res.setHeader('X-Payment-Id', paymentProof.payment_id);
+      }
+    }
+  }
+
   observability.info('server', 'Capability invocation', {
     capability_id: invokeRequest.capability_id,
     agent_id: agentId,
@@ -6966,6 +7008,87 @@ app.post('/workflows/:id/execute', async (req: Request, res: Response) => {
     res.json(result);
   } catch (error) {
     res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Workflow execution failed' });
+  }
+});
+
+// ============================================
+// PUBLIC CAPABILITY EXPLORER
+// ============================================
+
+app.get('/explorer', (req: Request, res: Response) => {
+  const { generateExplorerHTML } = require('./explorer');
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  res.setHeader('Content-Type', 'text/html');
+  res.send(generateExplorerHTML(baseUrl));
+});
+
+// ============================================
+// x402 PROTOCOL ENDPOINTS
+// ============================================
+
+// x402 protocol info and stats
+app.get('/x402/info', async (req: Request, res: Response) => {
+  try {
+    const { x402Protocol } = await import('./payments/x402-protocol');
+    const stats = x402Protocol.getStats();
+    res.json({
+      success: true,
+      protocol: {
+        version: '1.0.0',
+        name: 'x402',
+        description: 'HTTP 402 Payment Required protocol for autonomous agent commerce',
+        supported_networks: ['solana', 'base'],
+        supported_currencies: ['USDC', 'SOL', 'credits'],
+        payment_methods: ['usdc_solana', 'usdc_base', 'sol', 'credits', 'privacy_cash'],
+        flow: [
+          'POST /invoke with a paid capability (no payment proof)',
+          'Receive HTTP 402 with payment requirements',
+          'Execute payment on-chain or use credits',
+          'Resubmit /invoke with X-Payment-Proof header',
+          'Capability executes, settlement recorded'
+        ]
+      },
+      stats
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'x402 info failed' });
+  }
+});
+
+// x402 payment lookup
+app.get('/x402/payments/:payment_id', async (req: Request, res: Response) => {
+  try {
+    const { x402Protocol } = await import('./payments/x402-protocol');
+    const payment = x402Protocol.getPayment(req.params.payment_id);
+    if (!payment) {
+      return res.status(404).json({ success: false, error: 'Payment not found' });
+    }
+    res.json({ success: true, payment });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Payment lookup failed' });
+  }
+});
+
+// x402 agent payment history
+app.get('/x402/agents/:agent_id/payments', async (req: Request, res: Response) => {
+  try {
+    const { x402Protocol } = await import('./payments/x402-protocol');
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+    const payments = x402Protocol.getAgentPayments(req.params.agent_id, limit);
+    res.json({ success: true, agent_id: req.params.agent_id, count: payments.length, payments });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Payment history failed' });
+  }
+});
+
+// x402 revenue dashboard
+app.get('/x402/revenue', async (req: Request, res: Response) => {
+  try {
+    const { x402Protocol } = await import('./payments/x402-protocol');
+    const revenue = x402Protocol.getRevenueStats();
+    res.json({ success: true, revenue });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Revenue stats failed' });
   }
 });
 
