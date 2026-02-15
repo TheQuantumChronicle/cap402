@@ -477,8 +477,8 @@ MANDATORY for all agents:
 
 | Metric | Count |
 |--------|-------|
-| **Total Capabilities** | 22+ |
-| **Confidential Capabilities** | 10 |
+| **Total Capabilities** | 22 |
+| **Confidential Capabilities** | 15 |
 | **Noir ZK Circuits** | 10 |
 | **API Endpoints** | 110+ |
 | **Sponsor Integrations** | 4 (Arcium, Noir, Helius, Inco) |

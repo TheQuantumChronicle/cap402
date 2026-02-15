@@ -231,7 +231,7 @@ Usage commitments emitted to Solana for verification
 - **Version**: 1.0.0
 - **Files**: 30+
 - **Lines of Code**: ~10,000
-- **Capabilities**: 20+ (including Pump.fun Privacy)
+- **Capabilities**: 22 (including Pump.fun Privacy)
 - **Execution Modes**: 3 (Public, Confidential, Privacy)
 - **Payment Methods**: 5 (USDC Solana, USDC Base, SOL, credits, privacy cash)
 - **Integrations**: Arcium, Noir, Inco, Helius, [pumpfun.fun](https://pumpfun.fun)

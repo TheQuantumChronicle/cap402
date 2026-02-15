@@ -118,7 +118,8 @@ export class X402ProtocolHandler {
 
   constructor() {
     // Cleanup expired requirements every 60 seconds
-    setInterval(() => this.cleanup(), 60_000);
+    const timer = setInterval(() => this.cleanup(), 60_000);
+    if (timer.unref) timer.unref(); // Don't keep process alive for cleanup
   }
 
   /**
@@ -185,7 +186,7 @@ export class X402ProtocolHandler {
       type: 'usdc_solana',
       network: 'solana',
       recipient_address: this.treasuryAddresses['solana'],
-      amount: currency === 'USDC' ? amount : amount, // Convert if needed
+      amount: currency === 'SOL' ? amount * 200 : amount, // Convert SOL→USDC at ~$200
       currency: 'USDC',
       instructions: 'Send USDC SPL token to the recipient address. Include payment_id in memo.'
     });
@@ -195,7 +196,7 @@ export class X402ProtocolHandler {
       type: 'usdc_base',
       network: 'base',
       recipient_address: this.treasuryAddresses['base'],
-      amount: currency === 'USDC' ? amount : amount,
+      amount: currency === 'SOL' ? amount * 200 : amount, // Convert SOL→USDC at ~$200
       currency: 'USDC',
       instructions: 'Send USDC on Base L2 to the recipient address. Include payment_id in calldata.'
     });
@@ -305,13 +306,13 @@ export class X402ProtocolHandler {
 
     if (isOnChain && proof.transaction_hash) {
       // In production, we'd verify the tx on-chain via RPC
-      // For now, validate format and mark as pending settlement
-      if (proof.network === 'solana' && !/^[A-Za-z0-9]{87,88}$/.test(proof.transaction_hash)) {
-        settlementStatus = 'pending'; // Will verify async
-      } else if (proof.network === 'base' && !/^0x[a-fA-F0-9]{64}$/.test(proof.transaction_hash)) {
-        settlementStatus = 'pending';
-      } else {
+      // For now, validate format — valid format = verified, invalid = pending async verification
+      const isSolanaValid = proof.network === 'solana' && /^[A-HJ-NP-Za-km-z1-9]{86,88}$/.test(proof.transaction_hash);
+      const isBaseValid = proof.network === 'base' && /^0x[a-fA-F0-9]{64}$/.test(proof.transaction_hash);
+      if (isSolanaValid || isBaseValid) {
         settlementStatus = 'verified';
+      } else {
+        settlementStatus = 'pending'; // Will verify async via RPC
       }
     } else if (proof.method === 'credits') {
       settlementStatus = 'verified'; // Internal credits are instant

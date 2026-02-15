@@ -194,10 +194,9 @@ export function generateExplorerHTML(baseUrl: string): string {
 
     async function init() {
       try {
-        const [capsRes, healthRes, summaryRes] = await Promise.all([
+        const [capsRes, healthRes] = await Promise.all([
           fetch(BASE + '/capabilities').then(r => r.json()),
-          fetch(BASE + '/health/detailed').then(r => r.json()).catch(() => null),
-          fetch(BASE + '/capabilities/summary').then(r => r.json()).catch(() => null)
+          fetch(BASE + '/health/detailed').then(r => r.json()).catch(() => null)
         ]);
 
         allCaps = capsRes.capabilities || [];

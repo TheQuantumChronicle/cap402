@@ -931,7 +931,7 @@ app.post('/invoke', async (req: Request, res: Response) => {
           for (const [key, value] of Object.entries(resp.headers)) {
             res.setHeader(key, value);
           }
-          return res.status(402).json(resp.body);
+          return res.status(402).json({ ...resp.body, request_id: req.requestId });
         }
       } else {
         // Verify the payment proof
@@ -941,7 +941,8 @@ app.post('/invoke', async (req: Request, res: Response) => {
             success: false,
             error: 'Payment verification failed',
             reason: verification.reason,
-            hint: 'Resubmit with a valid payment proof'
+            hint: 'Resubmit with a valid payment proof',
+            request_id: req.requestId
           });
         }
         // Record the payment
