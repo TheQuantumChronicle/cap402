@@ -240,7 +240,7 @@ export function generateExplorerHTML(baseUrl: string): string {
         const latency = c.performance?.latency_hint || 'medium';
         const reliability = c.performance?.reliability_hint ? Math.round(c.performance.reliability_hint * 100) + '%' : '-';
         const composable = c.composable ? 'Yes' : 'No';
-        const curlCmd = 'curl -X POST ' + window.location.origin + '/invoke -H "Content-Type: application/json" -d \\x27{"capability_id":"' + c.id + '","inputs":{' + (c.inputs.required || []).map(r => '"' + r + '":"..."').join(',') + '}}\\x27';
+        const curlCmd = 'curl -X POST ' + window.location.origin + '/invoke -H "Content-Type: application/json" -d \\x27{"capability_id":"' + c.id + '","inputs":{' + (c.inputs?.required || []).map(r => '"' + r + '":"..."').join(',') + '}}\\x27';
 
         return '<div class="cap-card" data-mode="' + mode + '" data-x402="' + x402 + '" data-composable="' + c.composable + '">' +
           '<div class="cap-header">' +
@@ -300,7 +300,7 @@ export function generateExplorerHTML(baseUrl: string): string {
       currentFilter = e.target.dataset.filter;
       const q = document.getElementById('search').value.toLowerCase();
       let filtered = allCaps;
-      if (q) filtered = filtered.filter(c => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q) || c.description.toLowerCase().includes(q));
+      if (q) filtered = filtered.filter(c => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q) || c.description.toLowerCase().includes(q) || (c.metadata?.tags || []).some(t => t.toLowerCase().includes(q)));
       applyFilter(filtered);
     });
 
